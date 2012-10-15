@@ -38,3 +38,4 @@ Makefile
 /missing
 /stamp-h1
 tools/gimo-loader
+tests/test-plugin

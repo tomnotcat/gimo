@@ -49,19 +49,29 @@ struct _GimoPluginClass {
 
 GType gimo_plugin_get_type (void) G_GNUC_CONST;
 
-GimoPlugin* gimo_plugin_new (void);
+GimoPlugin* gimo_plugin_new (const gchar *id,
+                             const gchar *url,
+                             const gchar *entry,
+                             const gchar *name,
+                             const gchar *version,
+                             const gchar *provider,
+                             GSList *imports,
+                             GSList *extpoints,
+                             GSList *extensions);
 
 const gchar* gimo_plugin_get_id (GimoPlugin *self);
 
-const gchar* gimo_plugin_get_path (GimoPlugin *self);
+const gchar* gimo_plugin_get_url (GimoPlugin *self);
+
+const gchar* gimo_plugin_get_entry (GimoPlugin *self);
 
 const gchar* gimo_plugin_get_name (GimoPlugin *self);
 
 const gchar* gimo_plugin_get_version (GimoPlugin *self);
 
-const gchar* gimo_plugin_get_author (GimoPlugin *self);
+const gchar* gimo_plugin_get_provider (GimoPlugin *self);
 
-GSList* gimo_plugin_get_deps (GimoPlugin *self);
+GSList* gimo_plugin_get_imports (GimoPlugin *self);
 
 GSList* gimo_plugin_get_extpoints (GimoPlugin *self);
 

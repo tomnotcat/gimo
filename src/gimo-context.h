@@ -38,6 +38,8 @@ G_BEGIN_DECLS
 typedef struct _GimoContextPrivate GimoContextPrivate;
 typedef struct _GimoContextClass GimoContextClass;
 
+typedef gboolean (*GimoPluginTraverseFunc) (GimoPlugin *plugin, gpointer data);
+
 struct _GimoContext {
     GObject parent_instance;
     GimoContextPrivate *priv;
@@ -61,7 +63,7 @@ GimoPlugin* gimo_context_query_plugin (GimoContext *self,
                                        const gchar *id);
 
 void gimo_context_foreach_plugins (GimoContext *self,
-                                   gboolean (*func) (GimoPlugin*, gpointer),
+                                   GimoPluginTraverseFunc func,
                                    gpointer user_data);
 G_END_DECLS
 

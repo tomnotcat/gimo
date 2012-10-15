@@ -1,0 +1,137 @@
+{
+    g_type_init
+    Memcheck:Leak
+    ...
+    fun:g_type_init_with_debug_flags
+    fun:g_type_init
+}
+
+{
+    g_type_register_static_simple
+    Memcheck:Leak
+    ...
+    fun:g_type_register_static
+    fun:g_type_register_static_simple
+}
+
+{
+    g_param_type_register_static
+    Memcheck:Leak
+    ...
+    fun:g_type_register_static
+    fun:g_param_type_register_static
+}
+
+{
+    g_type_register_fundamental
+    Memcheck:Leak
+    ...
+    fun:g_type_register_fundamental
+}
+
+{
+    g_pointer_type_register_static
+    Memcheck:Leak
+    ...
+    fun:g_type_register_static
+    fun:g_pointer_type_register_static
+}
+
+{
+    g_object_newv
+    Memcheck:Leak
+    ...
+    fun:type_iface_vtable_base_init_Wm
+    fun:g_type_class_ref
+    fun:g_object_newv
+}
+
+{
+    standard_calloc
+    Memcheck:Leak
+    ...
+    fun:calloc
+    fun:standard_calloc
+}
+
+{
+    calloc
+    Memcheck:Leak
+    ...
+    fun:calloc
+    obj:*libglib-2.0.so*
+}
+
+{
+    g_signal_new
+    Memcheck:Leak
+    ...
+    fun:g_closure_new_simple
+    fun:g_signal_type_cclosure_new
+    fun:g_signal_new
+}
+
+{
+    g_type_add_interface_static
+    Memcheck:Leak
+    ...
+    fun:type_node_add_iface_entry_W
+    fun:type_add_interface_Wm
+    fun:g_type_add_interface_static
+}
+
+{
+    g_object_new
+    Memcheck:Leak
+    ...
+    fun:type_iface_vtable_base_init_Wm
+    fun:g_type_class_ref
+    fun:g_object_newv
+    fun:g_object_new
+}
+
+{
+    g_object_new
+    Memcheck:Leak
+    ...
+    fun:g_object_do_class_init
+    fun:g_type_class_ref
+    fun:g_type_class_ref
+    fun:g_object_newv
+    fun:g_object_new
+}
+
+{
+    g_enum_register_static
+    Memcheck:Leak
+    ...
+    fun:g_type_register_static
+    fun:g_enum_register_static
+}
+
+{
+    g_boxed_type_register_static
+    Memcheck:Leak
+    ...
+    fun:g_type_register_static
+    fun:g_boxed_type_register_static
+}
+
+{
+    g_param_spec_enum1
+    Memcheck:Leak
+    ...
+    fun:g_type_class_ref
+    fun:g_type_class_ref
+    fun:g_param_spec_enum
+}
+
+{
+    g_param_spec_enum2
+    Memcheck:Leak
+    ...
+    fun:g_type_class_ref
+    fun:g_type_class_ref
+    fun:g_type_create_instance
+    fun:g_param_spec_internal
+}

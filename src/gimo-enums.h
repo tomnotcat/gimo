@@ -27,10 +27,12 @@ G_BEGIN_DECLS
  * GimoStatus:
  * @GIMO_STATUS_SUCCESS: no error has occurred
  * @GIMO_STATUS_NO_MEMORY: out of memory
+ * @GIMO_STATUS_INVALID_OBJECT: invalid object
  */
 typedef enum {
     GIMO_STATUS_SUCCESS,
-    GIMO_STATUS_NO_MEMORY
+    GIMO_STATUS_NO_MEMORY,
+    GIMO_STATUS_INVALID_OBJECT
 } GimoStatus;
 
 /**
