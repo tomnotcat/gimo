@@ -51,7 +51,7 @@ struct _GimoRuntimeClass {
 
 GType gimo_runtime_get_type (void) G_GNUC_CONST;
 
-GimoRuntime* gimo_runtime_new (void);
+GimoRuntime* gimo_runtime_new (GimoContext *context);
 
 G_END_DECLS
 

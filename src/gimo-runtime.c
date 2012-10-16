@@ -51,7 +51,7 @@ static void gimo_runtime_class_init (GimoRuntimeClass *klass)
                               sizeof (GimoRuntimePrivate));
 }
 
-GimoRuntime* gimo_runtime_new (void)
+GimoRuntime* gimo_runtime_new (GimoContext *context)
 {
     return g_object_new (GIMO_TYPE_RUNTIME, NULL);
 }
