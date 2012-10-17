@@ -16,42 +16,42 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "gimo-runtime.h"
+#include "gimo-registry.h"
 
-G_DEFINE_TYPE (GimoRuntime, gimo_runtime, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GimoRegistry, gimo_registry, G_TYPE_OBJECT)
 
-struct _GimoRuntimePrivate {
+struct _GimoRegistryPrivate {
     int n;
 };
 
-static void gimo_runtime_init (GimoRuntime *self)
+static void gimo_registry_init (GimoRegistry *self)
 {
-    GimoRuntimePrivate *priv;
+    GimoRegistryPrivate *priv;
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              GIMO_TYPE_RUNTIME,
-                                              GimoRuntimePrivate);
+                                              GIMO_TYPE_REGISTRY,
+                                              GimoRegistryPrivate);
     priv = self->priv;
 
     priv->n = 0;
 }
 
-static void gimo_runtime_finalize (GObject *gobject)
+static void gimo_registry_finalize (GObject *gobject)
 {
-    G_OBJECT_CLASS (gimo_runtime_parent_class)->finalize (gobject);
+    G_OBJECT_CLASS (gimo_registry_parent_class)->finalize (gobject);
 }
 
-static void gimo_runtime_class_init (GimoRuntimeClass *klass)
+static void gimo_registry_class_init (GimoRegistryClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-    gobject_class->finalize = gimo_runtime_finalize;
+    gobject_class->finalize = gimo_registry_finalize;
 
     g_type_class_add_private (gobject_class,
-                              sizeof (GimoRuntimePrivate));
+                              sizeof (GimoRegistryPrivate));
 }
 
-GimoRuntime* gimo_runtime_new (GimoContext *context)
+GimoRegistry* gimo_registry_new (void)
 {
-    return g_object_new (GIMO_TYPE_RUNTIME, NULL);
+    return g_object_new (GIMO_TYPE_REGISTRY, NULL);
 }

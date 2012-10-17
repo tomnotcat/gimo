@@ -45,43 +45,11 @@ struct _GimoPlugin {
 
 struct _GimoPluginClass {
     GObjectClass parent_class;
+    GimoStatus (*start) (GimoPlugin *self);
+    GimoStatus (*stop) (GimoPlugin *self);
 };
 
 GType gimo_plugin_get_type (void) G_GNUC_CONST;
-
-GimoPlugin* gimo_plugin_new (const gchar *id,
-                             const gchar *url,
-                             const gchar *entry,
-                             const gchar *name,
-                             const gchar *version,
-                             const gchar *provider,
-                             GSList *imports,
-                             GSList *extpoints,
-                             GSList *extensions);
-
-const gchar* gimo_plugin_get_id (GimoPlugin *self);
-
-const gchar* gimo_plugin_get_url (GimoPlugin *self);
-
-const gchar* gimo_plugin_get_entry (GimoPlugin *self);
-
-const gchar* gimo_plugin_get_name (GimoPlugin *self);
-
-const gchar* gimo_plugin_get_version (GimoPlugin *self);
-
-const gchar* gimo_plugin_get_provider (GimoPlugin *self);
-
-GSList* gimo_plugin_get_imports (GimoPlugin *self);
-
-GSList* gimo_plugin_get_extpoints (GimoPlugin *self);
-
-GSList* gimo_plugin_get_extensions (GimoPlugin *self);
-
-GimoPluginState gimo_plugin_get_state (GimoPlugin *self);
-
-GimoStatus gimo_plugin_start (GimoPlugin *self);
-
-GimoStatus gimo_plugin_stop (GimoPlugin *self);
 
 G_END_DECLS
 

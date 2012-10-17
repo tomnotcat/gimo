@@ -16,23 +16,23 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "gimo-import.h"
+#include "gimo-require.h"
 
-G_DEFINE_TYPE (GimoImport, gimo_import, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GimoRequire, gimo_require, G_TYPE_OBJECT)
 
-struct _GimoImportPrivate {
+struct _GimoRequirePrivate {
     gchar *plugin_id;
     gchar *version;
     gboolean optional;
 };
 
-static void gimo_import_init (GimoImport *self)
+static void gimo_require_init (GimoRequire *self)
 {
-    GimoImportPrivate *priv;
+    GimoRequirePrivate *priv;
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              GIMO_TYPE_IMPORT,
-                                              GimoImportPrivate);
+                                              GIMO_TYPE_REQUIRE,
+                                              GimoRequirePrivate);
     priv = self->priv;
 
     priv->plugin_id = NULL;
@@ -40,33 +40,33 @@ static void gimo_import_init (GimoImport *self)
     priv->optional = FALSE;
 }
 
-static void gimo_import_finalize (GObject *gobject)
+static void gimo_require_finalize (GObject *gobject)
 {
-    GimoImport *self = GIMO_IMPORT (gobject);
-    GimoImportPrivate *priv = self->priv;
+    GimoRequire *self = GIMO_REQUIRE (gobject);
+    GimoRequirePrivate *priv = self->priv;
 
     g_free (priv->plugin_id);
     g_free (priv->version);
 
-    G_OBJECT_CLASS (gimo_import_parent_class)->finalize (gobject);
+    G_OBJECT_CLASS (gimo_require_parent_class)->finalize (gobject);
 }
 
-static void gimo_import_class_init (GimoImportClass *klass)
+static void gimo_require_class_init (GimoRequireClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-    gobject_class->finalize = gimo_import_finalize;
+    gobject_class->finalize = gimo_require_finalize;
 
     g_type_class_add_private (gobject_class,
-                              sizeof (GimoImportPrivate));
+                              sizeof (GimoRequirePrivate));
 }
 
-GimoImport* gimo_import_new (const gchar *plugin_id,
-                             const gchar *version,
-                             gboolean optional)
+GimoRequire* gimo_require_new (const gchar *plugin_id,
+                               const gchar *version,
+                               gboolean optional)
 {
-    GimoImport *self = g_object_new (GIMO_TYPE_IMPORT, NULL);
-    GimoImportPrivate *priv = self->priv;
+    GimoRequire *self = g_object_new (GIMO_TYPE_REQUIRE, NULL);
+    GimoRequirePrivate *priv = self->priv;
 
     priv->plugin_id = g_strdup (plugin_id);
     priv->version = g_strdup (version);
@@ -75,23 +75,23 @@ GimoImport* gimo_import_new (const gchar *plugin_id,
     return self;
 }
 
-const gchar* gimo_import_get_plugin_id (GimoImport *self)
+const gchar* gimo_require_get_plugin_id (GimoRequire *self)
 {
-    g_return_val_if_fail (GIMO_IS_IMPORT (self), NULL);
+    g_return_val_if_fail (GIMO_IS_REQUIRE (self), NULL);
 
     return self->priv->plugin_id;
 }
 
-const gchar* gimo_import_get_version (GimoImport *self)
+const gchar* gimo_require_get_version (GimoRequire *self)
 {
-    g_return_val_if_fail (GIMO_IS_IMPORT (self), NULL);
+    g_return_val_if_fail (GIMO_IS_REQUIRE (self), NULL);
 
     return self->priv->version;
 }
 
-gboolean gimo_import_is_optional (GimoImport *self)
+gboolean gimo_require_is_optional (GimoRequire *self)
 {
-    g_return_val_if_fail (GIMO_IS_IMPORT (self), FALSE);
+    g_return_val_if_fail (GIMO_IS_REQUIRE (self), FALSE);
 
     return self->priv->optional;
 }
