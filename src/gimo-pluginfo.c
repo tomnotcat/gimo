@@ -22,8 +22,11 @@
 #include "gimo-require.h"
 #include "gimo-utils.h"
 
-extern void _gimo_extpoint_setup (gpointer self,
-                                  gpointer info);
+extern void _gimo_extpoint_setup (gpointer data,
+                                  gpointer user_data);
+
+extern void _gimo_extpoint_teardown (gpointer data,
+                                     gpointer user_data);
 
 G_DEFINE_TYPE (GimoPluginfo, gimo_pluginfo, G_TYPE_OBJECT)
 
@@ -109,8 +112,12 @@ static void gimo_pluginfo_finalize (GObject *gobject)
     if (priv->requires)
         g_ptr_array_unref (priv->requires);
 
-    if (priv->extpoints)
+    if (priv->extpoints) {
+        g_ptr_array_foreach (priv->extpoints,
+                             _gimo_extpoint_teardown,
+                             self);
         g_ptr_array_unref (priv->extpoints);
+    }
 
     if (priv->extensions)
         g_ptr_array_unref (priv->extensions);

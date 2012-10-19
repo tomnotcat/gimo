@@ -59,9 +59,9 @@ const gchar* gimo_extension_get_name (GimoExtension *self);
 
 const gchar* gimo_extension_get_extpoint_id (GimoExtension *self);
 
-GimoPluginfo* gimo_extension_get_pluginfo (GimoExtension *self);
-
 const gchar* gimo_extension_get_identifier (GimoExtension *self);
+
+GimoPluginfo* gimo_extension_query_pluginfo (GimoExtension *self);
 
 G_END_DECLS
 

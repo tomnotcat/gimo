@@ -196,13 +196,19 @@ void _gimo_extpoint_setup (GimoExtpoint *self,
 
     g_assert (NULL == priv->identifier);
 
-    priv->info = g_object_ref (info);
+    priv->info = info;
+
     priv->identifier = g_strdup_printf ("%s.%s",
                                         gimo_pluginfo_get_identifier (info),
                                         priv->local_id);
 }
 
-void _gimo_extpoint_teardown (GimoExtpoint *self)
+void _gimo_extpoint_teardown (GimoExtpoint *self,
+                              GimoPluginfo *info)
 {
-    g_object_unref (self->priv->info);
+    GimoExtpointPrivate *priv = self->priv;
+
+    g_assert (priv->info == info);
+
+    priv->info = NULL;
 }

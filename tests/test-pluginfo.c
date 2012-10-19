@@ -16,6 +16,7 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#include "gimo-extension.h"
 #include "gimo-extpoint.h"
 #include "gimo-pluginfo.h"
 #include "gimo-require.h"
@@ -129,30 +130,32 @@ int main (int argc, char *argv[])
     g_assert (!strcmp (gimo_extpoint_get_local_id (extp), "extp1"));
     g_assert (!strcmp (gimo_extpoint_get_name (extp), "name1"));
     g_assert (gimo_extpoint_get_identifier (extp) == NULL);
-    g_assert (gimo_extpoint_get_pluginfo (extp) == NULL);
+    g_assert (gimo_extpoint_query_pluginfo (extp) == NULL);
 
     _test_pluginfo (&info);
 
     g_assert (!strcmp (gimo_extpoint_get_identifier (extp), "myplugin.extp1"));
-    g_assert (gimo_extpoint_get_pluginfo (extp) != NULL);
+    g_assert (gimo_extpoint_query_pluginfo (extp) == NULL);
     g_ptr_array_unref (info.extpoints);
     info.extpoints = NULL;
 
     /* extensions */
     info.extensions = g_ptr_array_new_with_free_func (g_object_unref);
 
-    ext = gimo_extension_new ("extp1", "name1");
-    g_ptr_array_add (info.extpoints, extp);
-    g_assert (!strcmp (gimo_extpoint_get_local_id (extp), "extp1"));
-    g_assert (!strcmp (gimo_extpoint_get_name (extp), "name1"));
-    g_assert (gimo_extpoint_get_identifier (extp) == NULL);
-    g_assert (gimo_extpoint_get_pluginfo (extp) == NULL);
+    ext = gimo_extension_new ("ext1", "name2", "extp2");
+    g_ptr_array_add (info.extensions, ext);
+    g_assert (!strcmp (gimo_extension_get_local_id (ext), "ext1"));
+    g_assert (!strcmp (gimo_extension_get_name (ext), "name2"));
+    g_assert (!strcmp (gimo_extension_get_extpoint_id (ext), "extp2"));
+    g_assert (gimo_extension_get_identifier (ext) == NULL);
+    g_assert (gimo_extension_query_pluginfo (ext) == NULL);
 
     _test_pluginfo (&info);
 
-    g_assert (!strcmp (gimo_extpoint_get_identifier (extp), "myplugin.extp1"));
-    g_assert (gimo_extpoint_get_pluginfo (extp) != NULL);
+    g_assert (!strcmp (gimo_extension_get_identifier (ext), "myplugin.ext1"));
+    g_assert (gimo_extension_query_pluginfo (ext) == NULL);
     g_ptr_array_unref (info.extpoints);
     info.extpoints = NULL;
+
     return 0;
 }
