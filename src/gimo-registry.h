@@ -53,6 +53,7 @@ GType gimo_registry_get_type (void) G_GNUC_CONST;
 
 GimoRegistry* gimo_registry_new (void);
 
+/*
 GimoStatus gimo_registry_install_plugin (GimoRegistry *self,
                                          GimoPlugin *plugin);
 
@@ -65,6 +66,8 @@ GimoPlugin* gimo_registry_query_plugin (GimoRegistry *self,
 void gimo_registry_foreach_plugins (GimoRegistry *self,
                                     GimoPluginTraverseFunc func,
                                     gpointer user_data);
+*/
+
 G_END_DECLS
 
 #endif /* __GIMO_REGISTRY_H__ */

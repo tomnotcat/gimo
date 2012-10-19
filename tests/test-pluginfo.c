@@ -47,7 +47,7 @@ static void _test_pluginfo (const struct _Pluginfo *p)
                               p->extpoints,
                               p->extensions);
 
-    g_assert (!strcmp (gimo_pluginfo_get_id (info), p->id));
+    g_assert (!strcmp (gimo_pluginfo_get_identifier (info), p->id));
     g_assert (!strcmp (gimo_pluginfo_get_url (info), p->url));
     g_assert (!strcmp (gimo_pluginfo_get_klass (info), p->klass));
     g_assert (!strcmp (gimo_pluginfo_get_name (info), p->name));

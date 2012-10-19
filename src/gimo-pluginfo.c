@@ -20,8 +20,13 @@
 
 G_DEFINE_TYPE (GimoPluginfo, gimo_pluginfo, G_TYPE_OBJECT)
 
+enum {
+    PROP_0,
+    PROP_REQUIRES
+};
+
 struct _GimoPluginfoPrivate {
-    gchar *id;
+    gchar *identifier;
     gchar *url;
     gchar *klass;
     gchar *name;
@@ -41,7 +46,7 @@ static void gimo_pluginfo_init (GimoPluginfo *self)
                                               GimoPluginfoPrivate);
     priv = self->priv;
 
-    priv->id = NULL;
+    priv->identifier = NULL;
     priv->url = NULL;
     priv->klass = NULL;
     priv->name = NULL;
@@ -57,7 +62,7 @@ static void gimo_pluginfo_finalize (GObject *gobject)
     GimoPluginfo *self = GIMO_PLUGINFO (gobject);
     GimoPluginfoPrivate *priv = self->priv;
 
-    g_free (priv->id);
+    g_free (priv->identifier);
     g_free (priv->url);
     g_free (priv->klass);
     g_free (priv->name);
@@ -71,6 +76,52 @@ static void gimo_pluginfo_finalize (GObject *gobject)
     G_OBJECT_CLASS (gimo_pluginfo_parent_class)->finalize (gobject);
 }
 
+static void gimo_pluginfo_set_property (GObject *object,
+                                        guint prop_id,
+                                        const GValue *value,
+                                        GParamSpec *pspec)
+{
+    GimoPluginfo *self = GIMO_PLUGINFO (object);
+    GimoPluginfoPrivate *priv = self->priv;
+
+    switch (prop_id) {
+    case PROP_REQUIRES:
+        {
+            GSList *it = g_value_get_pointer (value);
+
+            while (it) {
+                priv->requires = g_slist_prepend (priv->requires,
+                                                  g_object_ref (it->data));
+                it = it->next;
+            }
+        }
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void gimo_pluginfo_get_property (GObject *object,
+                                        guint prop_id,
+                                        GValue *value,
+                                        GParamSpec *pspec)
+{
+    GimoPluginfo *self = GIMO_PLUGINFO (object);
+    GimoPluginfoPrivate *priv = self->priv;
+
+    switch (prop_id) {
+    case PROP_REQUIRES:
+        g_value_set_pointer (value, priv->requires);
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
 static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -79,9 +130,44 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
                               sizeof (GimoPluginfoPrivate));
 
     gobject_class->finalize = gimo_pluginfo_finalize;
+    gobject_class->set_property = gimo_pluginfo_set_property;
+    gobject_class->get_property = gimo_pluginfo_get_property;
+
+    /**
+     * GimoPluginfo:requires:
+     * @pspec: (type Gimo.Pluginfo):
+     *
+     * The required plugins.
+     */
+    g_object_class_install_property (
+        gobject_class, PROP_REQUIRES,
+        g_param_spec_pointer ("requires",
+                              "Required plugins",
+                              "The plugins required by this plugin",
+                              G_PARAM_READABLE |
+                              G_PARAM_WRITABLE |
+                              G_PARAM_CONSTRUCT_ONLY |
+                              G_PARAM_STATIC_STRINGS));
 }
 
-GimoPluginfo* gimo_pluginfo_new (const gchar *id,
+/**
+ * gimo_pluginfo_new:
+ * @identifier: the unique identifier
+ * @url: url/path of the plugin
+ * @klass: the runtime class name
+ * @name: the display name
+ * @version: the release version
+ * @provider: the provider name
+ * @requires: (element-type Gimo.Extension) (transfer none):
+ *            the required plugins
+ * @extpoints: (element-type Gimo.Extension) (transfer none):
+ *             the extension points
+ * @extensions: (element-type Gimo.Extension) (transfer none):
+ *              the extensions
+ *
+ * Create a plugin descriptor of the provided parameters.
+ */
+GimoPluginfo* gimo_pluginfo_new (const gchar *identifier,
                                  const gchar *url,
                                  const gchar *klass,
                                  const gchar *name,
@@ -91,21 +177,18 @@ GimoPluginfo* gimo_pluginfo_new (const gchar *id,
                                  GSList *extpoints,
                                  GSList *extensions)
 {
-    GimoPluginfo *self = g_object_new (GIMO_TYPE_PLUGINFO, NULL);
+    GimoPluginfo *self = g_object_new (GIMO_TYPE_PLUGINFO,
+                                       "requires", requires,
+                                       NULL);
     GimoPluginfoPrivate *priv = self->priv;
     GSList *it;
 
-    priv->id = g_strdup (id);
+    priv->identifier = g_strdup (identifier);
     priv->url = g_strdup (url);
     priv->klass = g_strdup (klass);
     priv->name = g_strdup (name);
     priv->version = g_strdup (version);
     priv->provider = g_strdup (provider);
-
-    for (it = requires; it != NULL; it = it->next) {
-        priv->requires = g_slist_prepend (priv->requires,
-                                          g_object_ref (it->data));
-    }
 
     for (it = extpoints; it != NULL; it = it->next) {
         priv->extpoints = g_slist_prepend (priv->extpoints,
@@ -120,11 +203,11 @@ GimoPluginfo* gimo_pluginfo_new (const gchar *id,
     return self;
 }
 
-const gchar* gimo_pluginfo_get_id (GimoPluginfo *self)
+const gchar* gimo_pluginfo_get_identifier (GimoPluginfo *self)
 {
     g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
 
-    return self->priv->id;
+    return self->priv->identifier;
 }
 
 const gchar* gimo_pluginfo_get_url (GimoPluginfo *self)
@@ -162,6 +245,15 @@ const gchar* gimo_pluginfo_get_provider (GimoPluginfo *self)
     return self->priv->provider;
 }
 
+/**
+ * gimo_pluginfo_get_requires:
+ * @self: a #GimoPluginfo
+ *
+ * Get the required plugins of the plugin.
+ *
+ * Returns: (element-type Gimo.Require) (transfer none):
+ *          the required plugins list.
+ */
 GSList* gimo_pluginfo_get_requires (GimoPluginfo *self)
 {
     g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
@@ -169,6 +261,15 @@ GSList* gimo_pluginfo_get_requires (GimoPluginfo *self)
     return self->priv->requires;
 }
 
+/**
+ * gimo_pluginfo_get_extpoints:
+ * @self: a #GimoPluginfo
+ *
+ * Get the extension points provided by the plugin.
+ *
+ * Returns: (element-type Gimo.Extpoint) (transfer none):
+ *          the extension points list.
+ */
 GSList* gimo_pluginfo_get_extpoints (GimoPluginfo *self)
 {
     g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
@@ -176,6 +277,15 @@ GSList* gimo_pluginfo_get_extpoints (GimoPluginfo *self)
     return self->priv->extpoints;
 }
 
+/**
+ * gimo_pluginfo_get_extensions:
+ * @self: a #GimoPluginfo
+ *
+ * Get the extensions provided by the plugin.
+ *
+ * Returns: (element-type Gimo.Extension) (transfer none):
+ *          the extensions list.
+ */
 GSList* gimo_pluginfo_get_extensions (GimoPluginfo *self)
 {
     g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);

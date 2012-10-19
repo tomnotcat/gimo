@@ -49,7 +49,7 @@ struct _GimoPluginfoClass {
 
 GType gimo_pluginfo_get_type (void) G_GNUC_CONST;
 
-GimoPluginfo* gimo_pluginfo_new (const gchar *id,
+GimoPluginfo* gimo_pluginfo_new (const gchar *identifier,
                                  const gchar *url,
                                  const gchar *klass,
                                  const gchar *name,
@@ -59,7 +59,7 @@ GimoPluginfo* gimo_pluginfo_new (const gchar *id,
                                  GSList *extpoints,
                                  GSList *extensions);
 
-const gchar* gimo_pluginfo_get_id (GimoPluginfo *self);
+const gchar* gimo_pluginfo_get_identifier (GimoPluginfo *self);
 
 const gchar* gimo_pluginfo_get_url (GimoPluginfo *self);
 
