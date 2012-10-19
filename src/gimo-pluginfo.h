@@ -55,9 +55,9 @@ GimoPluginfo* gimo_pluginfo_new (const gchar *identifier,
                                  const gchar *name,
                                  const gchar *version,
                                  const gchar *provider,
-                                 GSList *requires,
-                                 GSList *extpoints,
-                                 GSList *extensions);
+                                 GPtrArray *requires,
+                                 GPtrArray *extpoints,
+                                 GPtrArray *extensions);
 
 const gchar* gimo_pluginfo_get_identifier (GimoPluginfo *self);
 
@@ -71,11 +71,11 @@ const gchar* gimo_pluginfo_get_version (GimoPluginfo *self);
 
 const gchar* gimo_pluginfo_get_provider (GimoPluginfo *self);
 
-GSList* gimo_pluginfo_get_requires (GimoPluginfo *self);
+GPtrArray* gimo_pluginfo_get_requires (GimoPluginfo *self);
 
-GSList* gimo_pluginfo_get_extpoints (GimoPluginfo *self);
+GPtrArray* gimo_pluginfo_get_extpoints (GimoPluginfo *self);
 
-GSList* gimo_pluginfo_get_extensions (GimoPluginfo *self);
+GPtrArray* gimo_pluginfo_get_extensions (GimoPluginfo *self);
 
 G_END_DECLS
 

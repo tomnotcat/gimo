@@ -51,7 +51,56 @@ static void gimo_extension_class_init (GimoExtensionClass *klass)
                               sizeof (GimoExtensionPrivate));
 }
 
-GimoExtension* gimo_extension_new (void)
+GimoExtension* gimo_extension_new (const gchar *local_id,
+                                   const gchar *name,
+                                   const gchar *extpoint_id)
 {
-    return g_object_new (GIMO_TYPE_EXTENSION, NULL);
+    return g_object_new (GIMO_TYPE_EXTENSION,
+                         "local-id", local_id,
+                         "name", name,
+                         "extpoint-id", extpoint_id,
+                         NULL);
+}
+
+const gchar* gimo_extension_get_local_id (GimoExtension *self)
+{
+    g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
+
+    return self->priv->local_id;
+}
+
+const gchar* gimo_extension_get_name (GimoExtension *self)
+{
+    g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
+
+    return self->priv->name;
+}
+
+const gchar* gimo_extension_get_extpoint_id (GimoExtension *self)
+{
+    g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
+
+    return self->priv->extpoint_id;
+}
+
+/**
+ * gimo_extension_get_pluginfo:
+ * @self: a #GimoExtpoint
+ *
+ * Get the plugin descriptor of the extension.
+ *
+ * Returns: (transfer none): a #GimoPluginfo
+ */
+GimoPluginfo* gimo_extension_get_pluginfo (GimoExtension *self)
+{
+    g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
+
+    return self->priv->info;
+}
+
+const gchar* gimo_extension_get_identifier (GimoExtension *self)
+{
+    g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
+
+    return self->priv->identifier;
 }

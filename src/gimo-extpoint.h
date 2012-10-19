@@ -49,7 +49,16 @@ struct _GimoExtpointClass {
 
 GType gimo_extpoint_get_type (void) G_GNUC_CONST;
 
-GimoExtpoint* gimo_extpoint_new (void);
+GimoExtpoint* gimo_extpoint_new (const gchar *local_id,
+                                 const gchar *name);
+
+const gchar* gimo_extpoint_get_local_id (GimoExtpoint *self);
+
+const gchar* gimo_extpoint_get_name (GimoExtpoint *self);
+
+const gchar* gimo_extpoint_get_identifier (GimoExtpoint *self);
+
+GimoPluginfo* gimo_extpoint_query_pluginfo (GimoExtpoint *self);
 
 G_END_DECLS
 

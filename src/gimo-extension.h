@@ -49,7 +49,19 @@ struct _GimoExtensionClass {
 
 GType gimo_extension_get_type (void) G_GNUC_CONST;
 
-GimoExtension* gimo_extension_new (void);
+GimoExtension* gimo_extension_new (const gchar *local_id,
+                                   const gchar *name,
+                                   const gchar *extpoint_id);
+
+const gchar* gimo_extension_get_local_id (GimoExtension *self);
+
+const gchar* gimo_extension_get_name (GimoExtension *self);
+
+const gchar* gimo_extension_get_extpoint_id (GimoExtension *self);
+
+GimoPluginfo* gimo_extension_get_pluginfo (GimoExtension *self);
+
+const gchar* gimo_extension_get_identifier (GimoExtension *self);
 
 G_END_DECLS
 
