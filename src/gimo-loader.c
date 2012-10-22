@@ -18,35 +18,37 @@
  */
 #include "gimo-loader.h"
 
-G_DEFINE_TYPE (GimoLoader, gimo_loader, G_TYPE_OBJECT)
-
-struct _GimoLoaderPrivate {
-    int n;
-};
-
-static void gimo_loader_init (GimoLoader *self)
+GType gimo_loader_get_type (void)
 {
-    GimoLoaderPrivate *priv;
+    static GType loader_type = 0;
 
-    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              GIMO_TYPE_LOADER,
-                                              GimoLoaderPrivate);
-    priv = self->priv;
+    if (!loader_type) {
+        const GTypeInfo loader_info = {
+            sizeof (GimoLoaderInterface),  /* class_size */
+            NULL,    /* base_init */
+            NULL,    /* base_finalize */
+        };
 
-    priv->n = 0;
+        loader_type = g_type_register_static (G_TYPE_INTERFACE,
+                                              "GimoLoader",
+                                              &loader_info, 0);
+    }
+
+    return loader_type;
 }
 
-static void gimo_loader_finalize (GObject *gobject)
+/**
+ * gimo_loader_load:
+ * @self: a #GimoLoader
+ *
+ * Load the plugin runtime object.
+ *
+ * Returns: (allow-none) (transfer full): a #GimoPlugin
+ */
+GimoPlugin* gimo_loader_load (GimoLoader *self,
+                              GimoPluginfo *info)
 {
-    G_OBJECT_CLASS (gimo_loader_parent_class)->finalize (gobject);
-}
+    g_return_val_if_fail (GIMO_IS_LOADER (self), NULL);
 
-static void gimo_loader_class_init (GimoLoaderClass *klass)
-{
-    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-    gobject_class->finalize = gimo_loader_finalize;
-
-    g_type_class_add_private (gobject_class,
-                              sizeof (GimoLoaderPrivate));
+    return GIMO_LOADER_GET_IFACE (self)->load (self, info);
 }

@@ -24,5 +24,10 @@ check_PROGRAMS += test-context
 test_context_SOURCES = test-context.c
 check_SCRIPTS += test-context.py
 
+# Test plugin loader.
+check_PROGRAMS += test-loader
+test_loader_SOURCES = test-loader.c
+check_SCRIPTS += test-loader.py
+
 TESTS = ${check_PROGRAMS} ${check_SCRIPTS}
 EXTRA_DIST = ${check_SCRIPTS}

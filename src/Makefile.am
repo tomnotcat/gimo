@@ -6,7 +6,7 @@ libgimo_1_0_la_SOURCES = gimo-types.h gimo-enums.h gimo-enums.c \
 	gimo-context.h gimo-context.c gimo-pluginfo.h gimo-pluginfo.c \
 	gimo-require.h gimo-require.c gimo-extpoint.h gimo-extpoint.c \
 	gimo-extension.h gimo-extension.c gimo-plugin.h gimo-plugin.c \
-	gimo-loaderset.h gimo-loaderset.c gimo-loader.h gimo-loader.c \
+	gimo-loadermgr.h gimo-loadermgr.c gimo-loader.h gimo-loader.c \
 	gimo-dlloader.h gimo-dlloader.c gimo-marshal.h gimo-marshal.c \
 	gimo-utils.h gimo-utils.c
 

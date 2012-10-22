@@ -39,3 +39,5 @@ Makefile
 /stamp-h1
 tools/gimo-loader
 tests/test-pluginfo
+tests/test-context
+tests/test-loader

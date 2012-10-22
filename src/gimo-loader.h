@@ -28,26 +28,20 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GIMO_TYPE_LOADER, GimoLoader))
 #define GIMO_IS_LOADER(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj), GIMO_TYPE_LOADER))
-#define GIMO_LOADER_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GIMO_TYPE_LOADER, GimoLoaderClass))
-#define GIMO_IS_LOADER_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GIMO_TYPE_LOADER))
-#define GIMO_LOADER_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS((obj), GIMO_TYPE_LOADER, GimoLoaderClass))
+#define GIMO_LOADER_GET_IFACE(inst) \
+    (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GIMO_TYPE_LOADER, GimoLoaderInterface))
 
-typedef struct _GimoLoaderPrivate GimoLoaderPrivate;
-typedef struct _GimoLoaderClass GimoLoaderClass;
+typedef struct _GimoLoaderInterface GimoLoaderInterface;
 
-struct _GimoLoader {
-    GObject parent_instance;
-    GimoLoaderPrivate *priv;
-};
-
-struct _GimoLoaderClass {
-    GObjectClass parent_class;
+struct _GimoLoaderInterface {
+    GTypeInterface base_iface;
+    GimoPlugin* (*load) (GimoLoader *self, GimoPluginfo *info);
 };
 
 GType gimo_loader_get_type (void) G_GNUC_CONST;
+
+GimoPlugin* gimo_loader_load (GimoLoader *self,
+                              GimoPluginfo *info);
 
 G_END_DECLS
 

@@ -17,6 +17,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-context.h"
+#include "gimo-extpoint.h"
 #include "gimo-pluginfo.h"
 #include <string.h>
 
@@ -43,8 +44,9 @@ static void _test_context_common (void)
 {
     GimoContext *ctx;
     GimoPluginfo *info;
-    GimoStatus status;
+    GimoExtpoint *extpt;
     GPtrArray *array;
+    GimoStatus status;
 
     struct _StateChange param = {
         GIMO_PLUGIN_UNINSTALLED,
@@ -59,8 +61,12 @@ static void _test_context_common (void)
                       G_CALLBACK (_test_context_state_changed),
                       &param);
 
+    array = g_ptr_array_new_with_free_func (g_object_unref);
+    extpt = gimo_extpoint_new ("extpt1", "extptname1");
+    g_ptr_array_add (array, extpt);
     info = gimo_pluginfo_new ("test.plugin1", NULL, NULL, NULL,
-                              NULL, NULL, NULL, NULL, NULL);
+                              NULL, NULL, NULL, array, NULL);
+    g_ptr_array_unref (array);
     g_assert (!gimo_context_query_plugin (ctx, "test.plugin1"));
     status = gimo_context_install_plugin (ctx, info);
     g_assert (gimo_context_query_plugin (ctx, "test.plugin1") == info);
@@ -111,13 +117,22 @@ static void _test_context_common (void)
     g_assert (1 == array->len);
     g_ptr_array_unref (array);
 
+    extpt = gimo_context_query_extpoint (ctx, "test.plugin1.extpt1");
+    g_assert (extpt);
+    info = gimo_extpoint_query_pluginfo (extpt);
+    g_assert (info);
+    g_object_unref (info);
+
     status = gimo_context_uninstall_plugin (ctx, "test.plugin1");
     g_assert (!gimo_context_query_plugin (ctx, "test.plugin1"));
+    g_assert (!gimo_context_query_extpoint (ctx, "test.plugin1.extpt1"));
     g_assert (status == GIMO_STATUS_SUCCESS);
     g_assert (GIMO_PLUGIN_INSTALLED == param.old_state);
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.new_state);
     g_assert (3 == param.count);
 
+    g_assert (!gimo_extpoint_query_pluginfo (extpt));
+    g_object_unref (extpt);
     g_object_unref (ctx);
     g_assert (3 == param.count);
 }

@@ -28,6 +28,8 @@
 #include "gimo-plugin.h"
 #include "gimo-require.h"
 #include "gimo-utils.h"
+#include <stdlib.h>
+#include <string.h>
 
 extern void _gimo_extpoint_setup (gpointer data, gpointer user_data);
 extern void _gimo_extpoint_teardown (gpointer data, gpointer user_data);
@@ -71,6 +73,32 @@ struct _GimoPluginfoPrivate {
 };
 
 G_LOCK_DEFINE_STATIC (pluginfo_lock);
+
+static gint _gimo_pluginfo_extpoint_sort (gconstpointer a,
+                                          gconstpointer b)
+{
+    return strcmp (gimo_extpoint_get_local_id (*(GimoExtpoint **) a),
+                   gimo_extpoint_get_local_id (*(GimoExtpoint **) b));
+}
+
+static gint _gimo_pluginfo_extpoint_search (gconstpointer a,
+                                            gconstpointer b)
+{
+    return strcmp (a, gimo_extpoint_get_local_id (*(GimoExtpoint **) b));
+}
+
+static gint _gimo_pluginfo_extension_sort (gconstpointer a,
+                                           gconstpointer b)
+{
+    return strcmp (gimo_extension_get_local_id (*(GimoExtension **) a),
+                   gimo_extension_get_local_id (*(GimoExtension **) b));
+}
+
+static gint _gimo_pluginfo_extension_search (gconstpointer a,
+                                             gconstpointer b)
+{
+    return strcmp (a, gimo_extension_get_local_id (*(GimoExtension **) b));
+}
 
 static GPtrArray* _gimo_pluginfo_clone_array (GimoPluginfo *self,
                                               GPtrArray *arr,
@@ -294,6 +322,9 @@ static void gimo_pluginfo_set_property (GObject *object,
             if (arr) {
                 priv->extpoints = _gimo_pluginfo_clone_array (
                     self, arr, GIMO_TYPE_EXTPOINT, _gimo_extpoint_setup);
+
+                g_ptr_array_sort (priv->extpoints,
+                                  _gimo_pluginfo_extpoint_sort);
             }
         }
         break;
@@ -304,6 +335,9 @@ static void gimo_pluginfo_set_property (GObject *object,
             if (arr) {
                 priv->extensions = _gimo_pluginfo_clone_array (
                     self, arr, GIMO_TYPE_EXTENSION, _gimo_extension_setup);
+
+                g_ptr_array_sort (priv->extensions,
+                                  _gimo_pluginfo_extension_sort);
             }
         }
         break;
@@ -479,16 +513,16 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
 /**
  * gimo_pluginfo_new:
  * @identifier: the unique identifier
- * @url: url/path of the plugin
- * @symbol: the runtime symbol name
- * @name: the display name
- * @version: the release version
- * @provider: the provider name
- * @requires: (element-type Gimo.Require) (transfer none):
+ * @url: (allow-none): url/path of the plugin
+ * @symbol: (allow-none): the runtime symbol name
+ * @name: (allow-none): the display name
+ * @version: (allow-none): the release version
+ * @provider: (allow-none): the provider name
+ * @requires: (allow-none) (element-type Gimo.Require) (transfer none):
  *            the required plugins
- * @extpoints: (element-type Gimo.Extpoint) (transfer none):
+ * @extpoints: (allow-none) (element-type Gimo.Extpoint) (transfer none):
  *             the extension points
- * @extensions: (element-type Gimo.Extension) (transfer none):
+ * @extensions: (allow-none) (element-type Gimo.Extension) (transfer none):
  *              the extensions
  *
  * Create a plugin descriptor of the provided parameters.
@@ -556,6 +590,68 @@ const gchar* gimo_pluginfo_get_provider (GimoPluginfo *self)
     g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
 
     return self->priv->provider;
+}
+
+/**
+ * gimo_pluginfo_get_extpoint:
+ * @self: a #GimoPluginfo
+ * @local_id: the local extension point ID
+ *
+ * Get an extension point with the specified local ID.
+ *
+ * Returns: (allow-none) (transfer none): a #GimoExtpoint
+ */
+GimoExtpoint* gimo_pluginfo_get_extpoint (GimoPluginfo *self,
+                                          const gchar *local_id)
+{
+    GimoPluginfoPrivate *priv;
+    GimoExtpoint **result;
+
+    g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
+
+    priv = self->priv;
+
+    if (NULL == priv->extpoints)
+        return NULL;
+
+    result = bsearch (local_id,
+                      priv->extpoints->pdata,
+                      priv->extpoints->len,
+                      sizeof (gpointer),
+                      _gimo_pluginfo_extpoint_search);
+
+    return result ? *result : NULL;
+}
+
+/**
+ * gimo_pluginfo_get_extension:
+ * @self: a #GimoPluginfo
+ * @local_id: the local extension ID
+ *
+ * Get an extension with the specified local ID.
+ *
+ * Returns: (allow-none) (transfer none): a #GimoExtension
+ */
+GimoExtension* gimo_pluginfo_get_extension (GimoPluginfo *self,
+                                            const gchar *local_id)
+{
+    GimoPluginfoPrivate *priv;
+    GimoExtension **result;
+
+    g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
+
+    priv = self->priv;
+
+    if (NULL == priv->extensions)
+        return NULL;
+
+    result = bsearch (local_id,
+                      priv->extensions->pdata,
+                      priv->extensions->len,
+                      sizeof (gpointer),
+                      _gimo_pluginfo_extension_search);
+
+    return result ? *result : NULL;
 }
 
 /**

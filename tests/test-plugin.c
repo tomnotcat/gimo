@@ -58,3 +58,8 @@ static void test_plugin_class_init (TestPluginClass *klass)
 
     gobject_class->finalize = test_plugin_finalize;
 }
+
+GimoPlugin* test_plugin_new (void)
+{
+    return g_object_new (TEST_TYPE_PLUGIN, NULL);
+}

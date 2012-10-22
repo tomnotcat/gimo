@@ -71,6 +71,12 @@ const gchar* gimo_pluginfo_get_version (GimoPluginfo *self);
 
 const gchar* gimo_pluginfo_get_provider (GimoPluginfo *self);
 
+GimoExtpoint* gimo_pluginfo_get_extpoint (GimoPluginfo *self,
+                                          const gchar *local_id);
+
+GimoExtension* gimo_pluginfo_get_extension (GimoPluginfo *self,
+                                            const gchar *local_id);
+
 GPtrArray* gimo_pluginfo_get_requires (GimoPluginfo *self);
 
 GPtrArray* gimo_pluginfo_get_extpoints (GimoPluginfo *self);

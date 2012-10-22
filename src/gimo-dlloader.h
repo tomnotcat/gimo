@@ -19,7 +19,7 @@
 #ifndef __GIMO_DLLOADER_H__
 #define __GIMO_DLLOADER_H__
 
-#include "gimo-types.h"
+#include "gimo-loader.h"
 
 G_BEGIN_DECLS
 

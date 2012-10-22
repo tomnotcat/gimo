@@ -16,51 +16,51 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "gimo-loaderset.h"
+#include "gimo-loadermgr.h"
 
-G_DEFINE_TYPE (GimoLoaderSet, gimo_loaderset, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GimoLoaderMgr, gimo_loadermgr, G_TYPE_OBJECT)
 
-struct _GimoLoaderSetPrivate {
+struct _GimoLoaderMgrPrivate {
     int n;
 };
 
-static void gimo_loaderset_init (GimoLoaderSet *self)
+static void gimo_loadermgr_init (GimoLoaderMgr *self)
 {
-    GimoLoaderSetPrivate *priv;
+    GimoLoaderMgrPrivate *priv;
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              GIMO_TYPE_LOADERSET,
-                                              GimoLoaderSetPrivate);
+                                              GIMO_TYPE_LOADERMGR,
+                                              GimoLoaderMgrPrivate);
     priv = self->priv;
 
     priv->n = 0;
 }
 
-static void gimo_loaderset_finalize (GObject *gobject)
+static void gimo_loadermgr_finalize (GObject *gobject)
 {
-    G_OBJECT_CLASS (gimo_loaderset_parent_class)->finalize (gobject);
+    G_OBJECT_CLASS (gimo_loadermgr_parent_class)->finalize (gobject);
 }
 
-static void gimo_loaderset_class_init (GimoLoaderSetClass *klass)
+static void gimo_loadermgr_class_init (GimoLoaderMgrClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-    gobject_class->finalize = gimo_loaderset_finalize;
+    gobject_class->finalize = gimo_loadermgr_finalize;
 
     g_type_class_add_private (gobject_class,
-                              sizeof (GimoLoaderSetPrivate));
+                              sizeof (GimoLoaderMgrPrivate));
 }
 
 /**
- * gimo_loaderset_load:
- * @self: a #GimoLoaderSet
+ * gimo_loadermgr_load:
+ * @self: a #GimoLoaderMgr
  * @info: the plugin descriptor
  *
  * Load a plugin based on the plugin descriptor.
  *
  * Returns: (allow-none) (transfer full): a #GimoPlugin
  */
-GimoPlugin* gimo_loaderset_load (GimoLoaderSet *self,
+GimoPlugin* gimo_loadermgr_load (GimoLoaderMgr *self,
                                  GimoPluginfo *info)
 {
     return NULL;

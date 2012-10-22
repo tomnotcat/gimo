@@ -17,38 +17,74 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-dlloader.h"
+#include "gimo-pluginfo.h"
+#include <gmodule.h>
 
-G_DEFINE_TYPE (GimoDlloader, gimo_dlloader, G_TYPE_OBJECT)
+static void gimo_loader_interface_init (GimoLoaderInterface *iface);
 
-struct _GimoDlloaderPrivate {
-    int n;
-};
+G_DEFINE_TYPE_WITH_CODE (GimoDlloader, gimo_dlloader, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (GIMO_TYPE_LOADER,
+                                                gimo_loader_interface_init))
+
+static GimoPlugin* _gimo_dlloader_load (GimoLoader *loader,
+                                        GimoPluginfo *info)
+{
+    const gchar *path = NULL;
+    const gchar *symbol = NULL;
+    GModule *module = NULL;
+    GimoPlugin* (*new_plugin) (GimoPluginfo*) = NULL;
+    GimoPlugin *plugin = NULL;
+
+    path = gimo_pluginfo_get_url (info);
+    symbol = gimo_pluginfo_get_symbol (info);
+    if (NULL == symbol)
+        goto done;
+
+    module = g_module_open (path, G_MODULE_BIND_LAZY);
+    if (NULL == module) {
+        g_warning ("Dlloader: open module error: %s: %s",
+                   path, g_module_error ());
+        goto done;;
+    }
+
+    if (!g_module_symbol (module,
+                          symbol,
+                          (gpointer *) &new_plugin))
+    {
+        g_warning ("Dlloader: resolve symbol error: %s: %s",
+                   path, symbol);
+        goto done;
+    }
+
+    if (NULL == new_plugin)
+        goto done;
+
+    plugin = new_plugin (info);
+
+done:
+    if (NULL == plugin) {
+        if (module) {
+            if (!g_module_close (module)) {
+                g_warning ("Dlloader: close module error: %s",
+                           g_module_error ());
+            }
+        }
+    }
+
+    return plugin;
+}
+
+static void gimo_loader_interface_init (GimoLoaderInterface *iface)
+{
+    iface->load = _gimo_dlloader_load;
+}
 
 static void gimo_dlloader_init (GimoDlloader *self)
 {
-    GimoDlloaderPrivate *priv;
-
-    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              GIMO_TYPE_DLLOADER,
-                                              GimoDlloaderPrivate);
-    priv = self->priv;
-
-    priv->n = 0;
-}
-
-static void gimo_dlloader_finalize (GObject *gobject)
-{
-    G_OBJECT_CLASS (gimo_dlloader_parent_class)->finalize (gobject);
 }
 
 static void gimo_dlloader_class_init (GimoDlloaderClass *klass)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-    gobject_class->finalize = gimo_dlloader_finalize;
-
-    g_type_class_add_private (gobject_class,
-                              sizeof (GimoDlloaderPrivate));
 }
 
 GimoDlloader* gimo_dlloader_new (void)

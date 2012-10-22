@@ -7,19 +7,10 @@
 }
 
 {
-    g_type_register_static_simple
+    g_type_register_static
     Memcheck:Leak
     ...
     fun:g_type_register_static
-    fun:g_type_register_static_simple
-}
-
-{
-    g_param_type_register_static
-    Memcheck:Leak
-    ...
-    fun:g_type_register_static
-    fun:g_param_type_register_static
 }
 
 {
@@ -27,14 +18,6 @@
     Memcheck:Leak
     ...
     fun:g_type_register_fundamental
-}
-
-{
-    g_pointer_type_register_static
-    Memcheck:Leak
-    ...
-    fun:g_type_register_static
-    fun:g_pointer_type_register_static
 }
 
 {
@@ -99,22 +82,6 @@
     fun:g_type_class_ref
     fun:g_object_newv
     fun:g_object_new
-}
-
-{
-    g_enum_register_static
-    Memcheck:Leak
-    ...
-    fun:g_type_register_static
-    fun:g_enum_register_static
-}
-
-{
-    g_boxed_type_register_static
-    Memcheck:Leak
-    ...
-    fun:g_type_register_static
-    fun:g_boxed_type_register_static
 }
 
 {

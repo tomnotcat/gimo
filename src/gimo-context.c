@@ -23,9 +23,10 @@
 
 #include "gimo-context.h"
 #include "gimo-extpoint.h"
-#include "gimo-loaderset.h"
+#include "gimo-loadermgr.h"
 #include "gimo-marshal.h"
 #include "gimo-pluginfo.h"
+#include "gimo-utils.h"
 #include <string.h>
 
 extern void _gimo_pluginfo_install (gpointer data, gpointer user_data);
@@ -319,14 +320,37 @@ GPtrArray* gimo_context_query_plugins (GimoContext *self,
 GimoExtpoint* gimo_context_query_extpoint (GimoContext *self,
                                            const gchar *extpoint_id)
 {
-    return NULL;
+    GimoPluginfo *info = NULL;
+    GimoExtpoint *extpt = NULL;
+    gchar *plugin_id = NULL;
+    gchar *local_id = NULL;
+
+    plugin_id = _gimo_utils_parse_extension_id (extpoint_id, &local_id);
+    if (NULL == plugin_id)
+        goto done;
+
+    info = gimo_context_query_plugin (self, plugin_id);
+    if (NULL == info)
+        goto done;
+
+    extpt = gimo_pluginfo_get_extpoint (info, local_id);
+    if (extpt)
+        g_object_ref (extpt);
+
+done:
+    if (info)
+        g_object_unref (info);
+
+    g_free (plugin_id);
+
+    return extpt;
 }
 
 GimoPlugin* _gimo_context_load_plugin (GimoContext *self,
                                        GimoPluginfo *info)
 {
     GimoExtpoint *extpt;
-    GimoLoaderSet *ldset;
+    GimoLoaderMgr *ldmgr;
     GimoPlugin *plugin;
 
     extpt = gimo_context_query_extpoint (self, "gimo.core.loader");
@@ -334,13 +358,13 @@ GimoPlugin* _gimo_context_load_plugin (GimoContext *self,
         return NULL;
     }
 
-    ldset = GIMO_LOADERSET (gimo_extpoint_resolve (extpt));
-    if (NULL == ldset) {
+    ldmgr = GIMO_LOADERMGR (gimo_extpoint_resolve (extpt));
+    if (NULL == ldmgr) {
         g_object_unref (extpt);
         return NULL;
     }
 
-    plugin = gimo_loaderset_load (ldset, info);
+    plugin = gimo_loadermgr_load (ldmgr, info);
     g_object_unref (extpt);
     return plugin;
 }

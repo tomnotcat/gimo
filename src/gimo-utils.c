@@ -17,7 +17,25 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-utils.h"
+#include <string.h>
 
 void gimo_context_install_core_plugins (GimoContext *self)
 {
+}
+
+gchar* _gimo_utils_parse_extension_id (const gchar *ext_id,
+                                       gchar **local_id)
+{
+    gchar *dot = strrchr (ext_id, '.');
+    gchar *result;
+
+    if (NULL == dot) {
+        *local_id = (gchar *) ext_id;
+        return NULL;
+    }
+
+    result = g_strndup (ext_id, dot - ext_id);
+    *local_id = dot + 1;
+
+    return result;
 }
