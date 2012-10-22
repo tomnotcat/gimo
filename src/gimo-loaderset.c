@@ -16,42 +16,52 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "gimo-registry.h"
+#include "gimo-loaderset.h"
 
-G_DEFINE_TYPE (GimoRegistry, gimo_registry, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GimoLoaderSet, gimo_loaderset, G_TYPE_OBJECT)
 
-struct _GimoRegistryPrivate {
+struct _GimoLoaderSetPrivate {
     int n;
 };
 
-static void gimo_registry_init (GimoRegistry *self)
+static void gimo_loaderset_init (GimoLoaderSet *self)
 {
-    GimoRegistryPrivate *priv;
+    GimoLoaderSetPrivate *priv;
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              GIMO_TYPE_REGISTRY,
-                                              GimoRegistryPrivate);
+                                              GIMO_TYPE_LOADERSET,
+                                              GimoLoaderSetPrivate);
     priv = self->priv;
 
     priv->n = 0;
 }
 
-static void gimo_registry_finalize (GObject *gobject)
+static void gimo_loaderset_finalize (GObject *gobject)
 {
-    G_OBJECT_CLASS (gimo_registry_parent_class)->finalize (gobject);
+    G_OBJECT_CLASS (gimo_loaderset_parent_class)->finalize (gobject);
 }
 
-static void gimo_registry_class_init (GimoRegistryClass *klass)
+static void gimo_loaderset_class_init (GimoLoaderSetClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-    gobject_class->finalize = gimo_registry_finalize;
+    gobject_class->finalize = gimo_loaderset_finalize;
 
     g_type_class_add_private (gobject_class,
-                              sizeof (GimoRegistryPrivate));
+                              sizeof (GimoLoaderSetPrivate));
 }
 
-GimoRegistry* gimo_registry_new (void)
+/**
+ * gimo_loaderset_load:
+ * @self: a #GimoLoaderSet
+ * @info: the plugin descriptor
+ *
+ * Load a plugin based on the plugin descriptor.
+ *
+ * Returns: (allow-none) (transfer full): a #GimoPlugin
+ */
+GimoPlugin* gimo_loaderset_load (GimoLoaderSet *self,
+                                 GimoPluginfo *info)
 {
-    return g_object_new (GIMO_TYPE_REGISTRY, NULL);
+    return NULL;
 }

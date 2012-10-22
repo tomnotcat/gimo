@@ -16,8 +16,20 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "gimo-utils.h"
+#ifndef __GIMO_MARSHAL_H__
+#define __GIMO_MARSHAL_H__
 
-void gimo_context_install_core_plugins (GimoContext *self)
-{
-}
+#include "gimo-types.h"
+
+G_BEGIN_DECLS
+
+void _gimo_marshal_VOID__OBJECT_ENUM_ENUM (GClosure *closure,
+                                           GValue *return_value G_GNUC_UNUSED,
+                                           guint n_param_values,
+                                           const GValue *param_values,
+                                           gpointer invocation_hint G_GNUC_UNUSED,
+                                           gpointer marshal_data);
+
+G_END_DECLS
+
+#endif /* __GIMO_MARSHAL_H__ */

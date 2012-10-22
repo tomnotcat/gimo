@@ -47,6 +47,7 @@ struct _GimoPluginClass {
     GObjectClass parent_class;
     GimoStatus (*start) (GimoPlugin *self);
     GimoStatus (*stop) (GimoPlugin *self);
+    GObject* (*resolve) (GimoPlugin *self, const gchar *symbol);
 };
 
 GType gimo_plugin_get_type (void) G_GNUC_CONST;

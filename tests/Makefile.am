@@ -1,6 +1,16 @@
 AM_CPPFLAGS = ${STRICT_CFLAGS} ${GLIB_CFLAGS} ${GIMO_CFLAGS}
 AM_LDFLAGS = ${GLIB_LIBS} ${GIMO_LDFLAGS}
 
+TEST_PLUGIN_LIBTOOL_FLAGS = \
+	-module \
+	-shared \
+	-avoid-version \
+	-rpath ${abs_builddir}
+
+noinst_LTLIBRARIES = libtestplugin.la
+libtestplugin_la_LDFLAGS = ${AM_LDFLAGS} ${TEST_PLUGIN_LIBTOOL_FLAGS}
+libtestplugin_la_SOURCES = test-plugin.c
+
 check_PROGRAMS =
 check_SCRIPTS =
 
@@ -8,6 +18,11 @@ check_SCRIPTS =
 check_PROGRAMS += test-pluginfo
 test_pluginfo_SOURCES = test-pluginfo.c
 check_SCRIPTS += test-pluginfo.py
+
+# Test plugin context.
+check_PROGRAMS += test-context
+test_context_SOURCES = test-context.c
+check_SCRIPTS += test-context.py
 
 TESTS = ${check_PROGRAMS} ${check_SCRIPTS}
 EXTRA_DIST = ${check_SCRIPTS}

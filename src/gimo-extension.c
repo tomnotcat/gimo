@@ -16,7 +16,13 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+/*
+ * MT safe
+ */
+
 #include "gimo-extension.h"
+#include "gimo-pluginfo.h"
 
 G_DEFINE_TYPE (GimoExtension, gimo_extension, G_TYPE_OBJECT)
 
@@ -34,6 +40,8 @@ struct _GimoExtensionPrivate {
     gchar *identifier;
     GimoPluginfo *info;
 };
+
+G_LOCK_DEFINE_STATIC (extension_lock);
 
 static void gimo_extension_init (GimoExtension *self)
 {
@@ -55,6 +63,8 @@ static void gimo_extension_finalize (GObject *gobject)
 {
     GimoExtension *self = GIMO_EXTENSION (gobject);
     GimoExtensionPrivate *priv = self->priv;
+
+    g_assert (NULL == priv->info);
 
     g_free (priv->local_id);
     g_free (priv->name);
@@ -128,6 +138,39 @@ static void gimo_extension_class_init (GimoExtensionClass *klass)
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoExtensionPrivate));
+
+    g_object_class_install_property (
+        gobject_class, PROP_LOCALID,
+        g_param_spec_string ("local-id",
+                             "Local identifier",
+                             "The local identifier of the extension",
+                             NULL,
+                             G_PARAM_READABLE |
+                             G_PARAM_WRITABLE |
+                             G_PARAM_CONSTRUCT_ONLY |
+                             G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property (
+        gobject_class, PROP_NAME,
+        g_param_spec_string ("name",
+                             "Extension name",
+                             "The display name of the extension",
+                             NULL,
+                             G_PARAM_READABLE |
+                             G_PARAM_WRITABLE |
+                             G_PARAM_CONSTRUCT_ONLY |
+                             G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property (
+        gobject_class, PROP_EXTPOINTID,
+        g_param_spec_string ("extpoint-id",
+                             "Extension point identifier",
+                             "The identifier of the host extension poit",
+                             NULL,
+                             G_PARAM_READABLE |
+                             G_PARAM_WRITABLE |
+                             G_PARAM_CONSTRUCT_ONLY |
+                             G_PARAM_STATIC_STRINGS));
 }
 
 GimoExtension* gimo_extension_new (const gchar *local_id,
@@ -179,10 +222,48 @@ const gchar* gimo_extension_get_identifier (GimoExtension *self)
  */
 GimoPluginfo* gimo_extension_query_pluginfo (GimoExtension *self)
 {
+    GimoExtensionPrivate *priv;
+    GimoPluginfo *info = NULL;
+
     g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
 
-    if (self->priv->info)
-        return g_object_ref (self->priv->info);
+    priv = self->priv;
 
-    return NULL;
+    G_LOCK (extension_lock);
+
+    if (priv->info)
+        info = g_object_ref (priv->info);
+
+    G_UNLOCK (extension_lock);
+
+    return info;
+}
+
+void _gimo_extension_setup (GimoExtension *self,
+                            GimoPluginfo *info)
+{
+    GimoExtensionPrivate *priv = self->priv;
+
+    g_assert (NULL == priv->identifier);
+
+    G_LOCK (extension_lock);
+
+    priv->info = info;
+
+    priv->identifier = g_strdup_printf ("%s.%s",
+                                        gimo_pluginfo_get_identifier (info),
+                                        priv->local_id);
+    G_UNLOCK (extension_lock);
+}
+
+void _gimo_extension_teardown (GimoExtension *self,
+                               GimoPluginfo *info)
+{
+    GimoExtensionPrivate *priv = self->priv;
+
+    g_assert (priv->info == info);
+
+    G_LOCK (extension_lock);
+    priv->info = NULL;
+    G_UNLOCK (extension_lock);
 }

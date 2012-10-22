@@ -23,11 +23,12 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GimoRegistry GimoRegistry;
+typedef struct _GimoContext GimoContext;
 typedef struct _GimoPluginfo GimoPluginfo;
 typedef struct _GimoRequire GimoRequire;
 typedef struct _GimoExtpoint GimoExtpoint;
 typedef struct _GimoExtension GimoExtension;
+typedef struct _GimoLoaderSet GimoLoaderSet;
 typedef struct _GimoLoader GimoLoader;
 typedef struct _GimoPlugin GimoPlugin;
 

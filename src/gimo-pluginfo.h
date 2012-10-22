@@ -51,7 +51,7 @@ GType gimo_pluginfo_get_type (void) G_GNUC_CONST;
 
 GimoPluginfo* gimo_pluginfo_new (const gchar *identifier,
                                  const gchar *url,
-                                 const gchar *klass,
+                                 const gchar *symbol,
                                  const gchar *name,
                                  const gchar *version,
                                  const gchar *provider,
@@ -63,7 +63,7 @@ const gchar* gimo_pluginfo_get_identifier (GimoPluginfo *self);
 
 const gchar* gimo_pluginfo_get_url (GimoPluginfo *self);
 
-const gchar* gimo_pluginfo_get_klass (GimoPluginfo *self);
+const gchar* gimo_pluginfo_get_symbol (GimoPluginfo *self);
 
 const gchar* gimo_pluginfo_get_name (GimoPluginfo *self);
 
@@ -76,6 +76,17 @@ GPtrArray* gimo_pluginfo_get_requires (GimoPluginfo *self);
 GPtrArray* gimo_pluginfo_get_extpoints (GimoPluginfo *self);
 
 GPtrArray* gimo_pluginfo_get_extensions (GimoPluginfo *self);
+
+GimoPluginState gimo_pluginfo_get_state (GimoPluginfo *self);
+
+GimoContext* gimo_pluginfo_query_context (GimoPluginfo *self);
+
+GimoStatus gimo_pluginfo_start (GimoPlugin *self);
+
+GimoStatus gimo_pluginfo_stop (GimoPlugin *self);
+
+GObject* gimo_pluginfo_resolve (GimoPluginfo *self,
+                                const gchar *symbol);
 
 G_END_DECLS
 

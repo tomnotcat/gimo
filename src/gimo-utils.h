@@ -23,6 +23,8 @@
 
 G_BEGIN_DECLS
 
+void gimo_context_install_core_plugins (GimoContext *self);
+
 G_END_DECLS
 
 #endif /* __GIMO_UTILS_H__ */

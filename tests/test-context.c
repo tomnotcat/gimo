@@ -1,0 +1,133 @@
+/* GIMO - A plugin system based on GObject.
+ *
+ * Copyright © 2012 SoftFlag, Inc.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free
+ * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+#include "gimo-context.h"
+#include "gimo-pluginfo.h"
+#include <string.h>
+
+struct _StateChange {
+    GimoPluginState old_state;
+    GimoPluginState new_state;
+    gint count;
+};
+
+static void _test_context_state_changed (GimoContext *ctx,
+                                         GimoPluginfo *info,
+                                         GimoPluginState old_state,
+                                         GimoPluginState new_state,
+                                         struct _StateChange *data)
+{
+    g_assert (gimo_pluginfo_get_state (info) == new_state);
+
+    data->old_state = old_state;
+    data->new_state = new_state;
+    data->count++;
+}
+
+static void _test_context_common (void)
+{
+    GimoContext *ctx;
+    GimoPluginfo *info;
+    GimoStatus status;
+    GPtrArray *array;
+
+    struct _StateChange param = {
+        GIMO_PLUGIN_UNINSTALLED,
+        GIMO_PLUGIN_UNINSTALLED,
+        0,
+    };
+
+    ctx = gimo_context_new ();
+
+    g_signal_connect (ctx,
+                      "state-changed",
+                      G_CALLBACK (_test_context_state_changed),
+                      &param);
+
+    info = gimo_pluginfo_new ("test.plugin1", NULL, NULL, NULL,
+                              NULL, NULL, NULL, NULL, NULL);
+    g_assert (!gimo_context_query_plugin (ctx, "test.plugin1"));
+    status = gimo_context_install_plugin (ctx, info);
+    g_assert (gimo_context_query_plugin (ctx, "test.plugin1") == info);
+    g_object_unref (info);
+    g_assert (status == GIMO_STATUS_SUCCESS);
+    g_object_unref (info);
+    g_assert (GIMO_PLUGIN_UNINSTALLED == param.old_state);
+    g_assert (GIMO_PLUGIN_INSTALLED == param.new_state);
+    g_assert (1 == param.count);
+
+    info = gimo_pluginfo_new ("test.plugin1", NULL, NULL, NULL,
+                              NULL, NULL, NULL, NULL, NULL);
+    status = gimo_context_install_plugin (ctx, info);
+    g_assert (status == GIMO_STATUS_CONFLICT);
+    g_object_unref (info);
+    info = gimo_pluginfo_new ("test.plugin2", NULL, NULL, NULL,
+                              NULL, NULL, NULL, NULL, NULL);
+    status = gimo_context_install_plugin (ctx, info);
+    g_assert (GIMO_PLUGIN_UNINSTALLED == param.old_state);
+    g_assert (GIMO_PLUGIN_INSTALLED == param.new_state);
+    g_assert (2 == param.count);
+    g_object_unref (info);
+
+    g_assert (gimo_context_query_plugin (ctx, "test.plugin2") == info);
+    g_object_unref (info);
+
+    array = gimo_context_query_plugins (ctx, "hello");
+    g_assert (NULL == array);
+
+    array = gimo_context_query_plugins (ctx, NULL);
+    g_assert (2 == array->len);
+    g_ptr_array_unref (array);
+
+    if (1) {
+        guint i;
+        const gchar *plugin_id = "test.plugin";
+        gchar id_prefix[32] = { 0 };
+
+        for (i = 0; i < strlen (plugin_id); ++i) {
+            id_prefix[i] = plugin_id[i];
+            array = gimo_context_query_plugins (ctx, id_prefix);
+            g_assert (2 == array->len);
+            g_ptr_array_unref (array);
+        }
+    }
+
+    array = gimo_context_query_plugins (ctx, "test.plugin2");
+    g_assert (1 == array->len);
+    g_ptr_array_unref (array);
+
+    status = gimo_context_uninstall_plugin (ctx, "test.plugin1");
+    g_assert (!gimo_context_query_plugin (ctx, "test.plugin1"));
+    g_assert (status == GIMO_STATUS_SUCCESS);
+    g_assert (GIMO_PLUGIN_INSTALLED == param.old_state);
+    g_assert (GIMO_PLUGIN_UNINSTALLED == param.new_state);
+    g_assert (3 == param.count);
+
+    g_object_unref (ctx);
+    g_assert (3 == param.count);
+}
+
+int main (int argc, char *argv[])
+{
+    g_type_init ();
+    g_thread_init (NULL);
+
+    _test_context_common ();
+
+    return 0;
+}

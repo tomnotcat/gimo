@@ -27,12 +27,20 @@ G_BEGIN_DECLS
  * GimoStatus:
  * @GIMO_STATUS_SUCCESS: no error has occurred
  * @GIMO_STATUS_NO_MEMORY: out of memory
+ * @GIMO_STATUS_INVALID_ID: invalid identifier
  * @GIMO_STATUS_INVALID_OBJECT: invalid object
+ * @GIMO_STATUS_INVALID_STATE: invalid state
+ * @GIMO_STATUS_CONFLICT: object conflict
+ * @GIMO_STATUS_NOT_FOUND: object not found
  */
 typedef enum {
     GIMO_STATUS_SUCCESS,
     GIMO_STATUS_NO_MEMORY,
-    GIMO_STATUS_INVALID_OBJECT
+    GIMO_STATUS_INVALID_ID,
+    GIMO_STATUS_INVALID_OBJECT,
+    GIMO_STATUS_INVALID_STATE,
+    GIMO_STATUS_CONFLICT,
+    GIMO_STATUS_NOT_FOUND
 } GimoStatus;
 
 /**
@@ -52,6 +60,9 @@ typedef enum {
     GIMO_PLUGIN_STOPPING,
     GIMO_PLUGIN_ACTIVE
 } GimoPluginState;
+
+GType gimo_plugin_state_get_type (void) G_GNUC_CONST;
+#define GIMO_TYPE_PLUGIN_STATE (gimo_plugin_state_get_type ())
 
 G_END_DECLS
 

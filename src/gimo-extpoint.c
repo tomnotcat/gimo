@@ -16,6 +16,11 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
+/*
+ * MT safe
+ */
+
 #include "gimo-extpoint.h"
 #include "gimo-pluginfo.h"
 
@@ -33,6 +38,8 @@ struct _GimoExtpointPrivate {
     gchar *local_id;
     gchar *name;
 };
+
+G_LOCK_DEFINE_STATIC (extpoint_lock);
 
 static void gimo_extpoint_init (GimoExtpoint *self)
 {
@@ -53,6 +60,8 @@ static void gimo_extpoint_finalize (GObject *gobject)
 {
     GimoExtpoint *self = GIMO_EXTPOINT (gobject);
     GimoExtpointPrivate *priv = self->priv;
+
+    g_assert (NULL == priv->info);
 
     g_free (priv->local_id);
     g_free (priv->identifier);
@@ -181,11 +190,33 @@ const gchar* gimo_extpoint_get_identifier (GimoExtpoint *self)
  */
 GimoPluginfo* gimo_extpoint_query_pluginfo (GimoExtpoint *self)
 {
+    GimoExtpointPrivate *priv;
+    GimoPluginfo *info = NULL;
+
     g_return_val_if_fail (GIMO_IS_EXTPOINT (self), NULL);
 
-    if (self->priv->info)
-        return g_object_ref (self->priv->info);
+    priv = self->priv;
 
+    G_LOCK (extpoint_lock);
+
+    if (priv->info)
+        info = g_object_ref (priv->info);
+
+    G_UNLOCK (extpoint_lock);
+
+    return info;
+}
+
+/**
+ * gimo_extpoint_resolve:
+ * @self: a #GimoExtpoint
+ *
+ * Resolve the extention point runtime information.
+ *
+ * Returns: (allow-none) (transfer full): a #GObject
+ */
+GObject* gimo_extpoint_resolve (GimoExtpoint *self)
+{
     return NULL;
 }
 
@@ -196,11 +227,14 @@ void _gimo_extpoint_setup (GimoExtpoint *self,
 
     g_assert (NULL == priv->identifier);
 
+    G_LOCK (extpoint_lock);
+
     priv->info = info;
 
     priv->identifier = g_strdup_printf ("%s.%s",
                                         gimo_pluginfo_get_identifier (info),
                                         priv->local_id);
+    G_UNLOCK (extpoint_lock);
 }
 
 void _gimo_extpoint_teardown (GimoExtpoint *self,
@@ -210,5 +244,7 @@ void _gimo_extpoint_teardown (GimoExtpoint *self,
 
     g_assert (priv->info == info);
 
+    G_LOCK (extpoint_lock);
     priv->info = NULL;
+    G_UNLOCK (extpoint_lock);
 }

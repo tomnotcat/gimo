@@ -60,6 +60,8 @@ const gchar* gimo_extpoint_get_identifier (GimoExtpoint *self);
 
 GimoPluginfo* gimo_extpoint_query_pluginfo (GimoExtpoint *self);
 
+GObject* gimo_extpoint_resolve (GimoExtpoint *self);
+
 G_END_DECLS
 
 #endif /* __GIMO_EXTPOINT_H__ */

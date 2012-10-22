@@ -11,7 +11,7 @@ m4_define([gimo_binary_age], [0])
 m4_define([gimo_version],
         [gimo_major_version.gimo_minor_version.gimo_micro_version])
 
-# libtool version related macros
+dnl libtool version related macros
 m4_define([gimo_lt_release], [gimo_major_version.gimo_minor_version])
 m4_define([gimo_lt_current],
         [m4_eval(100 * gimo_minor_version + gimo_micro_version - gimo_interface_age)])
@@ -38,7 +38,7 @@ AC_SUBST(GIMO_INTERFACE_AGE)
 AC_SUBST(GIMO_BINARY_AGE)
 AC_SUBST(GIMO_VERSION)
 
-# libtool versioning
+dnl libtool versioning
 LT_RELEASE=gimo_lt_release
 LT_CURRENT=gimo_lt_current
 LT_REVISION=gimo_lt_revision
@@ -56,7 +56,10 @@ dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT([disable-static])
 
-# Checks for programs.
+dnl ================================================================
+dnl Checks for programs.
+dnl ================================================================
+
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
@@ -66,11 +69,23 @@ dnl give error and exit if we don't have pkgconfig
 AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, [ ],
     [AC_MSG_ERROR([You need to have pkg-config installed!])])
 
-# Checks for libraries.
+dnl ================================================================
+dnl Checks for Gettext.
+dnl ================================================================
 
-#
-# Checks for GLib
-#
+#IT_PROG_INTLTOOL([0.40.0])
+
+#AM_GNU_GETTEXT([external])
+#AM_GNU_GETTEXT_VERSION([0.18.1])
+
+#GETTEXT_PACKAGE=libgimo
+#AC_SUBST(GETTEXT_PACKAGE)
+#AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package])
+
+dnl ================================================================
+dnl Checks for GLib
+dnl ================================================================
+
 GLIB_REQUIRED_VERSION=2.32.0
 GLIB_MODULES="glib-2.0 >= $GLIB_REQUIRED_VERSION gobject-2.0 gthread-2.0 gmodule-no-export-2.0"
 
@@ -87,14 +102,13 @@ AC_SUBST(GLIB_MKENUMS)
 # necesary defines for thread-safety.
 GLIB_CFLAGS=`$PKG_CONFIG --cflags $GLIB_MODULES gthread-2.0`
 
-#
-# Checks for GObject Introspection
-#
+dnl ================================================================
+dnl Checks for GObject Introspection
+dnl ================================================================
+
 GOBJECT_INTROSPECTION_CHECK([1.30.0])
 
-#
-# Check pygobject
-#
+dnl Check pygobject
 PKG_CHECK_MODULES(PYGOBJECT, [pygobject-3.0 python-2.7],
                              have_pygobject=yes, have_pygobject=no)
 
@@ -102,16 +116,17 @@ if test "x${have_pygobject}" = "xno"; then
    AC_MSG_WARN([pygobject-3.0 required but not found])
 fi
 
-#
-# Check Gjs
-#
+dnl Check Gjs
 PKG_CHECK_MODULES(GJS, [gjs-1.0 mozjs185], have_gjs=yes, have_gjs=no)
 
 if test "x${have_gjs}" = "xno"; then
    AC_MSG_WARN([Gjs-1.0 required but not found])
 fi
 
-# Checks for header files.
+dnl ================================================================
+dnl Checks for header files.
+dnl ================================================================
+
 AC_CHECK_HEADERS([ \
    locale.h math.h stdarg.h stdio.h stdlib.h \
    string.h sys/time.h time.h])
@@ -142,7 +157,7 @@ if test "x${debug}" != "xno"; then
 fi
 
 RUN_ENVIRONMENT="GI_TYPELIB_PATH=\$(top_builddir)/src \
-   LD_LIBRARY_PATH=/usr/local/lib:\$(top_builddir)/src/.libs:"
+   LD_LIBRARY_PATH=/usr/local/lib:\$(top_builddir)/src/.libs"
 
 TESTS_ENVIRONMENT="${RUN_ENVIRONMENT}"
 

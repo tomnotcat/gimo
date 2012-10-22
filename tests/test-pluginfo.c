@@ -25,7 +25,7 @@
 struct _Pluginfo {
     const gchar *id;
     const gchar *url;
-    const gchar *klass;
+    const gchar *symbol;
     const gchar *name;
     const gchar *version;
     const gchar *provider;
@@ -59,7 +59,7 @@ static void _test_pluginfo (const struct _Pluginfo *p)
 
     info = gimo_pluginfo_new (p->id,
                               p->url,
-                              p->klass,
+                              p->symbol,
                               p->name,
                               p->version,
                               p->provider,
@@ -69,7 +69,7 @@ static void _test_pluginfo (const struct _Pluginfo *p)
 
     g_assert (!strcmp (gimo_pluginfo_get_identifier (info), p->id));
     g_assert (!strcmp (gimo_pluginfo_get_url (info), p->url));
-    g_assert (!strcmp (gimo_pluginfo_get_klass (info), p->klass));
+    g_assert (!strcmp (gimo_pluginfo_get_symbol (info), p->symbol));
     g_assert (!strcmp (gimo_pluginfo_get_name (info), p->name));
     g_assert (!strcmp (gimo_pluginfo_get_version (info), p->version));
     g_assert (!strcmp (gimo_pluginfo_get_provider (info), p->provider));
@@ -79,6 +79,7 @@ static void _test_pluginfo (const struct _Pluginfo *p)
                                 gimo_pluginfo_get_extpoints (info)));
     g_assert (_ptr_array_equal (p->extensions,
                                 gimo_pluginfo_get_extensions (info)));
+    g_assert (gimo_pluginfo_get_state (info) == GIMO_PLUGIN_UNINSTALLED);
     g_object_unref (info);
 }
 
@@ -154,8 +155,8 @@ int main (int argc, char *argv[])
 
     g_assert (!strcmp (gimo_extension_get_identifier (ext), "myplugin.ext1"));
     g_assert (gimo_extension_query_pluginfo (ext) == NULL);
-    g_ptr_array_unref (info.extpoints);
-    info.extpoints = NULL;
+    g_ptr_array_unref (info.extensions);
+    info.extensions = NULL;
 
     return 0;
 }
