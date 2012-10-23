@@ -7,9 +7,9 @@ TEST_PLUGIN_LIBTOOL_FLAGS = \
 	-avoid-version \
 	-rpath ${abs_builddir}
 
-noinst_LTLIBRARIES = libtestplugin.la
-libtestplugin_la_LDFLAGS = ${AM_LDFLAGS} ${TEST_PLUGIN_LIBTOOL_FLAGS}
-libtestplugin_la_SOURCES = test-plugin.c
+noinst_LTLIBRARIES = testplugin.la
+testplugin_la_LDFLAGS = ${AM_LDFLAGS} ${TEST_PLUGIN_LIBTOOL_FLAGS}
+testplugin_la_SOURCES = test-plugin.c
 
 check_PROGRAMS =
 check_SCRIPTS =

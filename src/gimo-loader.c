@@ -17,38 +17,273 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-loader.h"
+#include "gimo-module.h"
+#include <string.h>
 
-GType gimo_loader_get_type (void)
+G_DEFINE_TYPE (GimoLoader, gimo_loader, G_TYPE_OBJECT)
+
+struct _GimoLoaderPrivate {
+    GQueue *loaders;
+    GTree *modules;
+    GMutex mutex;
+};
+
+struct _LoaderInfo {
+    gchar *suffix;
+    GimoModuleCtorFunc ctor;
+    gpointer user_data;
+    gint ref_count;
+};
+
+static void _loader_info_destroy (gpointer p)
 {
-    static GType loader_type = 0;
+    struct _LoaderInfo *info = p;
 
-    if (!loader_type) {
-        const GTypeInfo loader_info = {
-            sizeof (GimoLoaderInterface),  /* class_size */
-            NULL,    /* base_init */
-            NULL,    /* base_finalize */
-        };
+    if (g_atomic_int_add (&info->ref_count, -1) == 1) {
+        g_free (info->suffix);
+        g_free (info);
+    }
+}
 
-        loader_type = g_type_register_static (G_TYPE_INTERFACE,
-                                              "GimoLoader",
-                                              &loader_info, 0);
+static GList* _gimo_loader_lookup (GimoLoader *self,
+                                   const gchar *suffix)
+{
+    GimoLoaderPrivate *priv = self->priv;
+    GList *it;
+    struct _LoaderInfo *info;
+
+    it = g_queue_peek_head_link (priv->loaders);
+    while (it) {
+        info = it->data;
+
+        if (suffix == info->suffix)
+            return it;
+
+        if (suffix && info->suffix) {
+            if (!strcmp (info->suffix, suffix))
+                return it;
+        }
+
+        it = it->next;
     }
 
-    return loader_type;
+    return NULL;
+}
+
+static gint _gimo_loader_module_compare (gconstpointer a,
+                                         gconstpointer b,
+                                         gpointer user_data)
+{
+    return strcmp (a, b);
+}
+
+static void gimo_loader_init (GimoLoader *self)
+{
+    GimoLoaderPrivate *priv;
+
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+                                              GIMO_TYPE_LOADER,
+                                              GimoLoaderPrivate);
+    priv = self->priv;
+
+    priv->loaders = g_queue_new ();
+    priv->modules = g_tree_new_full (_gimo_loader_module_compare,
+                                     NULL, NULL,
+                                     g_object_unref);
+    g_mutex_init (&priv->mutex);
+}
+
+static void gimo_loader_finalize (GObject *gobject)
+{
+    GimoLoader *self = GIMO_LOADER (gobject);
+    GimoLoaderPrivate *priv = self->priv;
+
+    g_tree_unref (priv->modules);
+    g_queue_free_full (priv->loaders, _loader_info_destroy);
+    g_mutex_clear (&priv->mutex);
+
+    G_OBJECT_CLASS (gimo_loader_parent_class)->finalize (gobject);
+}
+
+static void gimo_loader_class_init (GimoLoaderClass *klass)
+{
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+    gobject_class->finalize = gimo_loader_finalize;
+
+    g_type_class_add_private (gobject_class,
+                              sizeof (GimoLoaderPrivate));
+}
+
+GimoLoader* gimo_loader_new (void)
+{
+    return g_object_new (GIMO_TYPE_LOADER, NULL);
+}
+
+/**
+ * gimo_loader_register:
+ * @self: a #GimoLoader
+ * @suffix: (allow-none): the module file suffix
+ * @func: (scope async): the constructor function
+ * @user_data: user data for @func
+ *
+ * Load a module.
+ *
+ * Returns: (allow-none) (transfer full): a #GimoModule
+ */
+gboolean gimo_loader_register (GimoLoader *self,
+                               const gchar *suffix,
+                               GimoModuleCtorFunc func,
+                               gpointer user_data)
+{
+    GimoLoaderPrivate *priv;
+    gboolean result = FALSE;
+
+    g_return_val_if_fail (GIMO_IS_LOADER (self), FALSE);
+
+    priv = self->priv;
+
+    g_mutex_lock (&priv->mutex);
+
+    if (!_gimo_loader_lookup (self, suffix)) {
+        struct _LoaderInfo *info;
+
+        info = g_malloc (sizeof *info);
+        info->suffix = g_strdup (suffix);
+        info->ctor = func;
+        info->user_data = user_data;
+        info->ref_count = 1;
+
+        g_queue_push_head (priv->loaders, info);
+        result = TRUE;
+    }
+
+    g_mutex_unlock (&priv->mutex);
+
+    return result;
+}
+
+void gimo_loader_unregister (GimoLoader *self,
+                             const gchar *suffix)
+{
+    GimoLoaderPrivate *priv;
+    GList *node;
+
+    g_return_if_fail (GIMO_IS_LOADER (self));
+
+    priv = self->priv;
+
+    g_mutex_lock (&priv->mutex);
+
+    node = _gimo_loader_lookup (self, suffix);
+    if (node) {
+        _loader_info_destroy (node->data);
+        g_queue_delete_link (priv->loaders, node);
+    }
+
+    g_mutex_unlock (&priv->mutex);
 }
 
 /**
  * gimo_loader_load:
  * @self: a #GimoLoader
+ * @file_name: the module file name
  *
- * Load the plugin runtime object.
+ * Load a module.
  *
- * Returns: (allow-none) (transfer full): a #GimoPlugin
+ * Returns: (allow-none) (transfer full): a #GimoModule
  */
-GimoPlugin* gimo_loader_load (GimoLoader *self,
-                              GimoPluginfo *info)
+GimoModule* gimo_loader_load (GimoLoader *self,
+                              const gchar *file_name)
 {
+    GimoLoaderPrivate *priv;
+    GList *it;
+    guint i, count;
+    GPtrArray *arr;
+    const gchar *suffix;
+    struct _LoaderInfo *info;
+    GimoModule *module = NULL;
+
     g_return_val_if_fail (GIMO_IS_LOADER (self), NULL);
 
-    return GIMO_LOADER_GET_IFACE (self)->load (self, info);
+    priv = self->priv;
+
+    g_mutex_lock (&priv->mutex);
+
+    module = g_tree_lookup (priv->modules, file_name);
+    if (module) {
+        g_object_ref (module);
+        g_mutex_unlock (&priv->mutex);
+        return module;
+    }
+
+    count = g_queue_get_length (priv->loaders);
+    if (0 == count) {
+        g_mutex_unlock (&priv->mutex);
+        return NULL;
+    }
+
+    arr = g_ptr_array_new_full (count, _loader_info_destroy);
+    it = g_queue_peek_head_link (priv->loaders);
+    while (it) {
+        info = it->data;
+        g_atomic_int_add (&info->ref_count, 1);
+        g_ptr_array_add (arr, info);
+        it = it->next;
+    }
+
+    g_mutex_unlock (&priv->mutex);
+
+    if (file_name) {
+        suffix = strrchr (file_name, '.');
+
+        if (suffix)
+            ++suffix;
+    }
+    else {
+        suffix = NULL;
+    }
+
+    for (i = 0; i < count; ++i) {
+        info = g_ptr_array_index (arr, i);
+
+        if (info->suffix) {
+            if (NULL == suffix || strcmp (suffix, info->suffix))
+                continue;
+        }
+
+        module = info->ctor (info->user_data);
+        if (module) {
+            if (!gimo_module_open (module, file_name)) {
+                g_object_unref (module);
+                module = NULL;
+            }
+
+            break;
+        }
+    }
+
+    g_ptr_array_unref (arr);
+
+    if (module) {
+        GimoModule *exist;
+
+        g_mutex_lock (&priv->mutex);
+
+        exist = g_tree_lookup (priv->modules, file_name);
+        if (!exist) {
+            g_tree_insert (priv->modules,
+                           gimo_module_get_name (module),
+                           module);
+        }
+        else {
+            g_object_unref (module);
+            module = exist;
+        }
+
+        g_object_ref (module);
+        g_mutex_unlock (&priv->mutex);
+    }
+
+    return module;
 }

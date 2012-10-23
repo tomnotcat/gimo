@@ -28,7 +28,7 @@ typedef struct _GimoPluginfo GimoPluginfo;
 typedef struct _GimoRequire GimoRequire;
 typedef struct _GimoExtpoint GimoExtpoint;
 typedef struct _GimoExtension GimoExtension;
-typedef struct _GimoLoaderMgr GimoLoaderMgr;
+typedef struct _GimoModule GimoModule;
 typedef struct _GimoLoader GimoLoader;
 typedef struct _GimoPlugin GimoPlugin;
 

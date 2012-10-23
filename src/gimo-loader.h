@@ -28,20 +28,49 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GIMO_TYPE_LOADER, GimoLoader))
 #define GIMO_IS_LOADER(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj), GIMO_TYPE_LOADER))
-#define GIMO_LOADER_GET_IFACE(inst) \
-    (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GIMO_TYPE_LOADER, GimoLoaderInterface))
+#define GIMO_LOADER_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST((klass), GIMO_TYPE_LOADER, GimoLoaderClass))
+#define GIMO_IS_LOADER_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GIMO_TYPE_LOADER))
+#define GIMO_LOADER_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS((obj), GIMO_TYPE_LOADER, GimoLoaderClass))
 
-typedef struct _GimoLoaderInterface GimoLoaderInterface;
+typedef struct _GimoLoaderPrivate GimoLoaderPrivate;
+typedef struct _GimoLoaderClass GimoLoaderClass;
 
-struct _GimoLoaderInterface {
-    GTypeInterface base_iface;
-    GimoPlugin* (*load) (GimoLoader *self, GimoPluginfo *info);
+struct _GimoLoader {
+    GObject parent_instance;
+    GimoLoaderPrivate *priv;
 };
+
+struct _GimoLoaderClass {
+    GObjectClass parent_class;
+};
+
+/**
+ * GimoModuleCtorFunc:
+ * @user_data: (closure): user data to pass to the function
+ *
+ * Module constructor function.
+ *
+ * Returns: (allow-none) (transfer full): a #GimoModule
+ */
+typedef GimoModule* (*GimoModuleCtorFunc) (gpointer user_data);
 
 GType gimo_loader_get_type (void) G_GNUC_CONST;
 
-GimoPlugin* gimo_loader_load (GimoLoader *self,
-                              GimoPluginfo *info);
+GimoLoader* gimo_loader_new (void);
+
+gboolean gimo_loader_register (GimoLoader *self,
+                               const gchar *suffix,
+                               GimoModuleCtorFunc func,
+                               gpointer user_data);
+
+void gimo_loader_unregister (GimoLoader *self,
+                             const gchar *suffix);
+
+GimoModule* gimo_loader_load (GimoLoader *self,
+                              const gchar *file_name);
 
 G_END_DECLS
 

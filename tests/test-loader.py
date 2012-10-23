@@ -2,9 +2,7 @@
 
 from gi.repository import Gimo
 
-info = Gimo.Pluginfo (identifier="test.plugin1",
-                      url="libtestplugin",
-                      symbol="test_plugin_new")
-dlld = Gimo.Dlloader ()
-plugin = dlld.load (info)
+module = Gimo.Dlmodule ()
+assert (module.open ("testplugin"))
+plugin = module.resolve ("test_plugin_new", None)
 assert (plugin)

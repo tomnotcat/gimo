@@ -23,7 +23,7 @@
 
 #include "gimo-context.h"
 #include "gimo-extpoint.h"
-#include "gimo-loadermgr.h"
+#include "gimo-loader.h"
 #include "gimo-marshal.h"
 #include "gimo-pluginfo.h"
 #include "gimo-utils.h"
@@ -42,7 +42,6 @@ enum {
 struct _GimoContextPrivate {
     GTree *plugins;
     GMutex mutex;
-    gboolean finalize;
 };
 
 struct _QueryParam {
@@ -103,7 +102,6 @@ static void gimo_context_init (GimoContext *self)
                                      NULL, NULL,
                                      _gimo_context_plugin_destroy);
     g_mutex_init (&priv->mutex);
-    priv->finalize = FALSE;
 }
 
 static void gimo_context_finalize (GObject *gobject)
@@ -111,7 +109,6 @@ static void gimo_context_finalize (GObject *gobject)
     GimoContext *self = GIMO_CONTEXT (gobject);
     GimoContextPrivate *priv = self->priv;
 
-    priv->finalize = TRUE;
     g_tree_unref (priv->plugins);
     g_mutex_clear (&priv->mutex);
 
@@ -160,11 +157,6 @@ GimoStatus gimo_context_install_plugin (GimoContext *self,
     if (NULL == plugin_id || !plugin_id[0])
         return GIMO_STATUS_INVALID_ID;
 
-    if (priv->finalize) {
-        g_warning ("Install plugin: %s: finalizing", plugin_id);
-        return GIMO_STATUS_INVALID_OBJECT;
-    }
-
     g_mutex_lock (&priv->mutex);
 
     if (g_tree_lookup (priv->plugins, plugin_id)) {
@@ -200,11 +192,6 @@ GimoStatus gimo_context_uninstall_plugin (GimoContext *self,
                           GIMO_STATUS_INVALID_OBJECT);
 
     priv = self->priv;
-
-    if (priv->finalize) {
-        g_warning ("Uninstall plugin: %s: finalize", plugin_id);
-        return GIMO_STATUS_INVALID_OBJECT;
-    }
 
     if (NULL == plugin_id || !plugin_id[0])
         return GIMO_STATUS_INVALID_ID;
@@ -251,11 +238,6 @@ GimoPluginfo* gimo_context_query_plugin (GimoContext *self,
 
     priv = self->priv;
 
-    if (priv->finalize) {
-        g_warning ("Query plugin: %s: finalize", plugin_id);
-        return NULL;
-    }
-
     if (NULL == plugin_id || !plugin_id[0])
         return NULL;
 
@@ -289,11 +271,6 @@ GPtrArray* gimo_context_query_plugins (GimoContext *self,
     g_return_val_if_fail (GIMO_IS_CONTEXT (self), NULL);
 
     priv = self->priv;
-
-    if (priv->finalize) {
-        g_warning ("Query plugins: %s: finalize", namesps);
-        return NULL;
-    }
 
     param.plugins = NULL;
     param.namesps = namesps;
@@ -349,8 +326,9 @@ done:
 GimoPlugin* _gimo_context_load_plugin (GimoContext *self,
                                        GimoPluginfo *info)
 {
+    /*
     GimoExtpoint *extpt;
-    GimoLoaderMgr *ldmgr;
+    GimoLoader *loader;
     GimoPlugin *plugin;
 
     extpt = gimo_context_query_extpoint (self, "gimo.core.loader");
@@ -367,6 +345,8 @@ GimoPlugin* _gimo_context_load_plugin (GimoContext *self,
     plugin = gimo_loadermgr_load (ldmgr, info);
     g_object_unref (extpt);
     return plugin;
+    */
+    return NULL;
 }
 
 void _gimo_context_plugin_state_changed (GimoContext *self,

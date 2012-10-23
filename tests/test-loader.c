@@ -16,55 +16,57 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "gimo-dlloader.h"
+#include "gimo-dlmodule.h"
 #include "gimo-loader.h"
-#include "gimo-pluginfo.h"
+#include "gimo-plugin.h"
 
-static void _test_loader_dlloader (void)
+static void _test_loader_dlmodule (void)
 {
-    GimoPluginfo *info;
-    GimoDlloader *dlld;
-    GimoLoader *loader;
-    GimoPlugin *plugin;
+    GimoModule *module;
+    GObject *plugin;
 
-    info = gimo_pluginfo_new ("test.plugin1",
-                              "libtestplugin",
-                              "test_plugin_new",
-                              NULL, NULL, NULL,
-                              NULL, NULL, NULL);
-    dlld = gimo_dlloader_new ();
-    loader = GIMO_LOADER (dlld);
-    plugin = gimo_loader_load (loader, info);
-    g_assert (plugin);
+    module = GIMO_MODULE (gimo_dlmodule_new ());
+    g_assert (gimo_module_open (module, "testplugin"));
+    plugin = gimo_module_resolve (module,
+                                  "test_plugin_new",
+                                  NULL);
+    g_assert (GIMO_IS_PLUGIN (plugin));
     g_object_unref (plugin);
-    g_object_unref (dlld);
-    g_object_unref (info);
+    g_assert (gimo_module_close (module));
+    g_assert (!gimo_module_resolve (module,
+                                    "test_plugin_new",
+                                    NULL));
+    g_object_unref (module);
 }
 
-static void _test_loader_manager (void)
+static void _test_loader_pymodule (void)
 {
-    GimoPluginfo *info;
-    GimoLoaderMgr *ldmgr;
-    GimoDlloader *dlld;
-    GimoPlugin *plugin;
+}
 
-    info = gimo_pluginfo_new ("test.plugin1",
-                              "libtestplugin",
-                              "test_plugin_new",
-                              NULL, NULL, NULL,
-                              NULL, NULL, NULL);
-    ldmgr = gimo_loadermgr_new (NULL);
+static void _test_loader_jsmodule (void)
+{
+}
 
-    dlld = gimo_dlloader_new ();
-    gimo_loadermgr_register_loader (ldmgr, dlld);
-    g_object_unref (dlld);
+static void _test_loader_loader (void)
+{
+    GimoLoader *loader;
+    GimoModule *module;
+    GObject *plugin;
 
-    plugin = gimo_loadermgr_load (ldmgr, info);
-    g_assert (plugin);
-
+    loader = gimo_loader_new ();
+    g_assert (gimo_loader_register (loader,
+                                    NULL,
+                                    (GimoModuleCtorFunc) gimo_dlmodule_new,
+                                    NULL));
+    module = gimo_loader_load (loader, "testplugin");
+    g_assert (GIMO_IS_DLMODULE (module));
+    plugin = gimo_module_resolve (module,
+                                  "test_plugin_new",
+                                  NULL);
+    g_assert (GIMO_IS_PLUGIN (plugin));
     g_object_unref (plugin);
-    g_object_unref (info);
-    g_object_unref (ldmgr);
+    g_object_unref (module);
+    g_object_unref (loader);
 }
 
 int main (int argc, char *argv[])
@@ -72,8 +74,10 @@ int main (int argc, char *argv[])
     g_type_init ();
     g_thread_init (NULL);
 
-    _test_loader_dlloader ();
-    _test_loader_manager ();
+    _test_loader_dlmodule ();
+    _test_loader_pymodule ();
+    _test_loader_jsmodule ();
+    _test_loader_loader ();
 
     return 0;
 }
