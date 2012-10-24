@@ -273,7 +273,7 @@ GimoModule* gimo_loader_load (GimoLoader *self,
         exist = g_tree_lookup (priv->modules, file_name);
         if (!exist) {
             g_tree_insert (priv->modules,
-                           gimo_module_get_name (module),
+                           (gpointer) gimo_module_get_name (module),
                            module);
         }
         else {

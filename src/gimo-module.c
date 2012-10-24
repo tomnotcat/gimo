@@ -52,6 +52,13 @@ gboolean gimo_module_close (GimoModule *self)
     return GIMO_MODULE_GET_IFACE (self)->close (self);
 }
 
+const gchar* gimo_module_get_name (GimoModule *self)
+{
+    g_return_val_if_fail (GIMO_IS_MODULE (self), NULL);
+
+    return GIMO_MODULE_GET_IFACE (self)->get_name (self);
+}
+
 /**
  * gimo_module_resolve:
  * @self: a #GimoModule

@@ -17,39 +17,177 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-pymodule.h"
-#include "gimo-pluginfo.h"
-#include <gmodule.h>
 
-static void gimo_loader_interface_init (GimoLoaderInterface *iface);
+/* Redefined in Python.h */
+#undef  _POSIX_C_SOURCE
+#include <pygobject.h>
+
+struct _GimoPymodulePrivate {
+    PyObject *module;
+    gchar *name;
+};
+
+static void gimo_module_interface_init (GimoModuleInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (GimoPymodule, gimo_pymodule, G_TYPE_OBJECT,
-                         G_IMPLEMENT_INTERFACE (GIMO_TYPE_LOADER,
-                                                gimo_loader_interface_init))
+                         G_IMPLEMENT_INTERFACE (GIMO_TYPE_MODULE,
+                                                gimo_module_interface_init))
 
-static gboolean _gimo_pymodule_check (GimoLoader *loader,
-                                      GimoPluginfo *info)
+static gboolean _gimo_pymodule_open (GimoModule *module,
+                                     const gchar *file_name)
 {
-    return FALSE;
+    GimoPymodule *self = GIMO_PYMODULE (module);
+    GimoPymodulePrivate *priv = self->priv;
+    gchar *path;
+    gchar *suffix;
+    PyObject *name = NULL;
+
+    if (priv->module) {
+        g_warning ("Pymodule: module already opened: %s", file_name);
+        return FALSE;
+    }
+
+    path = g_strdup (file_name);
+    suffix = strrchr (path, '.');
+    if (suffix)
+        *suffix = '\0';
+
+    name = PyString_FromString (path);
+    if (NULL == name)
+        goto fail;
+
+    priv->module = PyImport_Import (name);
+    if (NULL == priv->module) {
+        g_warning ("Import python module error: %s", path);
+        goto fail;
+    }
+
+fail:
+    if (PyErr_Occurred ())
+        PyErr_Print ();
+
+    if (name)
+        Py_DECREF (name);
+
+    if (priv->module)
+        priv->name = path;
+    else
+        g_free (path);
+
+    return (priv->module != NULL);
 }
 
-static GimoPlugin* _gimo_pymodule_load (GimoLoader *loader,
-                                        GimoPluginfo *info)
+static gboolean _gimo_pymodule_close (GimoModule *module)
 {
-    return NULL;
+    GimoPymodule *self = GIMO_PYMODULE (module);
+    GimoPymodulePrivate *priv = self->priv;
+
+    if (priv->module) {
+        Py_DECREF (priv->module);
+        priv->module = NULL;
+    }
+
+    if (priv->name) {
+        g_free (priv->name);
+        priv->name = NULL;
+    }
+
+    return TRUE;
 }
 
-static void gimo_loader_interface_init (GimoLoaderInterface *iface)
+static const gchar* _gimo_pymodule_get_name (GimoModule *module)
 {
-    iface->check = _gimo_pymodule_check;
-    iface->load = _gimo_pymodule_load;
+    GimoPymodule *self = GIMO_PYMODULE (module);
+
+    return self->priv->name;
+}
+
+static GObject* _gimo_pymodule_resolve (GimoModule *module,
+                                        const gchar *symbol,
+                                        GObject *param)
+{
+    GimoPymodule *self = GIMO_PYMODULE (module);
+    GimoPymodulePrivate *priv = self->priv;
+    PyObject *func = NULL;
+    PyObject *value = NULL;
+    GObject *object = NULL;
+
+    if (!priv->module)
+        return NULL;
+
+    func = PyObject_GetAttrString (priv->module, symbol);
+    if (NULL == func) {
+        g_warning ("Can't get python attribute: %s: %s",
+                   priv->name, symbol);
+        goto fail;
+    }
+
+    if (!PyCallable_Check (func)) {
+        g_warning ("Attribute not callable: %s: %s",
+                   priv->name, symbol);
+        goto fail;
+    }
+
+    value = PyObject_CallObject (func, NULL);
+    if (NULL == value) {
+        g_warning ("Function return NULL: %s: %s",
+                   priv->name, symbol);
+        goto fail;
+    }
+
+    object = pygobject_get (value);
+    if (object)
+        g_object_ref (object);
+
+fail:
+    if (PyErr_Occurred ())
+        PyErr_Print ();
+
+    if (func)
+        Py_DECREF (func);
+
+    if (value)
+        Py_DECREF (value);
+
+    return object;
+}
+
+static void gimo_module_interface_init (GimoModuleInterface *iface)
+{
+    iface->open = _gimo_pymodule_open;
+    iface->close = _gimo_pymodule_close;
+    iface->get_name = _gimo_pymodule_get_name;
+    iface->resolve = _gimo_pymodule_resolve;
 }
 
 static void gimo_pymodule_init (GimoPymodule *self)
 {
+    GimoPymodulePrivate *priv;
+
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+                                              GIMO_TYPE_PYMODULE,
+                                              GimoPymodulePrivate);
+    priv = self->priv;
+
+    priv->module = NULL;
+    priv->name = NULL;
+}
+
+static void gimo_pymodule_finalize (GObject *gobject)
+{
+    _gimo_pymodule_close (GIMO_MODULE (gobject));
+
+    G_OBJECT_CLASS (gimo_pymodule_parent_class)->finalize (gobject);
 }
 
 static void gimo_pymodule_class_init (GimoPymoduleClass *klass)
 {
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+    gobject_class->finalize = gimo_pymodule_finalize;
+
+    g_type_class_add_private (gobject_class,
+                              sizeof (GimoPymodulePrivate));
 }
 
 GimoPymodule* gimo_pymodule_new (void)

@@ -1,4 +1,4 @@
-SUBDIRS = .
+SUBDIRS = . plugins
 
 lib_LTLIBRARIES = libgimo-1.0.la
 libgimo_1_0_la_CFLAGS = ${STRICT_CFLAGS} ${GLIB_CFLAGS}

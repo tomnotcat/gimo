@@ -19,7 +19,7 @@
 #ifndef __GIMO_JSMODULE_H__
 #define __GIMO_JSMODULE_H__
 
-#include "gimo-loader.h"
+#include "gimo-module.h"
 
 G_BEGIN_DECLS
 

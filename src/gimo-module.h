@@ -38,6 +38,7 @@ struct _GimoModuleInterface {
     gboolean (*open) (GimoModule *self,
                       const gchar *file_name);
     gboolean (*close) (GimoModule *self);
+    const gchar* (*get_name) (GimoModule *self);
     GObject* (*resolve) (GimoModule *self,
                          const gchar *symbol,
                          GObject *param);
@@ -49,6 +50,8 @@ gboolean gimo_module_open (GimoModule *self,
                            const gchar *file_name);
 
 gboolean gimo_module_close (GimoModule *self);
+
+const gchar* gimo_module_get_name (GimoModule *self);
 
 GObject* gimo_module_resolve (GimoModule *self,
                               const gchar *symbol,

@@ -17,7 +17,6 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-dlmodule.h"
-#include "gimo-pluginfo.h"
 #include <gmodule.h>
 
 struct _GimoDlmodulePrivate {
@@ -69,6 +68,17 @@ static gboolean _gimo_dlmodule_close (GimoModule *module)
     return TRUE;
 }
 
+static const gchar* _gimo_dlmodule_get_name (GimoModule *module)
+{
+    GimoDlmodule *self = GIMO_DLMODULE (module);
+    GimoDlmodulePrivate *priv = self->priv;
+
+    if (priv->module)
+        return g_module_name (priv->module);
+
+    return NULL;
+}
+
 static GObject* _gimo_dlmodule_resolve (GimoModule *module,
                                         const gchar *symbol,
                                         GObject *param)
@@ -98,6 +108,7 @@ static void gimo_module_interface_init (GimoModuleInterface *iface)
 {
     iface->open = _gimo_dlmodule_open;
     iface->close = _gimo_dlmodule_close;
+    iface->get_name = _gimo_dlmodule_get_name;
     iface->resolve = _gimo_dlmodule_resolve;
 }
 

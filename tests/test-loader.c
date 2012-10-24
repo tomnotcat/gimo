@@ -20,38 +20,14 @@
 #include "gimo-loader.h"
 #include "gimo-plugin.h"
 
-static void _test_loader_dlmodule (void)
-{
-    GimoModule *module;
-    GObject *plugin;
-
-    module = GIMO_MODULE (gimo_dlmodule_new ());
-    g_assert (gimo_module_open (module, "testplugin"));
-    plugin = gimo_module_resolve (module,
-                                  "test_plugin_new",
-                                  NULL);
-    g_assert (GIMO_IS_PLUGIN (plugin));
-    g_object_unref (plugin);
-    g_assert (gimo_module_close (module));
-    g_assert (!gimo_module_resolve (module,
-                                    "test_plugin_new",
-                                    NULL));
-    g_object_unref (module);
-}
-
-static void _test_loader_pymodule (void)
-{
-}
-
-static void _test_loader_jsmodule (void)
-{
-}
-
-static void _test_loader_loader (void)
+int main (int argc, char *argv[])
 {
     GimoLoader *loader;
     GimoModule *module;
     GObject *plugin;
+
+    g_type_init ();
+    g_thread_init (NULL);
 
     loader = gimo_loader_new ();
     g_assert (gimo_loader_register (loader,
@@ -67,17 +43,6 @@ static void _test_loader_loader (void)
     g_object_unref (plugin);
     g_object_unref (module);
     g_object_unref (loader);
-}
-
-int main (int argc, char *argv[])
-{
-    g_type_init ();
-    g_thread_init (NULL);
-
-    _test_loader_dlmodule ();
-    _test_loader_pymodule ();
-    _test_loader_jsmodule ();
-    _test_loader_loader ();
 
     return 0;
 }
