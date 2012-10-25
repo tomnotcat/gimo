@@ -55,11 +55,11 @@ GType gimo_context_get_type (void) G_GNUC_CONST;
 
 GimoContext* gimo_context_new (void);
 
-GimoStatus gimo_context_install_plugin (GimoContext *self,
-                                        GimoPluginfo *info);
+gboolean gimo_context_install_plugin (GimoContext *self,
+                                      GimoPluginfo *info);
 
-GimoStatus gimo_context_uninstall_plugin (GimoContext *self,
-                                          const gchar *plugin_id);
+void gimo_context_uninstall_plugin (GimoContext *self,
+                                    const gchar *plugin_id);
 
 GimoPluginfo* gimo_context_query_plugin (GimoContext *self,
                                          const gchar *plugin_id);

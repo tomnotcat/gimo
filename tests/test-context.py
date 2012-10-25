@@ -20,17 +20,16 @@ ctx.connect ("state-changed", _plugin_state_changed)
 
 info = Gimo.Pluginfo (identifier="test.plugin")
 assert (not ctx.query_plugin ("test.plugin"))
-status = ctx.install_plugin (info)
+assert (ctx.install_plugin (info))
 assert (ctx.query_plugin ("test.plugin") == info)
-assert (status == Gimo.Status.SUCCESS)
 
 assert (Gimo.PluginState.UNINSTALLED == g_old_state)
 assert (Gimo.PluginState.INSTALLED == g_new_state)
 assert (1 == g_state_count)
 
 info = Gimo.Pluginfo (identifier="test.plugin")
-status = ctx.install_plugin (info)
-assert (status == Gimo.Status.CONFLICT)
+assert (not ctx.install_plugin (info))
+assert (Gimo.get_error () == Gimo.Errors.CONFLICT)
 
 extpts = [Gimo.Extpoint (local_id="extpt1"),
           Gimo.Extpoint (local_id="extpt2")]
@@ -45,7 +44,7 @@ info = Gimo.Pluginfo.new ("test.plugin2",
                           None)
 
 assert (info.query_context () == None)
-status = ctx.install_plugin (info)
+assert (ctx.install_plugin (info))
 assert (Gimo.PluginState.UNINSTALLED == g_old_state)
 assert (Gimo.PluginState.INSTALLED == g_new_state)
 assert (2 == g_state_count)
@@ -63,11 +62,10 @@ assert (ctx.query_extpoint ("test.plugin2.extpt1") == extpts[0])
 assert (ctx.query_extpoint ("test.plugin2.extpt2") == extpts[1])
 assert (ctx.query_extpoint ("test.plugin2.extpt3") == None)
 
-status = ctx.uninstall_plugin ("test.plugin2");
+ctx.uninstall_plugin ("test.plugin2");
 assert (not ctx.query_plugin ("test.plugin2"))
 assert (info.query_context () == None)
 assert (ctx.query_plugin ("test.plugin"))
-assert (status == Gimo.Status.SUCCESS)
 assert (ctx.query_extpoint ("test.plugin2.extpt1") == None)
 assert (ctx.query_extpoint ("test.plugin2.extpt2") == None)
 assert (Gimo.PluginState.INSTALLED == g_old_state)

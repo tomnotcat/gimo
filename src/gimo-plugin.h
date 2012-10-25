@@ -45,8 +45,8 @@ struct _GimoPlugin {
 
 struct _GimoPluginClass {
     GObjectClass parent_class;
-    GimoStatus (*start) (GimoPlugin *self);
-    GimoStatus (*stop) (GimoPlugin *self);
+    gboolean (*start) (GimoPlugin *self);
+    gboolean (*stop) (GimoPlugin *self);
     GObject* (*resolve) (GimoPlugin *self, const gchar *symbol);
 };
 

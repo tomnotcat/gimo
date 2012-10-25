@@ -23,6 +23,7 @@
 
 #include "gimo-pluginfo.h"
 #include "gimo-context.h"
+#include "gimo-error.h"
 #include "gimo-extension.h"
 #include "gimo-extpoint.h"
 #include "gimo-plugin.h"
@@ -140,18 +141,12 @@ static GimoPlugin* _gimo_pluginfo_load_plugin (GimoPluginfo *self)
     G_UNLOCK (pluginfo_lock);
 
     ctx = gimo_pluginfo_query_context (self);
-    if (NULL == ctx) {
-        g_warning ("Pluginfo(%s) resolve: query context error",
-                   priv->identifier);
-        return NULL;
-    }
+    if (NULL == ctx)
+        gimo_set_error_return_val (GIMO_ERROR_NOT_FOUND, NULL);
 
     plugin = _gimo_context_load_plugin (ctx, self);
-    if (NULL == plugin) {
-        g_warning ("Pluginfo(%s) resolve: load plugin error",
-                   priv->identifier);
-        return NULL;
-    }
+    if (NULL == plugin)
+        gimo_set_error_return_val (GIMO_ERROR_IMPORT, NULL);
 
     G_LOCK (pluginfo_lock);
 
@@ -736,14 +731,14 @@ GimoContext* gimo_pluginfo_query_context (GimoPluginfo *self)
     return ctx;
 }
 
-GimoStatus gimo_pluginfo_start (GimoPlugin *self)
+gboolean gimo_pluginfo_start (GimoPlugin *self)
 {
-    return GIMO_STATUS_SUCCESS;
+    return FALSE;
 }
 
-GimoStatus gimo_pluginfo_stop (GimoPlugin *self)
+gboolean gimo_pluginfo_stop (GimoPlugin *self)
 {
-    return GIMO_STATUS_SUCCESS;
+    return FALSE;
 }
 
 /**

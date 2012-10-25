@@ -23,6 +23,7 @@
 G_DEFINE_TYPE (GimoLoader, gimo_loader, G_TYPE_OBJECT)
 
 struct _GimoLoaderPrivate {
+    GSList *paths;
     GQueue *loaders;
     GTree *modules;
     GMutex mutex;
@@ -43,6 +44,13 @@ static void _loader_info_destroy (gpointer p)
         g_free (info->suffix);
         g_free (info);
     }
+}
+
+static gint _gimo_module_compare (gconstpointer a,
+                                  gconstpointer b,
+                                  gpointer user_data)
+{
+    return strcmp (a, b);
 }
 
 static GList* _gimo_loader_lookup (GimoLoader *self,
@@ -70,27 +78,65 @@ static GList* _gimo_loader_lookup (GimoLoader *self,
     return NULL;
 }
 
-static gint _gimo_loader_module_compare (gconstpointer a,
-                                         gconstpointer b,
-                                         gpointer user_data)
+static GimoModule* _gimo_loader_load_module (GPtrArray *loaders,
+                                             const gchar *suffix,
+                                             const gchar *file_name)
 {
-    return strcmp (a, b);
+    GimoModule *module = NULL;
+    struct _LoaderInfo *info;
+    guint i;
+
+    for (i = 0; i < loaders->len; ++i) {
+        info = g_ptr_array_index (loaders, i);
+
+        if (info->suffix) {
+            if (NULL == suffix || strcmp (suffix, info->suffix))
+                continue;
+        }
+
+        module = info->ctor (info->user_data);
+        if (module) {
+            if (!gimo_module_open (module, file_name)) {
+                g_object_unref (module);
+                module = NULL;
+            }
+
+            break;
+        }
+    }
+
+    return module;
 }
 
 static void gimo_loader_init (GimoLoader *self)
 {
     GimoLoaderPrivate *priv;
+    const gchar *plugin_path = g_getenv ("GIMO_PLUGIN_PATH");
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               GIMO_TYPE_LOADER,
                                               GimoLoaderPrivate);
     priv = self->priv;
 
+    priv->paths = NULL;
     priv->loaders = g_queue_new ();
-    priv->modules = g_tree_new_full (_gimo_loader_module_compare,
+    priv->modules = g_tree_new_full (_gimo_module_compare,
                                      NULL, NULL,
                                      g_object_unref);
     g_mutex_init (&priv->mutex);
+
+    if (plugin_path) {
+        gchar **dirs;
+        guint i = 0;
+
+        dirs = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
+        while (dirs[i]) {
+            priv->paths = g_slist_prepend (priv->paths, dirs[i]);
+            ++i;
+        }
+
+        g_free (dirs);
+    }
 }
 
 static void gimo_loader_finalize (GObject *gobject)
@@ -100,6 +146,7 @@ static void gimo_loader_finalize (GObject *gobject)
 
     g_tree_unref (priv->modules);
     g_queue_free_full (priv->loaders, _loader_info_destroy);
+    g_slist_free_full (priv->paths, g_free);
     g_mutex_clear (&priv->mutex);
 
     G_OBJECT_CLASS (gimo_loader_parent_class)->finalize (gobject);
@@ -118,6 +165,37 @@ static void gimo_loader_class_init (GimoLoaderClass *klass)
 GimoLoader* gimo_loader_new (void)
 {
     return g_object_new (GIMO_TYPE_LOADER, NULL);
+}
+
+void gimo_loader_add_path (GimoLoader *self,
+                           const gchar *path)
+{
+    GimoLoaderPrivate *priv;
+
+    g_return_if_fail (GIMO_IS_LOADER (self));
+
+    priv = self->priv;
+
+    /* TODO: Make this function thread safe. */
+    priv->paths = g_slist_prepend (priv->paths,
+                                   g_strdup (path));
+}
+
+/**
+ * gimo_loader_get_paths:
+ * @self: a #GimoLoader
+ *
+ * Get the module search paths.
+ *
+ * Returns: (allow-none) (element-type utf8) (transfer none):
+ *          the search paths list
+ */
+GSList* gimo_loader_get_paths (GimoLoader *self)
+{
+    g_return_val_if_fail (GIMO_IS_LOADER (self), NULL);
+
+    /* TODO: Make this function thread safe. */
+    return self->priv->paths;
 }
 
 /**
@@ -198,7 +276,7 @@ GimoModule* gimo_loader_load (GimoLoader *self,
 {
     GimoLoaderPrivate *priv;
     GList *it;
-    guint i, count;
+    guint count;
     GPtrArray *arr;
     const gchar *suffix;
     struct _LoaderInfo *info;
@@ -244,22 +322,22 @@ GimoModule* gimo_loader_load (GimoLoader *self,
         suffix = NULL;
     }
 
-    for (i = 0; i < count; ++i) {
-        info = g_ptr_array_index (arr, i);
+    module = _gimo_loader_load_module (arr, suffix, file_name);
 
-        if (info->suffix) {
-            if (NULL == suffix || strcmp (suffix, info->suffix))
-                continue;
-        }
+    if (NULL == module && !g_path_is_absolute (file_name)) {
+        GSList *it = priv->paths;
+        gchar *full_path;
 
-        module = info->ctor (info->user_data);
-        if (module) {
-            if (!gimo_module_open (module, file_name)) {
-                g_object_unref (module);
-                module = NULL;
-            }
+        /* TODO: Make paths thread safe. */
+        while (it) {
+            full_path = g_build_filename (it->data, file_name, NULL);
+            module = _gimo_loader_load_module (arr, suffix, full_path);
+            g_free (full_path);
 
-            break;
+            if (module)
+                break;
+
+            it = it->next;
         }
     }
 

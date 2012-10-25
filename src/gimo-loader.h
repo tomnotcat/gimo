@@ -61,6 +61,11 @@ GType gimo_loader_get_type (void) G_GNUC_CONST;
 
 GimoLoader* gimo_loader_new (void);
 
+void gimo_loader_add_path (GimoLoader *self,
+                           const gchar *path);
+
+GSList* gimo_loader_get_paths (GimoLoader *self);
+
 gboolean gimo_loader_register (GimoLoader *self,
                                const gchar *suffix,
                                GimoModuleCtorFunc func,

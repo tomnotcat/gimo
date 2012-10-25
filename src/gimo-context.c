@@ -22,6 +22,7 @@
  */
 
 #include "gimo-context.h"
+#include "gimo-error.h"
 #include "gimo-extpoint.h"
 #include "gimo-loader.h"
 #include "gimo-marshal.h"
@@ -142,26 +143,25 @@ GimoContext* gimo_context_new (void)
     return g_object_new (GIMO_TYPE_CONTEXT, NULL);
 }
 
-GimoStatus gimo_context_install_plugin (GimoContext *self,
-                                        GimoPluginfo *info)
+gboolean gimo_context_install_plugin (GimoContext *self,
+                                      GimoPluginfo *info)
 {
     GimoContextPrivate *priv;
     const gchar *plugin_id;
 
-    g_return_val_if_fail (GIMO_IS_CONTEXT (self),
-                          GIMO_STATUS_INVALID_OBJECT);
+    g_return_val_if_fail (GIMO_IS_CONTEXT (self), FALSE);
 
     priv = self->priv;
 
     plugin_id = gimo_pluginfo_get_identifier (info);
     if (NULL == plugin_id || !plugin_id[0])
-        return GIMO_STATUS_INVALID_ID;
+        gimo_set_error_return_val (GIMO_ERROR_INVALID_ID, FALSE);
 
     g_mutex_lock (&priv->mutex);
 
     if (g_tree_lookup (priv->plugins, plugin_id)) {
         g_mutex_unlock (&priv->mutex);
-        return GIMO_STATUS_CONFLICT;
+        gimo_set_error_return_val (GIMO_ERROR_CONFLICT, FALSE);
     }
 
     g_tree_insert (priv->plugins,
@@ -178,30 +178,28 @@ GimoStatus gimo_context_install_plugin (GimoContext *self,
                    info,
                    GIMO_PLUGIN_UNINSTALLED,
                    GIMO_PLUGIN_INSTALLED);
-
-    return GIMO_STATUS_SUCCESS;
+    return TRUE;
 }
 
-GimoStatus gimo_context_uninstall_plugin (GimoContext *self,
-                                          const gchar *plugin_id)
+void gimo_context_uninstall_plugin (GimoContext *self,
+                                    const gchar *plugin_id)
 {
     GimoContextPrivate *priv;
     GimoPluginfo *info;
 
-    g_return_val_if_fail (GIMO_IS_CONTEXT (self),
-                          GIMO_STATUS_INVALID_OBJECT);
+    g_return_if_fail (GIMO_IS_CONTEXT (self));
 
     priv = self->priv;
 
     if (NULL == plugin_id || !plugin_id[0])
-        return GIMO_STATUS_INVALID_ID;
+        return;
 
     g_mutex_lock (&priv->mutex);
 
     info = g_tree_lookup (priv->plugins, plugin_id);
     if (NULL == info) {
         g_mutex_unlock (&priv->mutex);
-        return GIMO_STATUS_NOT_FOUND;
+        return;
     }
 
     g_object_ref (info);
@@ -216,8 +214,6 @@ GimoStatus gimo_context_uninstall_plugin (GimoContext *self,
                    GIMO_PLUGIN_UNINSTALLED);
 
     g_object_unref (info);
-
-    return GIMO_STATUS_SUCCESS;
 }
 
 /**

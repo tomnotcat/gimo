@@ -17,6 +17,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-context.h"
+#include "gimo-error.h"
 #include "gimo-extpoint.h"
 #include "gimo-pluginfo.h"
 #include <string.h>
@@ -46,7 +47,6 @@ static void _test_context_common (void)
     GimoPluginfo *info;
     GimoExtpoint *extpt;
     GPtrArray *array;
-    GimoStatus status;
 
     struct _StateChange param = {
         GIMO_PLUGIN_UNINSTALLED,
@@ -68,10 +68,9 @@ static void _test_context_common (void)
                               NULL, NULL, NULL, array, NULL);
     g_ptr_array_unref (array);
     g_assert (!gimo_context_query_plugin (ctx, "test.plugin1"));
-    status = gimo_context_install_plugin (ctx, info);
+    g_assert (gimo_context_install_plugin (ctx, info));
     g_assert (gimo_context_query_plugin (ctx, "test.plugin1") == info);
     g_object_unref (info);
-    g_assert (status == GIMO_STATUS_SUCCESS);
     g_object_unref (info);
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.old_state);
     g_assert (GIMO_PLUGIN_INSTALLED == param.new_state);
@@ -79,12 +78,12 @@ static void _test_context_common (void)
 
     info = gimo_pluginfo_new ("test.plugin1", NULL, NULL, NULL,
                               NULL, NULL, NULL, NULL, NULL);
-    status = gimo_context_install_plugin (ctx, info);
-    g_assert (status == GIMO_STATUS_CONFLICT);
+    g_assert (!gimo_context_install_plugin (ctx, info));
+    g_assert (gimo_get_error () == GIMO_ERROR_CONFLICT);
     g_object_unref (info);
     info = gimo_pluginfo_new ("test.plugin2", NULL, NULL, NULL,
                               NULL, NULL, NULL, NULL, NULL);
-    status = gimo_context_install_plugin (ctx, info);
+    g_assert (gimo_context_install_plugin (ctx, info));
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.old_state);
     g_assert (GIMO_PLUGIN_INSTALLED == param.new_state);
     g_assert (2 == param.count);
@@ -123,10 +122,9 @@ static void _test_context_common (void)
     g_assert (info);
     g_object_unref (info);
 
-    status = gimo_context_uninstall_plugin (ctx, "test.plugin1");
+    gimo_context_uninstall_plugin (ctx, "test.plugin1");
     g_assert (!gimo_context_query_plugin (ctx, "test.plugin1"));
     g_assert (!gimo_context_query_extpoint (ctx, "test.plugin1.extpt1"));
-    g_assert (status == GIMO_STATUS_SUCCESS);
     g_assert (GIMO_PLUGIN_INSTALLED == param.old_state);
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.new_state);
     g_assert (3 == param.count);

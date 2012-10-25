@@ -17,6 +17,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-pymodule.h"
+#include "gimo-error.h"
 
 /* Redefined in Python.h */
 #undef  _POSIX_C_SOURCE
@@ -42,10 +43,8 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
     gchar *suffix;
     PyObject *name = NULL;
 
-    if (priv->module) {
-        g_warning ("Pymodule: module already opened: %s", file_name);
-        return FALSE;
-    }
+    if (priv->module)
+        gimo_set_error_return_val (GIMO_ERROR_CONFLICT, FALSE);
 
     path = g_strdup (file_name);
     suffix = strrchr (path, '.');
@@ -58,14 +57,13 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
 
     priv->module = PyImport_Import (name);
     if (NULL == priv->module) {
-        g_warning ("Import python module error: %s", path);
+        gimo_set_error_full (GIMO_ERROR_IMPORT,
+                             "Import python module error: %s",
+                             path);
         goto fail;
     }
 
 fail:
-    if (PyErr_Occurred ())
-        PyErr_Print ();
-
     if (name)
         Py_DECREF (name);
 
@@ -117,21 +115,24 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
 
     func = PyObject_GetAttrString (priv->module, symbol);
     if (NULL == func) {
-        g_warning ("Can't get python attribute: %s: %s",
-                   priv->name, symbol);
+        gimo_set_error_full (GIMO_ERROR_NO_SYMBOL,
+                             "Can't get python attribute: %s: %s",
+                             priv->name, symbol);
         goto fail;
     }
 
     if (!PyCallable_Check (func)) {
-        g_warning ("Attribute not callable: %s: %s",
-                   priv->name, symbol);
+        gimo_set_error_full (GIMO_ERROR_INVALID_SYMBOL,
+                             "Attribute not callable: %s: %s",
+                             priv->name, symbol);
         goto fail;
     }
 
     value = PyObject_CallObject (func, NULL);
     if (NULL == value) {
-        g_warning ("Function return NULL: %s: %s",
-                   priv->name, symbol);
+        gimo_set_error_full (GIMO_ERROR_NEW_OBJECT,
+                             "Function return NULL: %s: %s",
+                             priv->name, symbol);
         goto fail;
     }
 

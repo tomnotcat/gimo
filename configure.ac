@@ -157,6 +157,7 @@ if test "x${debug}" != "xno"; then
 fi
 
 RUN_ENVIRONMENT="GI_TYPELIB_PATH=\$(top_builddir)/src \
+   GIMO_PLUGIN_PATH=\$(top_builddir)/src/plugins \
    LD_LIBRARY_PATH=/usr/local/lib:\$(top_builddir)/src/.libs"
 
 TESTS_ENVIRONMENT="${RUN_ENVIRONMENT}"

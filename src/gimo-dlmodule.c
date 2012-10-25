@@ -17,6 +17,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-dlmodule.h"
+#include "gimo-error.h"
 #include <gmodule.h>
 
 struct _GimoDlmodulePrivate {
@@ -35,15 +36,15 @@ static gboolean _gimo_dlmodule_open (GimoModule *module,
     GimoDlmodule *self = GIMO_DLMODULE (module);
     GimoDlmodulePrivate *priv = self->priv;
 
-    if (priv->module) {
-        g_warning ("Dlmodule: module already opened: %s", file_name);
-        return FALSE;
-    }
+    if (priv->module)
+        gimo_set_error_return_val (GIMO_ERROR_CONFLICT, FALSE);
 
     priv->module = g_module_open (file_name, G_MODULE_BIND_LAZY);
     if (NULL == priv->module) {
-        g_warning ("Dlmodule: open module error: %s: %s",
-                   file_name, g_module_error ());
+        gimo_set_error_full (GIMO_ERROR_UNLOAD,
+                             "Dlmodule: open module error: %s: %s",
+                             file_name,
+                             g_module_error ());
         return FALSE;
     }
 
@@ -59,8 +60,9 @@ static gboolean _gimo_dlmodule_close (GimoModule *module)
         return TRUE;
 
     if (!g_module_close (priv->module)) {
-        g_warning ("Dlmodule: close module error: %s",
-                   g_module_error ());
+        gimo_set_error_full (GIMO_ERROR_UNLOAD,
+                             "Dlmodule: close module error: %s",
+                             g_module_error ());
         return FALSE;
     }
 
@@ -94,7 +96,7 @@ static GObject* _gimo_dlmodule_resolve (GimoModule *module,
                           symbol,
                           (gpointer *) &new_object))
     {
-        g_warning ("Dlmodule: resolve symbol error: %s", symbol);
+        gimo_set_error (GIMO_ERROR_NO_SYMBOL);
         return NULL;
     }
 

@@ -30,6 +30,9 @@ int main (int argc, char *argv[])
     g_thread_init (NULL);
 
     loader = gimo_loader_new ();
+
+    /* Dynamic library */
+    g_assert (!gimo_loader_load (loader, "testplugin"));
     g_assert (gimo_loader_register (loader,
                                     NULL,
                                     (GimoModuleCtorFunc) gimo_dlmodule_new,
@@ -42,6 +45,13 @@ int main (int argc, char *argv[])
     g_assert (GIMO_IS_PLUGIN (plugin));
     g_object_unref (plugin);
     g_object_unref (module);
+
+    /* Python module */
+    g_assert (!gimo_loader_load (loader, "testplugin.py"));
+    module = gimo_loader_load (loader, "pymodule-1.0");
+    g_assert (module);
+    g_object_unref (module);
+
     g_object_unref (loader);
 
     return 0;

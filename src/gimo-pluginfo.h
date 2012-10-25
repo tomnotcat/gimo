@@ -87,9 +87,9 @@ GimoPluginState gimo_pluginfo_get_state (GimoPluginfo *self);
 
 GimoContext* gimo_pluginfo_query_context (GimoPluginfo *self);
 
-GimoStatus gimo_pluginfo_start (GimoPlugin *self);
+gboolean gimo_pluginfo_start (GimoPlugin *self);
 
-GimoStatus gimo_pluginfo_stop (GimoPlugin *self);
+gboolean gimo_pluginfo_stop (GimoPlugin *self);
 
 GObject* gimo_pluginfo_resolve (GimoPluginfo *self,
                                 const gchar *symbol);
