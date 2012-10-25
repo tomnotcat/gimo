@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -17,21 +17,27 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-loader.h"
-#include "gimo-module.h"
+#include "gimo-loadable.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GimoLoader, gimo_loader, G_TYPE_OBJECT)
 
+enum {
+    PROP_0,
+    PROP_CACHE
+};
+
 struct _GimoLoaderPrivate {
-    GSList *paths;
+    GSList *path_list;
     GQueue *loaders;
-    GTree *modules;
+    GTree *object_tree;
+    GSList *object_list;
     GMutex mutex;
 };
 
 struct _LoaderInfo {
     gchar *suffix;
-    GimoModuleCtorFunc ctor;
+    GimoLoadableCtorFunc ctor;
     gpointer user_data;
     gint ref_count;
 };
@@ -46,7 +52,7 @@ static void _loader_info_destroy (gpointer p)
     }
 }
 
-static gint _gimo_module_compare (gconstpointer a,
+static gint _gimo_string_compare (gconstpointer a,
                                   gconstpointer b,
                                   gpointer user_data)
 {
@@ -78,11 +84,11 @@ static GList* _gimo_loader_lookup (GimoLoader *self,
     return NULL;
 }
 
-static GimoModule* _gimo_loader_load_module (GPtrArray *loaders,
+static GimoLoadable* _gimo_loader_load_file (GPtrArray *loaders,
                                              const gchar *suffix,
                                              const gchar *file_name)
 {
-    GimoModule *module = NULL;
+    GimoLoadable *object = NULL;
     struct _LoaderInfo *info;
     guint i;
 
@@ -94,18 +100,18 @@ static GimoModule* _gimo_loader_load_module (GPtrArray *loaders,
                 continue;
         }
 
-        module = info->ctor (info->user_data);
-        if (module) {
-            if (!gimo_module_open (module, file_name)) {
-                g_object_unref (module);
-                module = NULL;
+        object = info->ctor (info->user_data);
+        if (object) {
+            if (!gimo_loadable_load (object, file_name)) {
+                g_object_unref (object);
+                object = NULL;
             }
 
             break;
         }
     }
 
-    return module;
+    return object;
 }
 
 static void gimo_loader_init (GimoLoader *self)
@@ -118,11 +124,10 @@ static void gimo_loader_init (GimoLoader *self)
                                               GimoLoaderPrivate);
     priv = self->priv;
 
-    priv->paths = NULL;
+    priv->path_list = NULL;
     priv->loaders = g_queue_new ();
-    priv->modules = g_tree_new_full (_gimo_module_compare,
-                                     NULL, NULL,
-                                     g_object_unref);
+    priv->object_tree = NULL;
+    priv->object_list = NULL;
     g_mutex_init (&priv->mutex);
 
     if (plugin_path) {
@@ -131,7 +136,7 @@ static void gimo_loader_init (GimoLoader *self)
 
         dirs = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
         while (dirs[i]) {
-            priv->paths = g_slist_prepend (priv->paths, dirs[i]);
+            priv->path_list = g_slist_prepend (priv->path_list, dirs[i]);
             ++i;
         }
 
@@ -144,12 +149,58 @@ static void gimo_loader_finalize (GObject *gobject)
     GimoLoader *self = GIMO_LOADER (gobject);
     GimoLoaderPrivate *priv = self->priv;
 
-    g_tree_unref (priv->modules);
+    if (priv->object_list)
+        g_slist_free_full (priv->object_list, g_object_unref);
+
+    if (priv->object_tree)
+        g_tree_unref (priv->object_tree);
+
     g_queue_free_full (priv->loaders, _loader_info_destroy);
-    g_slist_free_full (priv->paths, g_free);
+    g_slist_free_full (priv->path_list, g_free);
     g_mutex_clear (&priv->mutex);
 
     G_OBJECT_CLASS (gimo_loader_parent_class)->finalize (gobject);
+}
+
+static void gimo_loader_set_property (GObject *object,
+                                      guint prop_id,
+                                      const GValue *value,
+                                      GParamSpec *pspec)
+{
+    GimoLoader *self = GIMO_LOADER (object);
+    GimoLoaderPrivate *priv = self->priv;
+
+    switch (prop_id) {
+    case PROP_CACHE:
+        if (g_value_get_boolean (value)) {
+            priv->object_tree = g_tree_new_full (
+                _gimo_string_compare, NULL, g_free, NULL);
+        }
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void gimo_loader_get_property (GObject *object,
+                                      guint prop_id,
+                                      GValue *value,
+                                      GParamSpec *pspec)
+{
+    GimoLoader *self = GIMO_LOADER (object);
+    GimoLoaderPrivate *priv = self->priv;
+
+    switch (prop_id) {
+    case PROP_CACHE:
+        g_value_set_boolean (value, priv->object_tree != NULL);
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
 }
 
 static void gimo_loader_class_init (GimoLoaderClass *klass)
@@ -157,14 +208,32 @@ static void gimo_loader_class_init (GimoLoaderClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
     gobject_class->finalize = gimo_loader_finalize;
+    gobject_class->set_property = gimo_loader_set_property;
+    gobject_class->get_property = gimo_loader_get_property;
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoLoaderPrivate));
+
+    g_object_class_install_property (
+        gobject_class, PROP_CACHE,
+        g_param_spec_boolean ("cache",
+                              "Cache object",
+                              "Cache the loaded objects",
+                              FALSE,
+                              G_PARAM_READABLE |
+                              G_PARAM_WRITABLE |
+                              G_PARAM_CONSTRUCT_ONLY |
+                              G_PARAM_STATIC_STRINGS));
 }
 
 GimoLoader* gimo_loader_new (void)
 {
     return g_object_new (GIMO_TYPE_LOADER, NULL);
+}
+
+GimoLoader* gimo_loader_new_cached (void)
+{
+    return g_object_new (GIMO_TYPE_LOADER, "cache", TRUE, NULL);
 }
 
 void gimo_loader_add_path (GimoLoader *self,
@@ -177,15 +246,15 @@ void gimo_loader_add_path (GimoLoader *self,
     priv = self->priv;
 
     /* TODO: Make this function thread safe. */
-    priv->paths = g_slist_prepend (priv->paths,
-                                   g_strdup (path));
+    priv->path_list = g_slist_prepend (priv->path_list,
+                                       g_strdup (path));
 }
 
 /**
  * gimo_loader_get_paths:
  * @self: a #GimoLoader
  *
- * Get the module search paths.
+ * Get the load search paths.
  *
  * Returns: (allow-none) (element-type utf8) (transfer none):
  *          the search paths list
@@ -195,23 +264,23 @@ GSList* gimo_loader_get_paths (GimoLoader *self)
     g_return_val_if_fail (GIMO_IS_LOADER (self), NULL);
 
     /* TODO: Make this function thread safe. */
-    return self->priv->paths;
+    return self->priv->path_list;
 }
 
 /**
  * gimo_loader_register:
  * @self: a #GimoLoader
- * @suffix: (allow-none): the module file suffix
+ * @suffix: (allow-none): the file suffix
  * @func: (scope async): the constructor function
  * @user_data: user data for @func
  *
- * Load a module.
+ * Register a loadable class.
  *
- * Returns: (allow-none) (transfer full): a #GimoModule
+ * Returns: %TRUE if register success.
  */
 gboolean gimo_loader_register (GimoLoader *self,
                                const gchar *suffix,
-                               GimoModuleCtorFunc func,
+                               GimoLoadableCtorFunc func,
                                gpointer user_data)
 {
     GimoLoaderPrivate *priv;
@@ -232,7 +301,11 @@ gboolean gimo_loader_register (GimoLoader *self,
         info->user_data = user_data;
         info->ref_count = 1;
 
-        g_queue_push_head (priv->loaders, info);
+        if (suffix)
+            g_queue_push_head (priv->loaders, info);
+        else
+            g_queue_push_tail (priv->loaders, info);
+
         result = TRUE;
     }
 
@@ -265,14 +338,14 @@ void gimo_loader_unregister (GimoLoader *self,
 /**
  * gimo_loader_load:
  * @self: a #GimoLoader
- * @file_name: the module file name
+ * @file_name: the file name
  *
- * Load a module.
+ * Load a file.
  *
- * Returns: (allow-none) (transfer full): a #GimoModule
+ * Returns: (allow-none) (transfer full): a #GimoLoadable
  */
-GimoModule* gimo_loader_load (GimoLoader *self,
-                              const gchar *file_name)
+GimoLoadable* gimo_loader_load (GimoLoader *self,
+                                const gchar *file_name)
 {
     GimoLoaderPrivate *priv;
     GList *it;
@@ -280,7 +353,7 @@ GimoModule* gimo_loader_load (GimoLoader *self,
     GPtrArray *arr;
     const gchar *suffix;
     struct _LoaderInfo *info;
-    GimoModule *module = NULL;
+    GimoLoadable *result = NULL;
 
     g_return_val_if_fail (GIMO_IS_LOADER (self), NULL);
 
@@ -288,11 +361,14 @@ GimoModule* gimo_loader_load (GimoLoader *self,
 
     g_mutex_lock (&priv->mutex);
 
-    module = g_tree_lookup (priv->modules, file_name);
-    if (module) {
-        g_object_ref (module);
-        g_mutex_unlock (&priv->mutex);
-        return module;
+    if (priv->object_tree) {
+        result = g_tree_lookup (priv->object_tree, file_name);
+
+        if (result) {
+            g_object_ref (result);
+            g_mutex_unlock (&priv->mutex);
+            return result;
+        }
     }
 
     count = g_queue_get_length (priv->loaders);
@@ -322,19 +398,19 @@ GimoModule* gimo_loader_load (GimoLoader *self,
         suffix = NULL;
     }
 
-    module = _gimo_loader_load_module (arr, suffix, file_name);
+    result = _gimo_loader_load_file (arr, suffix, file_name);
 
-    if (NULL == module && !g_path_is_absolute (file_name)) {
-        GSList *it = priv->paths;
+    if (NULL == result && !g_path_is_absolute (file_name)) {
+        GSList *it = priv->path_list;
         gchar *full_path;
 
         /* TODO: Make paths thread safe. */
         while (it) {
             full_path = g_build_filename (it->data, file_name, NULL);
-            module = _gimo_loader_load_module (arr, suffix, full_path);
+            result = _gimo_loader_load_file (arr, suffix, full_path);
             g_free (full_path);
 
-            if (module)
+            if (result)
                 break;
 
             it = it->next;
@@ -343,25 +419,28 @@ GimoModule* gimo_loader_load (GimoLoader *self,
 
     g_ptr_array_unref (arr);
 
-    if (module) {
-        GimoModule *exist;
+    if (result && priv->object_tree) {
+        GimoLoadable *exist;
 
         g_mutex_lock (&priv->mutex);
 
-        exist = g_tree_lookup (priv->modules, file_name);
+        exist = g_tree_lookup (priv->object_tree, file_name);
         if (!exist) {
-            g_tree_insert (priv->modules,
-                           (gpointer) gimo_module_get_name (module),
-                           module);
+            g_tree_insert (priv->object_tree,
+                           g_strdup (file_name),
+                           result);
+
+            priv->object_list = g_slist_prepend (priv->object_list,
+                                                 result);
         }
         else {
-            g_object_unref (module);
-            module = exist;
+            g_object_unref (result);
+            result = exist;
         }
 
-        g_object_ref (module);
+        g_object_ref (result);
         g_mutex_unlock (&priv->mutex);
     }
 
-    return module;
+    return result;
 }

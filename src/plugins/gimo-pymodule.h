@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -19,6 +19,7 @@
 #ifndef __GIMO_PYMODULE_H__
 #define __GIMO_PYMODULE_H__
 
+#include "gimo-loadable.h"
 #include "gimo-module.h"
 
 G_BEGIN_DECLS
@@ -46,6 +47,7 @@ struct _GimoPymodule {
 
 struct _GimoPymoduleClass {
     GObjectClass parent_class;
+    gint instance_count;
 };
 
 GType gimo_pymodule_get_type (void) G_GNUC_CONST;

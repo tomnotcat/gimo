@@ -8,8 +8,9 @@ libgimo_1_0_la_SOURCES = gimo-types.h gimo-enums.h gimo-enums.c \
 	gimo-error.h gimo-error.c gimo-context.h gimo-context.c \
 	gimo-pluginfo.h gimo-pluginfo.c gimo-require.h gimo-require.c \
 	gimo-plugin.h gimo-plugin.c gimo-extpoint.h gimo-extpoint.c \
-	gimo-extension.h gimo-extension.c gimo-module.h gimo-module.c \
-	gimo-loader.h gimo-loader.c gimo-dlmodule.h gimo-dlmodule.c \
+	gimo-extension.h gimo-extension.c gimo-loader.h gimo-loader.c \
+	gimo-loadable.h gimo-loadable.c gimo-module.h gimo-module.c \
+	gimo-dlmodule.h gimo-dlmodule.c gimo-archive.h gimo-archive.c \
 	gimo-marshal.h gimo-marshal.c gimo-utils.h gimo-utils.c
 
 CLEANFILES =

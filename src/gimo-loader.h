@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -48,18 +48,20 @@ struct _GimoLoaderClass {
 };
 
 /**
- * GimoModuleCtorFunc:
+ * GimoLoadableCtorFunc:
  * @user_data: (closure): user data to pass to the function
  *
- * Module constructor function.
+ * Loadable object constructor.
  *
- * Returns: (allow-none) (transfer full): a #GimoModule
+ * Returns: (allow-none) (transfer full): a #GimoLoadable
  */
-typedef GimoModule* (*GimoModuleCtorFunc) (gpointer user_data);
+typedef GimoLoadable* (*GimoLoadableCtorFunc) (gpointer user_data);
 
 GType gimo_loader_get_type (void) G_GNUC_CONST;
 
 GimoLoader* gimo_loader_new (void);
+
+GimoLoader* gimo_loader_new_cached (void);
 
 void gimo_loader_add_path (GimoLoader *self,
                            const gchar *path);
@@ -68,14 +70,14 @@ GSList* gimo_loader_get_paths (GimoLoader *self);
 
 gboolean gimo_loader_register (GimoLoader *self,
                                const gchar *suffix,
-                               GimoModuleCtorFunc func,
+                               GimoLoadableCtorFunc func,
                                gpointer user_data);
 
 void gimo_loader_unregister (GimoLoader *self,
                              const gchar *suffix);
 
-GimoModule* gimo_loader_load (GimoLoader *self,
-                              const gchar *file_name);
+GimoLoadable* gimo_loader_load (GimoLoader *self,
+                                const gchar *file_name);
 
 G_END_DECLS
 

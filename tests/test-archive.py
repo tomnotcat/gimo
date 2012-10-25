@@ -18,3 +18,10 @@ assert (plugin)
 
 # Python module
 assert (loader.load ("testplugin.py") == None)
+module = loader.load ("pymodule-1.0");
+assert (module)
+
+# JavaScript module
+assert (loader.load ("testplugin.js") == None)
+module = loader.load ("jsmodule-1.0");
+assert (module)

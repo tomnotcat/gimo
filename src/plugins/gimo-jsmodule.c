@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -27,9 +27,12 @@ struct _GimoJsmodulePrivate {
     gchar *name;
 };
 
+static void gimo_loadable_interface_init (GimoLoadableInterface *iface);
 static void gimo_module_interface_init (GimoModuleInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (GimoJsmodule, gimo_jsmodule, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (GIMO_TYPE_LOADABLE,
+                                                gimo_loadable_interface_init);
                          G_IMPLEMENT_INTERFACE (GIMO_TYPE_MODULE,
                                                 gimo_module_interface_init))
 
@@ -142,6 +145,12 @@ static GObject* _gimo_jsmodule_resolve (GimoModule *module,
         g_object_ref (result);
 
     return result;
+}
+
+static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
+{
+    iface->load = (GimoLoadableLoadFunc) _gimo_jsmodule_open;
+    iface->unload = (GimoLoadableUnloadFunc) _gimo_jsmodule_close;
 }
 
 static void gimo_module_interface_init (GimoModuleInterface *iface)

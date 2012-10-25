@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -18,15 +18,17 @@
  */
 #include "gimo-dlmodule.h"
 #include "gimo-error.h"
-#include <gmodule.h>
 
 struct _GimoDlmodulePrivate {
     GModule *module;
 };
 
+static void gimo_loadable_interface_init (GimoLoadableInterface *iface);
 static void gimo_module_interface_init (GimoModuleInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (GimoDlmodule, gimo_dlmodule, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (GIMO_TYPE_LOADABLE,
+                                                gimo_loadable_interface_init);
                          G_IMPLEMENT_INTERFACE (GIMO_TYPE_MODULE,
                                                 gimo_module_interface_init))
 
@@ -106,6 +108,12 @@ static GObject* _gimo_dlmodule_resolve (GimoModule *module,
     return new_object (param);
 }
 
+static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
+{
+    iface->load = (GimoLoadableLoadFunc) _gimo_dlmodule_open;
+    iface->unload = (GimoLoadableUnloadFunc) _gimo_dlmodule_close;
+}
+
 static void gimo_module_interface_init (GimoModuleInterface *iface)
 {
     iface->open = _gimo_dlmodule_open;
@@ -128,7 +136,10 @@ static void gimo_dlmodule_init (GimoDlmodule *self)
 
 static void gimo_dlmodule_finalize (GObject *gobject)
 {
-    _gimo_dlmodule_close (GIMO_MODULE (gobject));
+    /* NOTE: Don't close module, otherwise valgrind will
+     *       report memory leak. */
+    if (0)
+        _gimo_dlmodule_close (GIMO_MODULE (gobject));
 
     G_OBJECT_CLASS (gimo_dlmodule_parent_class)->finalize (gobject);
 }
@@ -146,4 +157,11 @@ static void gimo_dlmodule_class_init (GimoDlmoduleClass *klass)
 GimoDlmodule* gimo_dlmodule_new (void)
 {
     return g_object_new (GIMO_TYPE_DLMODULE, NULL);
+}
+
+GModule* _gimo_dlmodule_get_gmodule (GimoDlmodule *self)
+{
+    g_return_val_if_fail (GIMO_IS_DLMODULE (self), NULL);
+
+    return self->priv->module;
 }

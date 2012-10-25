@@ -38,11 +38,13 @@
 }
 
 {
-    calloc
+    g_type_set_qdata
     Memcheck:Leak
-    ...
-    fun:calloc
-    obj:*libglib-2.0.so*
+    fun:realloc
+    fun:standard_realloc
+    fun:g_realloc
+    fun:g_realloc_n
+    fun:g_type_set_qdata
 }
 
 {
@@ -101,4 +103,52 @@
     fun:g_type_class_ref
     fun:g_type_create_instance
     fun:g_param_spec_internal
+}
+
+{
+    PyObject_Malloc
+    Memcheck:Leak
+    fun:malloc
+    fun:PyObject_Malloc
+}
+
+{
+    PyObject_Free
+    Memcheck:Cond
+    fun:PyObject_Free
+}
+
+{
+    PyObject_Free
+    Memcheck:Addr4
+    fun:PyObject_Free
+}
+
+{
+    PyObject_Realloc
+    Memcheck:Leak
+    fun:realloc
+    fun:PyObject_Realloc
+}
+
+{
+    PyObject_Realloc
+    Memcheck:Cond
+    fun:PyObject_Realloc
+}
+
+{
+    PyObject_Realloc
+    Memcheck:Addr4
+    fun:PyObject_Realloc
+}
+
+{
+    gjs_gtype_create_gtype_wrapper
+    Memcheck:Leak
+    ...
+    fun:g_realloc
+    fun:g_realloc_n
+    fun:g_type_set_qdata
+    fun:gjs_gtype_create_gtype_wrapper
 }

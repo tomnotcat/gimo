@@ -16,37 +16,37 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "gimo-plugin.h"
+#include "gimo-archive.h"
 
-G_DEFINE_TYPE (GimoPlugin, gimo_plugin, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GimoArchive, gimo_archive, G_TYPE_OBJECT)
 
-struct _GimoPluginPrivate {
+struct _GimoArchivePrivate {
     int n;
 };
 
-static void gimo_plugin_init (GimoPlugin *self)
+static void gimo_archive_init (GimoArchive *self)
 {
-    GimoPluginPrivate *priv;
+    GimoArchivePrivate *priv;
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              GIMO_TYPE_PLUGIN,
-                                              GimoPluginPrivate);
+                                              GIMO_TYPE_ARCHIVE,
+                                              GimoArchivePrivate);
     priv = self->priv;
 
     priv->n = 0;
 }
 
-static void gimo_plugin_finalize (GObject *gobject)
+static void gimo_archive_finalize (GObject *gobject)
 {
-    G_OBJECT_CLASS (gimo_plugin_parent_class)->finalize (gobject);
+    G_OBJECT_CLASS (gimo_archive_parent_class)->finalize (gobject);
 }
 
-static void gimo_plugin_class_init (GimoPluginClass *klass)
+static void gimo_archive_class_init (GimoArchiveClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-    gobject_class->finalize = gimo_plugin_finalize;
+    gobject_class->finalize = gimo_archive_finalize;
 
     g_type_class_add_private (gobject_class,
-                              sizeof (GimoPluginPrivate));
+                              sizeof (GimoArchivePrivate));
 }

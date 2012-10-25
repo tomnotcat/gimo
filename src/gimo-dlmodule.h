@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -19,7 +19,9 @@
 #ifndef __GIMO_DLMODULE_H__
 #define __GIMO_DLMODULE_H__
 
+#include "gimo-loadable.h"
 #include "gimo-module.h"
+#include <gmodule.h>
 
 G_BEGIN_DECLS
 
@@ -51,6 +53,8 @@ struct _GimoDlmoduleClass {
 GType gimo_dlmodule_get_type (void) G_GNUC_CONST;
 
 GimoDlmodule* gimo_dlmodule_new (void);
+
+GModule* _gimo_dlmodule_get_gmodule (GimoDlmodule *self);
 
 G_END_DECLS
 

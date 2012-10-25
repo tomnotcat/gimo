@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -28,9 +28,12 @@ struct _GimoPymodulePrivate {
     gchar *name;
 };
 
+static void gimo_loadable_interface_init (GimoLoadableInterface *iface);
 static void gimo_module_interface_init (GimoModuleInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (GimoPymodule, gimo_pymodule, G_TYPE_OBJECT,
+                         G_IMPLEMENT_INTERFACE (GIMO_TYPE_LOADABLE,
+                                                gimo_loadable_interface_init);
                          G_IMPLEMENT_INTERFACE (GIMO_TYPE_MODULE,
                                                 gimo_module_interface_init))
 
@@ -141,9 +144,6 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
         g_object_ref (object);
 
 fail:
-    if (PyErr_Occurred ())
-        PyErr_Print ();
-
     if (func)
         Py_DECREF (func);
 
@@ -151,6 +151,12 @@ fail:
         Py_DECREF (value);
 
     return object;
+}
+
+static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
+{
+    iface->load = (GimoLoadableLoadFunc) _gimo_pymodule_open;
+    iface->unload = (GimoLoadableUnloadFunc) _gimo_pymodule_close;
 }
 
 static void gimo_module_interface_init (GimoModuleInterface *iface)
@@ -164,6 +170,7 @@ static void gimo_module_interface_init (GimoModuleInterface *iface)
 static void gimo_pymodule_init (GimoPymodule *self)
 {
     GimoPymodulePrivate *priv;
+    GimoPymoduleClass *klass;
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               GIMO_TYPE_PYMODULE,
@@ -172,11 +179,25 @@ static void gimo_pymodule_init (GimoPymodule *self)
 
     priv->module = NULL;
     priv->name = NULL;
+
+    klass = GIMO_PYMODULE_GET_CLASS (self);
+
+    if (g_atomic_int_add (&klass->instance_count, 1) == 0) {
+        g_setenv ("PYTHONPATH", ".", 0);
+        Py_Initialize ();
+    }
 }
 
 static void gimo_pymodule_finalize (GObject *gobject)
 {
+    GimoPymoduleClass *klass;
+
     _gimo_pymodule_close (GIMO_MODULE (gobject));
+
+    klass = GIMO_PYMODULE_GET_CLASS (gobject);
+
+    if (g_atomic_int_add (&klass->instance_count, -1) == 1)
+        Py_Finalize ();
 
     G_OBJECT_CLASS (gimo_pymodule_parent_class)->finalize (gobject);
 }
@@ -189,6 +210,7 @@ static void gimo_pymodule_class_init (GimoPymoduleClass *klass)
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoPymodulePrivate));
+    klass->instance_count = 0;
 }
 
 GimoPymodule* gimo_pymodule_new (void)
