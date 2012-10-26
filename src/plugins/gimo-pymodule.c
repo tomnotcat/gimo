@@ -133,7 +133,7 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
 
     value = PyObject_CallObject (func, NULL);
     if (NULL == value) {
-        gimo_set_error_full (GIMO_ERROR_NEW_OBJECT,
+        gimo_set_error_full (GIMO_ERROR_INVALID_RETURN,
                              "Function return NULL: %s: %s",
                              priv->name, symbol);
         goto fail;
@@ -156,7 +156,6 @@ fail:
 static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
 {
     iface->load = (GimoLoadableLoadFunc) _gimo_pymodule_open;
-    iface->unload = (GimoLoadableUnloadFunc) _gimo_pymodule_close;
 }
 
 static void gimo_module_interface_init (GimoModuleInterface *iface)

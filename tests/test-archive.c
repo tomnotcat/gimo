@@ -18,9 +18,37 @@
  */
 #include "gimo-archive.h"
 
+static void _test_archive_common (void)
+{
+    GimoArchive *archive;
+    GObject *object;
+
+    archive = gimo_archive_new ();
+    object = G_OBJECT (gimo_archive_new ());
+    g_assert (gimo_archive_add_object (archive, "1", object));
+    g_assert (!gimo_archive_add_object (archive, "1", object));
+    g_assert (!gimo_archive_query_object (archive, "2"));
+    g_assert (gimo_archive_add_object (archive, "2", object));
+    g_object_unref (object);
+    object = gimo_archive_query_object (archive, "1");
+    g_assert (object);
+    g_object_unref (object);
+    gimo_archive_remove_object (archive, "1");
+    g_assert (!gimo_archive_query_object (archive, "1"));
+    g_object_unref (archive);
+}
+
+static void _test_archive_xml (void)
+{
+}
+
 int main (int argc, char *argv[])
 {
     g_type_init ();
     g_thread_init (NULL);
+
+    _test_archive_common ();
+    _test_archive_xml ();
+
     return 0;
 }

@@ -39,3 +39,10 @@ gchar* _gimo_utils_parse_extension_id (const gchar *ext_id,
 
     return result;
 }
+
+gint _gimo_utils_string_compare (gconstpointer a,
+                                 gconstpointer b,
+                                 gpointer user_data)
+{
+    return strcmp (a, b);
+}

@@ -111,7 +111,6 @@ static GObject* _gimo_dlmodule_resolve (GimoModule *module,
 static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
 {
     iface->load = (GimoLoadableLoadFunc) _gimo_dlmodule_open;
-    iface->unload = (GimoLoadableUnloadFunc) _gimo_dlmodule_close;
 }
 
 static void gimo_module_interface_init (GimoModuleInterface *iface)

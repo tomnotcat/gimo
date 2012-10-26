@@ -27,10 +27,11 @@ G_BEGIN_DECLS
  * GimoErrors:
  * @GIMO_ERROR_NONE: no error
  * @GIMO_ERROR_NO_MEMORY: out of memory
- * @GIMO_ERROR_NEW_OBJECT: new object failed
+ * @GIMO_ERROR_OPEN_FILE: open file error
  * @GIMO_ERROR_INVALID_ID: invalid identifier
  * @GIMO_ERROR_INVALID_OBJECT: invalid object
  * @GIMO_ERROR_INVALID_STATE: invalid state
+ * @GIMO_ERROR_INVALID_RETURN: invalid return
  * @GIMO_ERROR_CONFLICT: object conflict
  * @GIMO_ERROR_NOT_FOUND: object not found
  * @GIMO_ERROR_IMPORT: import module error
@@ -41,10 +42,11 @@ G_BEGIN_DECLS
 typedef enum {
     GIMO_ERROR_NONE,
     GIMO_ERROR_NO_MEMORY,
-    GIMO_ERROR_NEW_OBJECT,
+    GIMO_ERROR_OPEN_FILE,
     GIMO_ERROR_INVALID_ID,
     GIMO_ERROR_INVALID_OBJECT,
     GIMO_ERROR_INVALID_STATE,
+    GIMO_ERROR_INVALID_RETURN,
     GIMO_ERROR_CONFLICT,
     GIMO_ERROR_NOT_FOUND,
     GIMO_ERROR_IMPORT,

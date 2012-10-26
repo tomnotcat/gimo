@@ -44,10 +44,3 @@ gboolean gimo_loadable_load (GimoLoadable *self,
 
     return GIMO_LOADABLE_GET_IFACE (self)->load (self, file_name);
 }
-
-gboolean gimo_loadable_unload (GimoLoadable *self)
-{
-    g_return_val_if_fail (GIMO_IS_LOADABLE (self), FALSE);
-
-    return GIMO_LOADABLE_GET_IFACE (self)->unload (self);
-}

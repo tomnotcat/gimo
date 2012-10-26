@@ -28,6 +28,10 @@ void gimo_context_install_core_plugins (GimoContext *self);
 gchar* _gimo_utils_parse_extension_id (const gchar *ext_id,
                                        gchar **local_id);
 
+gint _gimo_utils_string_compare (gconstpointer a,
+                                 gconstpointer b,
+                                 gpointer user_data);
+
 G_END_DECLS
 
 #endif /* __GIMO_UTILS_H__ */

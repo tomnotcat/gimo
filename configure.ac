@@ -123,6 +123,12 @@ if test "x${have_gjs}" = "xno"; then
    AC_MSG_WARN([Gjs-1.0 required but not found])
 fi
 
+dnl Check for Expat XML parsing library
+AC_CHECK_HEADER([expat.h],, AC_MSG_ERROR([Expat header file is required]))
+AC_CHECK_LIB([expat], [XML_ParseBuffer], \
+                      [EXPAT_LIBS="-lexpat"], \
+                      AC_MSG_ERROR([Expat library is required]))
+
 dnl ================================================================
 dnl Checks for header files.
 dnl ================================================================

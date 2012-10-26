@@ -18,6 +18,7 @@
  */
 #include "gimo-loader.h"
 #include "gimo-loadable.h"
+#include "gimo-utils.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GimoLoader, gimo_loader, G_TYPE_OBJECT)
@@ -50,13 +51,6 @@ static void _loader_info_destroy (gpointer p)
         g_free (info->suffix);
         g_free (info);
     }
-}
-
-static gint _gimo_string_compare (gconstpointer a,
-                                  gconstpointer b,
-                                  gpointer user_data)
-{
-    return strcmp (a, b);
 }
 
 static GList* _gimo_loader_lookup (GimoLoader *self,
@@ -174,7 +168,7 @@ static void gimo_loader_set_property (GObject *object,
     case PROP_CACHE:
         if (g_value_get_boolean (value)) {
             priv->object_tree = g_tree_new_full (
-                _gimo_string_compare, NULL, g_free, NULL);
+                _gimo_utils_string_compare, NULL, g_free, NULL);
         }
         break;
 

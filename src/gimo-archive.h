@@ -45,11 +45,31 @@ struct _GimoArchive {
 
 struct _GimoArchiveClass {
     GObjectClass parent_class;
+    gboolean (*read) (GimoArchive *self,
+                      const gchar *file_name);
+    gboolean (*save) (GimoArchive *self,
+                      const gchar *file_name);
 };
 
 GType gimo_archive_get_type (void) G_GNUC_CONST;
 
 GimoArchive* gimo_archive_new (void);
+
+gboolean gimo_archive_read (GimoArchive *self,
+                            const gchar *file_name);
+
+gboolean gimo_archive_save (GimoArchive *self,
+                            const gchar *file_name);
+
+gboolean gimo_archive_add_object (GimoArchive *self,
+                                  const gchar *name,
+                                  GObject *object);
+
+GObject* gimo_archive_query_object (GimoArchive *self,
+                                    const gchar *name);
+
+void gimo_archive_remove_object (GimoArchive *self,
+                                 const gchar *name);
 
 G_END_DECLS
 

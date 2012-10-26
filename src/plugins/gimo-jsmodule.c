@@ -17,6 +17,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-jsmodule.h"
+#include "gimo-error.h"
 
 #include <gi/object.h>
 #include <gjs/gjs.h>
@@ -44,10 +45,8 @@ static gboolean _gimo_jsmodule_open (GimoModule *module,
     GError *error = NULL;
     int status = 0;
 
-    if (priv->context) {
-        g_warning ("Jsmodule: module already opened: %s", file_name);
-        return FALSE;
-    }
+    if (priv->context)
+        gimo_set_error_return_val (GIMO_ERROR_CONFLICT, FALSE);
 
     priv->context = gjs_context_new ();
     if (!gjs_context_eval_file (priv->context,
@@ -55,8 +54,9 @@ static gboolean _gimo_jsmodule_open (GimoModule *module,
                                 &status,
                                 &error))
     {
-        g_warning ("Eval JS failed: %s: %s", file_name, error->message);
-
+        gimo_set_error_full (GIMO_ERROR_IMPORT,
+                             "Eval JS failed: %s: %s",
+                             file_name, error->message);
         g_error_free (error);
         g_object_unref (priv->context);
         priv->context = NULL;
@@ -114,29 +114,33 @@ static GObject* _gimo_jsmodule_resolve (GimoModule *module,
 
     JS_GetProperty (js_ctx, global, symbol, &function);
     if (JSVAL_VOID == function) {
-        g_warning ("Can't get JS symbol: %s: %s",
-                   priv->name, symbol);
+        gimo_set_error_full (GIMO_ERROR_NO_SYMBOL,
+                             "Can't get JS symbol: %s: %s",
+                             priv->name, symbol);
         return NULL;
     }
 
     if (!gjs_call_function_value (
             js_ctx, global, function, 0, NULL, &rval))
     {
-        g_warning ("Call JS function failed: %s: %s",
-                   priv->name, symbol);
+        gimo_set_error_full (GIMO_ERROR_INVALID_SYMBOL,
+                             "Call JS function failed: %s: %s",
+                             priv->name, symbol);
         return NULL;
     }
 
     if (JSVAL_VOID == rval) {
-        g_warning ("JS function return NULL: %s: %s",
-                   priv->name, symbol);
+        gimo_set_error_full (GIMO_ERROR_INVALID_RETURN,
+                             "JS function return NULL: %s: %s",
+                             priv->name, symbol);
         return NULL;
     }
 
     object = JSVAL_TO_OBJECT (rval);
     if (NULL == object) {
-        g_warning ("JS function return non-Object: %s: %s",
-                   priv->name, symbol);
+        gimo_set_error_full (GIMO_ERROR_INVALID_RETURN,
+                             "JS function return non-Object: %s: %s",
+                             priv->name, symbol);
         return NULL;
     }
 
@@ -150,7 +154,6 @@ static GObject* _gimo_jsmodule_resolve (GimoModule *module,
 static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
 {
     iface->load = (GimoLoadableLoadFunc) _gimo_jsmodule_open;
-    iface->unload = (GimoLoadableUnloadFunc) _gimo_jsmodule_close;
 }
 
 static void gimo_module_interface_init (GimoModuleInterface *iface)
