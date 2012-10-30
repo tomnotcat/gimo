@@ -147,3 +147,8 @@ static void gimo_xmlarchive_class_init (GimoXmlArchiveClass *klass)
     g_type_class_add_private (gobject_class,
                               sizeof (GimoXmlArchivePrivate));
 }
+
+GimoXmlArchive* gimo_xmlarchive_new (void)
+{
+    return g_object_new (GIMO_TYPE_XMLARCHIVE, NULL);
+}

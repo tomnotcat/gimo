@@ -17,6 +17,8 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include "gimo-archive.h"
+#include "gimo-dlmodule.h"
+#include "gimo-loader.h"
 
 static void _test_archive_common (void)
 {
@@ -40,6 +42,25 @@ static void _test_archive_common (void)
 
 static void _test_archive_xml (void)
 {
+    GimoLoader *loader;
+    GimoModule *module;
+    GObject *archive;
+
+    loader = gimo_loader_new_cached ();
+    g_assert (gimo_loader_register (loader,
+                                    NULL,
+                                    (GimoLoadableCtorFunc) gimo_dlmodule_new,
+                                    NULL));
+    module = GIMO_MODULE (gimo_loader_load (loader, "xmlarchive-1.0"));
+    archive = gimo_module_resolve (module,
+                                   "gimo_xmlarchive_new",
+                                   NULL);
+    g_assert (archive);
+    g_assert (gimo_archive_read (GIMO_ARCHIVE (archive),
+                                 "test-archive.xml"));
+    g_object_unref (archive);
+    g_object_unref (module);
+    g_object_unref (loader);
 }
 
 int main (int argc, char *argv[])

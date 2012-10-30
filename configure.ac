@@ -129,6 +129,8 @@ AC_CHECK_LIB([expat], [XML_ParseBuffer], \
                       [EXPAT_LIBS="-lexpat"], \
                       AC_MSG_ERROR([Expat library is required]))
 
+AC_SUBST([EXPAT_LIBS])
+
 dnl ================================================================
 dnl Checks for header files.
 dnl ================================================================
