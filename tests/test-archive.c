@@ -1,6 +1,6 @@
 /* GIMO - A plugin system based on GObject.
  *
- * Copyright © 2012 SoftFlag, Inc.
+ * Copyright (C) 2012 TinySoft, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -12,11 +12,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 #include "gimo-archive.h"
+#include "gimo-cfgelement.h"
 #include "gimo-dlmodule.h"
 #include "gimo-loader.h"
 
@@ -45,6 +47,9 @@ static void _test_archive_xml (void)
     GimoLoader *loader;
     GimoModule *module;
     GObject *archive;
+
+    /* Register types. */
+    g_type_name (GIMO_TYPE_CFGELEMENT);
 
     loader = gimo_loader_new_cached ();
     g_assert (gimo_loader_register (loader,

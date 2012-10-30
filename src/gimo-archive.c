@@ -1,6 +1,6 @@
 /* GIMO - A plugin system based on GObject.
  *
- * Copyright © 2012 SoftFlag, Inc.
+ * Copyright (C) 2012 TinySoft, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -12,9 +12,10 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
 /*
@@ -91,7 +92,7 @@ gboolean gimo_archive_save (GimoArchive *self,
 }
 
 gboolean gimo_archive_add_object (GimoArchive *self,
-                                  const gchar *name,
+                                  const gchar *id,
                                   GObject *object)
 {
     GimoArchivePrivate *priv;
@@ -102,13 +103,13 @@ gboolean gimo_archive_add_object (GimoArchive *self,
 
     g_mutex_lock (&priv->mutex);
 
-    if (g_tree_lookup (priv->objects, name)) {
+    if (g_tree_lookup (priv->objects, id)) {
         g_mutex_unlock (&priv->mutex);
         return FALSE;
     }
 
     g_tree_insert (priv->objects,
-                   g_strdup (name),
+                   g_strdup (id),
                    g_object_ref (object));
 
     g_mutex_unlock (&priv->mutex);
@@ -119,14 +120,14 @@ gboolean gimo_archive_add_object (GimoArchive *self,
 /**
  * gimo_archive_query_object:
  * @self: a #GimoArchive
- * @name: the object name
+ * @id: the object identifier
  *
- * Query object by name.
+ * Query object by identifier.
  *
  * Returns: (allow-none) (transfer full): a #GObject
  */
 GObject* gimo_archive_query_object (GimoArchive *self,
-                                    const gchar *name)
+                                    const gchar *id)
 {
     GimoArchivePrivate *priv;
     GObject *object;
@@ -137,7 +138,7 @@ GObject* gimo_archive_query_object (GimoArchive *self,
 
     g_mutex_lock (&priv->mutex);
 
-    object = g_tree_lookup (priv->objects, name);
+    object = g_tree_lookup (priv->objects, id);
 
     if (object)
         g_object_ref (object);
@@ -148,7 +149,7 @@ GObject* gimo_archive_query_object (GimoArchive *self,
 }
 
 void gimo_archive_remove_object (GimoArchive *self,
-                                 const gchar *name)
+                                 const gchar *id)
 {
     GimoArchivePrivate *priv;
 
@@ -158,7 +159,7 @@ void gimo_archive_remove_object (GimoArchive *self,
 
     g_mutex_lock (&priv->mutex);
 
-    g_tree_remove (priv->objects, name);
+    g_tree_remove (priv->objects, id);
 
     g_mutex_unlock (&priv->mutex);
 }

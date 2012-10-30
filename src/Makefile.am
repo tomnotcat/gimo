@@ -11,7 +11,8 @@ libgimo_1_0_la_SOURCES = gimo-types.h gimo-enums.h gimo-enums.c \
 	gimo-extension.h gimo-extension.c gimo-loader.h gimo-loader.c \
 	gimo-loadable.h gimo-loadable.c gimo-module.h gimo-module.c \
 	gimo-dlmodule.h gimo-dlmodule.c gimo-archive.h gimo-archive.c \
-	gimo-marshal.h gimo-marshal.c gimo-utils.h gimo-utils.c
+	gimo-marshal.h gimo-marshal.c gimo-utils.h gimo-utils.c \
+	gimo-cfgelement.h gimo-cfgelement.c
 
 CLEANFILES =
 

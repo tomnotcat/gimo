@@ -1,3 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive version="1.0">
+  <object id="object1" class="GimoCfgElement">
+    <attribute>
+      <attr1>1</attr1>
+    </attribute>
+    <children>
+    </children>
+  </object>
+  <object id="object2" class="GimoCfgElement">
+    <attribute>
+      <attr1>1</attr1>
+    </attribute>
+    <children>
+    </children>
+  </object>
 </archive>

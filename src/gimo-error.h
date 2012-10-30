@@ -1,6 +1,6 @@
 /* GIMO - A plugin system based on GObject.
  *
- * Copyright © 2012 SoftFlag, Inc.
+ * Copyright (C) 2012 TinySoft, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -12,9 +12,10 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 #ifndef __GIMO_ERROR_H__
 #define __GIMO_ERROR_H__
@@ -33,11 +34,14 @@ G_BEGIN_DECLS
  * @GIMO_ERROR_INVALID_STATE: invalid state
  * @GIMO_ERROR_INVALID_RETURN: invalid return
  * @GIMO_ERROR_CONFLICT: object conflict
- * @GIMO_ERROR_NOT_FOUND: object not found
+ * @GIMO_ERROR_NO_TYPE: type not found
+ * @GIMO_ERROR_NO_OBJECT: object not found
  * @GIMO_ERROR_IMPORT: import module error
  * @GIMO_ERROR_UNLOAD: unload module error
  * @GIMO_ERROR_NO_SYMBOL: symbol not found
  * @GIMO_ERROR_INVALID_SYMBOL: invalid symbol
+ * @GIMO_ERROR_NO_ATTRIBUTE: attribute not found
+ * @GIMO_ERROR_INVALID_ATTRIBUTE: invalid attribute
  */
 typedef enum {
     GIMO_ERROR_NONE,
@@ -48,11 +52,14 @@ typedef enum {
     GIMO_ERROR_INVALID_STATE,
     GIMO_ERROR_INVALID_RETURN,
     GIMO_ERROR_CONFLICT,
-    GIMO_ERROR_NOT_FOUND,
+    GIMO_ERROR_NO_TYPE,
+    GIMO_ERROR_NO_OBJECT,
     GIMO_ERROR_IMPORT,
     GIMO_ERROR_UNLOAD,
     GIMO_ERROR_NO_SYMBOL,
-    GIMO_ERROR_INVALID_SYMBOL
+    GIMO_ERROR_INVALID_SYMBOL,
+    GIMO_ERROR_NO_ATTRIBUTE,
+    GIMO_ERROR_INVALID_ATTRIBUTE
 } GimoErrors;
 
 void gimo_set_error (gint code);
