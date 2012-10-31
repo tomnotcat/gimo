@@ -27,9 +27,9 @@ G_BEGIN_DECLS
 typedef struct _GimoContext GimoContext;
 typedef struct _GimoPluginfo GimoPluginfo;
 typedef struct _GimoRequire GimoRequire;
-typedef struct _GimoExtpoint GimoExtpoint;
+typedef struct _GimoExtPoint GimoExtPoint;
 typedef struct _GimoExtension GimoExtension;
-typedef struct _GimoCfgElement GimoCfgElement;
+typedef struct _GimoExtConfig GimoExtConfig;
 typedef struct _GimoModule GimoModule;
 typedef struct _GimoLoader GimoLoader;
 typedef struct _GimoLoadable GimoLoadable;

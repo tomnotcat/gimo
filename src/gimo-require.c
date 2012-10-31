@@ -28,7 +28,7 @@ G_DEFINE_TYPE (GimoRequire, gimo_require, G_TYPE_OBJECT)
 
 enum {
     PROP_0,
-    PROP_PLUGINID,
+    PROP_PLUGIN,
     PROP_VERSION,
     PROP_OPTIONAL
 };
@@ -73,7 +73,7 @@ static void gimo_require_set_property (GObject *object,
     GimoRequirePrivate *priv = self->priv;
 
     switch (prop_id) {
-    case PROP_PLUGINID:
+    case PROP_PLUGIN:
         priv->plugin_id = g_value_dup_string (value);
         break;
 
@@ -100,7 +100,7 @@ static void gimo_require_get_property (GObject *object,
     GimoRequirePrivate *priv = self->priv;
 
     switch (prop_id) {
-    case PROP_PLUGINID:
+    case PROP_PLUGIN:
         g_value_set_string (value, priv->plugin_id);
         break;
 
@@ -130,8 +130,8 @@ static void gimo_require_class_init (GimoRequireClass *klass)
                               sizeof (GimoRequirePrivate));
 
     g_object_class_install_property (
-        gobject_class, PROP_PLUGINID,
-        g_param_spec_string ("plugin-id",
+        gobject_class, PROP_PLUGIN,
+        g_param_spec_string ("plugin",
                              "Plugin identifier",
                              "The identifier of the plugin",
                              NULL,
@@ -162,12 +162,12 @@ static void gimo_require_class_init (GimoRequireClass *klass)
                               G_PARAM_STATIC_STRINGS));
 }
 
-GimoRequire* gimo_require_new (const gchar *plugin_id,
+GimoRequire* gimo_require_new (const gchar *plugin,
                                const gchar *version,
                                gboolean optional)
 {
     return g_object_new (GIMO_TYPE_REQUIRE,
-                         "plugin-id", plugin_id,
+                         "plugin", plugin,
                          "version", version,
                          "optional", optional,
                          NULL);

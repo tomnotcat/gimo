@@ -46,7 +46,7 @@ static void _test_context_common (void)
 {
     GimoContext *ctx;
     GimoPluginfo *info;
-    GimoExtpoint *extpt;
+    GimoExtPoint *extpt;
     GPtrArray *array;
 
     struct _StateChange param = {

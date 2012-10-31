@@ -48,12 +48,12 @@ G_DEFINE_TYPE (GimoPluginfo, gimo_pluginfo, G_TYPE_OBJECT)
 
 enum {
     PROP_0,
-    PROP_IDENTIFIER,
-    PROP_URL,
-    PROP_SYMBOL,
+    PROP_ID,
     PROP_NAME,
     PROP_VERSION,
     PROP_PROVIDER,
+    PROP_URI,
+    PROP_MODULE,
     PROP_REQUIRES,
     PROP_EXTPOINTS,
     PROP_EXTENSIONS
@@ -61,9 +61,9 @@ enum {
 
 struct _GimoPluginfoPrivate {
     GimoContext *context;
-    gchar *identifier;
-    gchar *url;
-    gchar *symbol;
+    gchar *id;
+    gchar *uri;
+    gchar *module;
     gchar *name;
     gchar *version;
     gchar *provider;
@@ -79,14 +79,14 @@ G_LOCK_DEFINE_STATIC (pluginfo_lock);
 static gint _gimo_pluginfo_extpoint_sort (gconstpointer a,
                                           gconstpointer b)
 {
-    return strcmp (gimo_extpoint_get_local_id (*(GimoExtpoint **) a),
-                   gimo_extpoint_get_local_id (*(GimoExtpoint **) b));
+    return strcmp (gimo_extpoint_get_local_id (*(GimoExtPoint **) a),
+                   gimo_extpoint_get_local_id (*(GimoExtPoint **) b));
 }
 
 static gint _gimo_pluginfo_extpoint_search (gconstpointer a,
                                             gconstpointer b)
 {
-    return strcmp (a, gimo_extpoint_get_local_id (*(GimoExtpoint **) b));
+    return strcmp (a, gimo_extpoint_get_local_id (*(GimoExtPoint **) b));
 }
 
 static gint _gimo_pluginfo_extension_sort (gconstpointer a,
@@ -222,12 +222,12 @@ static void gimo_pluginfo_init (GimoPluginfo *self)
     priv = self->priv;
 
     priv->context = NULL;
-    priv->identifier = NULL;
-    priv->url = NULL;
-    priv->symbol = NULL;
+    priv->id = NULL;
     priv->name = NULL;
     priv->version = NULL;
     priv->provider = NULL;
+    priv->uri = NULL;
+    priv->module = NULL;
     priv->requires = NULL;
     priv->extpoints = NULL;
     priv->extensions = NULL;
@@ -242,12 +242,12 @@ static void gimo_pluginfo_finalize (GObject *gobject)
 
     g_assert (!priv->context && !priv->plugin);
 
-    g_free (priv->identifier);
-    g_free (priv->url);
-    g_free (priv->symbol);
+    g_free (priv->id);
     g_free (priv->name);
     g_free (priv->version);
     g_free (priv->provider);
+    g_free (priv->uri);
+    g_free (priv->module);
 
     if (priv->requires)
         g_ptr_array_unref (priv->requires);
@@ -278,16 +278,8 @@ static void gimo_pluginfo_set_property (GObject *object,
     GimoPluginfoPrivate *priv = self->priv;
 
     switch (prop_id) {
-    case PROP_IDENTIFIER:
-        priv->identifier = g_value_dup_string (value);
-        break;
-
-    case PROP_URL:
-        priv->url = g_value_dup_string (value);
-        break;
-
-    case PROP_SYMBOL:
-        priv->symbol = g_value_dup_string (value);
+    case PROP_ID:
+        priv->id = g_value_dup_string (value);
         break;
 
     case PROP_NAME:
@@ -300,6 +292,14 @@ static void gimo_pluginfo_set_property (GObject *object,
 
     case PROP_PROVIDER:
         priv->provider = g_value_dup_string (value);
+        break;
+
+    case PROP_URI:
+        priv->uri = g_value_dup_string (value);
+        break;
+
+    case PROP_MODULE:
+        priv->module = g_value_dup_string (value);
         break;
 
     case PROP_REQUIRES:
@@ -353,16 +353,8 @@ static void gimo_pluginfo_get_property (GObject *object,
     GimoPluginfoPrivate *priv = self->priv;
 
     switch (prop_id) {
-    case PROP_IDENTIFIER:
-        g_value_set_string (value, priv->identifier);
-        break;
-
-    case PROP_URL:
-        g_value_set_string (value, priv->url);
-        break;
-
-    case PROP_SYMBOL:
-        g_value_set_string (value, priv->symbol);
+    case PROP_ID:
+        g_value_set_string (value, priv->id);
         break;
 
     case PROP_NAME:
@@ -375,6 +367,14 @@ static void gimo_pluginfo_get_property (GObject *object,
 
     case PROP_PROVIDER:
         g_value_set_string (value, priv->provider);
+        break;
+
+    case PROP_URI:
+        g_value_set_string (value, priv->uri);
+        break;
+
+    case PROP_MODULE:
+        g_value_set_string (value, priv->module);
         break;
 
     case PROP_REQUIRES:
@@ -407,8 +407,8 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
     gobject_class->get_property = gimo_pluginfo_get_property;
 
     g_object_class_install_property (
-        gobject_class, PROP_IDENTIFIER,
-        g_param_spec_string ("identifier",
+        gobject_class, PROP_ID,
+        g_param_spec_string ("id",
                              "Unique identifier",
                              "The unique identifier of the plugin",
                              NULL,
@@ -418,10 +418,10 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
                              G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property (
-        gobject_class, PROP_URL,
-        g_param_spec_string ("url",
-                             "URL/path",
-                             "The URL/path of the plugin",
+        gobject_class, PROP_URI,
+        g_param_spec_string ("uri",
+                             "The plugin URI",
+                             "The URI of the plugin runtime resources",
                              NULL,
                              G_PARAM_READABLE |
                              G_PARAM_WRITABLE |
@@ -429,10 +429,10 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
                              G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property (
-        gobject_class, PROP_SYMBOL,
-        g_param_spec_string ("symbol",
-                             "Class name",
-                             "The runtime class name of the plugin",
+        gobject_class, PROP_MODULE,
+        g_param_spec_string ("module",
+                             "Module name",
+                             "The runtime module name",
                              NULL,
                              G_PARAM_READABLE |
                              G_PARAM_WRITABLE |
@@ -508,63 +508,49 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
 
 /**
  * gimo_pluginfo_new:
- * @identifier: the unique identifier
- * @url: (allow-none): url/path of the plugin
- * @symbol: (allow-none): the runtime symbol name
+ * @id: the unique identifier
  * @name: (allow-none): the display name
  * @version: (allow-none): the release version
  * @provider: (allow-none): the provider name
+ * @uri: (allow-none): URI of the plugin runtime resources
+ * @module: (allow-none): the runtime module name
  * @requires: (allow-none) (element-type Gimo.Require) (transfer none):
  *            the required plugins
- * @extpoints: (allow-none) (element-type Gimo.Extpoint) (transfer none):
+ * @extpoints: (allow-none) (element-type Gimo.ExtPoint) (transfer none):
  *             the extension points
  * @extensions: (allow-none) (element-type Gimo.Extension) (transfer none):
  *              the extensions
  *
  * Create a plugin descriptor of the provided parameters.
  */
-GimoPluginfo* gimo_pluginfo_new (const gchar *identifier,
-                                 const gchar *url,
-                                 const gchar *symbol,
+GimoPluginfo* gimo_pluginfo_new (const gchar *id,
                                  const gchar *name,
                                  const gchar *version,
                                  const gchar *provider,
+                                 const gchar *uri,
+                                 const gchar *module,
                                  GPtrArray *requires,
                                  GPtrArray *extpoints,
                                  GPtrArray *extensions)
 {
     return g_object_new (GIMO_TYPE_PLUGINFO,
-                         "identifier", identifier,
-                         "url", url,
-                         "symbol", symbol,
+                         "id", id,
                          "name", name,
                          "version", version,
                          "provider", provider,
+                         "uri", uri,
+                         "module", module,
                          "requires", requires,
                          "extpoints", extpoints,
                          "extensions", extensions,
                          NULL);
 }
 
-const gchar* gimo_pluginfo_get_identifier (GimoPluginfo *self)
+const gchar* gimo_pluginfo_get_id (GimoPluginfo *self)
 {
     g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
 
-    return self->priv->identifier;
-}
-
-const gchar* gimo_pluginfo_get_url (GimoPluginfo *self)
-{
-    g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
-
-    return self->priv->url;
-}
-
-const gchar* gimo_pluginfo_get_symbol (GimoPluginfo *self)
-{
-    g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
-
-    return self->priv->symbol;
+    return self->priv->id;
 }
 
 const gchar* gimo_pluginfo_get_name (GimoPluginfo *self)
@@ -588,6 +574,20 @@ const gchar* gimo_pluginfo_get_provider (GimoPluginfo *self)
     return self->priv->provider;
 }
 
+const gchar* gimo_pluginfo_get_uri (GimoPluginfo *self)
+{
+    g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
+
+    return self->priv->uri;
+}
+
+const gchar* gimo_pluginfo_get_module (GimoPluginfo *self)
+{
+    g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
+
+    return self->priv->module;
+}
+
 /**
  * gimo_pluginfo_get_extpoint:
  * @self: a #GimoPluginfo
@@ -595,13 +595,13 @@ const gchar* gimo_pluginfo_get_provider (GimoPluginfo *self)
  *
  * Get an extension point with the specified local ID.
  *
- * Returns: (allow-none) (transfer none): a #GimoExtpoint
+ * Returns: (allow-none) (transfer none): a #GimoExtPoint
  */
-GimoExtpoint* gimo_pluginfo_get_extpoint (GimoPluginfo *self,
+GimoExtPoint* gimo_pluginfo_get_extpoint (GimoPluginfo *self,
                                           const gchar *local_id)
 {
     GimoPluginfoPrivate *priv;
-    GimoExtpoint **result;
+    GimoExtPoint **result;
 
     g_return_val_if_fail (GIMO_IS_PLUGINFO (self), NULL);
 
@@ -672,7 +672,7 @@ GPtrArray* gimo_pluginfo_get_requires (GimoPluginfo *self)
  *
  * Get the extension points provided by the plugin.
  *
- * Returns: (element-type Gimo.Extpoint) (transfer none):
+ * Returns: (element-type Gimo.ExtPoint) (transfer none):
  *          the extension points list.
  */
 GPtrArray* gimo_pluginfo_get_extpoints (GimoPluginfo *self)

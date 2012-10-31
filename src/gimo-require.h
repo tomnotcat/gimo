@@ -50,7 +50,7 @@ struct _GimoRequireClass {
 
 GType gimo_require_get_type (void) G_GNUC_CONST;
 
-GimoRequire* gimo_require_new (const gchar *plugin_id,
+GimoRequire* gimo_require_new (const gchar *plugin,
                                const gchar *version,
                                gboolean optional);
 

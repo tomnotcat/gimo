@@ -3,40 +3,40 @@
 from gi.repository import Gimo
 
 info = Gimo.Pluginfo ()
-assert (info.get_identifier () == None)
-assert (info.get_url () == None)
-assert (info.get_symbol () == None)
+assert (info.get_id () == None)
 assert (info.get_name () == None)
 assert (info.get_version () == None)
 assert (info.get_provider () == None)
+assert (info.get_uri () == None)
+assert (info.get_module () == None)
 assert (len (info.get_requires ()) == 0)
 assert (len (info.get_extpoints ()) == 0)
 assert (len (info.get_extensions ()) == 0)
 assert (info.get_state () == Gimo.PluginState.UNINSTALLED)
 
-requires = [Gimo.Require (plugin_id="require-plugin",
+requires = [Gimo.Require (plugin="require-plugin",
                           version="1.0",
                           optional=True)]
-extpoints = [Gimo.Extpoint (local_id="extpoint1",
+extpoints = [Gimo.ExtPoint (id="extpoint1",
                             name="hello")]
-extensions = [Gimo.Extension (local_id="extension1",
+extensions = [Gimo.Extension (id="extension1",
                               name="world",
-                              extpoint_id="test.plugin.extpoint1")]
+                              point="test.plugin.extpoint1")]
 info = Gimo.Pluginfo.new ("test.plugin",
-                          "/home/test",
-                          "myklass",
                           "myname",
                           "1.0",
                           "tomnotcat",
+                          "/home/test",
+                          "mymodule",
                           requires,
                           extpoints,
                           extensions)
-assert (info.get_identifier () == "test.plugin")
-assert (info.get_url () == "/home/test")
-assert (info.get_symbol () == "myklass")
+assert (info.get_id () == "test.plugin")
 assert (info.get_name () == "myname")
 assert (info.get_version () == "1.0")
 assert (info.get_provider () == "tomnotcat")
+assert (info.get_uri () == "/home/test")
+assert (info.get_module () == "mymodule")
 assert (len (info.get_requires ()) == len (requires))
 assert (len (info.get_extpoints ()) == len (extpoints))
 assert (len (info.get_extensions ()) == len (extensions))
@@ -49,12 +49,12 @@ assert (it.is_optional ())
 it = info.get_extpoints ()[0]
 assert (it.get_local_id () == "extpoint1")
 assert (it.get_name () == "hello")
-assert (it.get_identifier () == "test.plugin.extpoint1")
+assert (it.get_id () == "test.plugin.extpoint1")
 assert (it.query_pluginfo () == info)
 
 it = info.get_extensions ()[0]
 assert (it.get_local_id () == "extension1")
 assert (it.get_name () == "world")
 assert (it.get_extpoint_id () == "test.plugin.extpoint1")
-assert (it.get_identifier () == "test.plugin.extension1")
+assert (it.get_id () == "test.plugin.extension1")
 assert (it.query_pluginfo () == info)

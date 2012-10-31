@@ -18,7 +18,7 @@ def _plugin_state_changed (ctx, info, old_state, new_state):
 ctx = Gimo.Context ()
 ctx.connect ("state-changed", _plugin_state_changed)
 
-info = Gimo.Pluginfo (identifier="test.plugin")
+info = Gimo.Pluginfo (id="test.plugin")
 assert (not ctx.query_plugin ("test.plugin"))
 assert (ctx.install_plugin (info))
 assert (ctx.query_plugin ("test.plugin") == info)
@@ -27,12 +27,12 @@ assert (Gimo.PluginState.UNINSTALLED == g_old_state)
 assert (Gimo.PluginState.INSTALLED == g_new_state)
 assert (1 == g_state_count)
 
-info = Gimo.Pluginfo (identifier="test.plugin")
+info = Gimo.Pluginfo (id="test.plugin")
 assert (not ctx.install_plugin (info))
 assert (Gimo.get_error () == Gimo.Errors.CONFLICT)
 
-extpts = [Gimo.Extpoint (local_id="extpt1"),
-          Gimo.Extpoint (local_id="extpt2")]
+extpts = [Gimo.ExtPoint (id="extpt1"),
+          Gimo.ExtPoint (id="extpt2")]
 info = Gimo.Pluginfo.new ("test.plugin2",
                           "/home/test",
                           "myklass",

@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive version="1.0">
-  <object id="object1" class="GimoCfgElement">
-    <attribute>
-      <attr1>1</attr1>
-    </attribute>
-    <children>
-    </children>
+  <object id="org.gimo.test.plugin1" class="GimoPluginfo">
+    <name>test plugin1</name>
+    <version>0.1</version>
+    <provider>tomnotcat</provider>
+    <uri>http://www.xxx.com/org.gimo.test.plugin1</uri>
+    <module>plugin1</module>
+    <extpoint id="extpt1" name="extension point 1"/>
   </object>
-  <object id="object2" class="GimoCfgElement">
-    <attribute>
-      <attr1>1</attr1>
-    </attribute>
-    <children>
-    </children>
+  <object id="plugin2" class="GimoPluginfo">
+    <id>org.gimo.test.plugin2</id>
+    <require plugin="org.gimo.test.plugin1" version="1.0" optional="true"/>
+    <extension id="ext1" name="extension 1"
+               point="org.gimo.test.plugin1.extpt1">
+      <config name="config1" value="value1"/>
+      <config name="config2" value="value2">
+        <config name="subcfg1" value="subval1"/>
+      </config>
+    </extension>
   </object>
 </archive>

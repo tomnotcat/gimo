@@ -75,7 +75,7 @@ static gboolean _gimo_context_query_plugins (gpointer key,
 
     if (p->namesps) {
         const gchar *it = p->namesps;
-        const gchar *id = gimo_pluginfo_get_identifier (info);
+        const gchar *id = gimo_pluginfo_get_id (info);
 
         while (*it) {
             if (*it++ != *id++)
@@ -154,7 +154,7 @@ gboolean gimo_context_install_plugin (GimoContext *self,
 
     priv = self->priv;
 
-    plugin_id = gimo_pluginfo_get_identifier (info);
+    plugin_id = gimo_pluginfo_get_id (info);
     if (NULL == plugin_id || !plugin_id[0])
         gimo_set_error_return_val (GIMO_ERROR_INVALID_ID, FALSE);
 
@@ -289,13 +289,13 @@ GPtrArray* gimo_context_query_plugins (GimoContext *self,
  *
  * Query an extension point with the specified ID.
  *
- * Returns: (allow-none) (transfer full): a #GimoExtpoint
+ * Returns: (allow-none) (transfer full): a #GimoExtPoint
  */
-GimoExtpoint* gimo_context_query_extpoint (GimoContext *self,
+GimoExtPoint* gimo_context_query_extpoint (GimoContext *self,
                                            const gchar *extpoint_id)
 {
     GimoPluginfo *info = NULL;
-    GimoExtpoint *extpt = NULL;
+    GimoExtPoint *extpt = NULL;
     gchar *plugin_id = NULL;
     gchar *local_id = NULL;
 
@@ -324,7 +324,7 @@ GimoPlugin* _gimo_context_load_plugin (GimoContext *self,
                                        GimoPluginfo *info)
 {
     /*
-    GimoExtpoint *extpt;
+    GimoExtPoint *extpt;
     GimoLoader *loader;
     GimoPlugin *plugin;
 

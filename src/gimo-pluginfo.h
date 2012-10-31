@@ -50,21 +50,17 @@ struct _GimoPluginfoClass {
 
 GType gimo_pluginfo_get_type (void) G_GNUC_CONST;
 
-GimoPluginfo* gimo_pluginfo_new (const gchar *identifier,
-                                 const gchar *url,
-                                 const gchar *symbol,
+GimoPluginfo* gimo_pluginfo_new (const gchar *id,
                                  const gchar *name,
                                  const gchar *version,
                                  const gchar *provider,
+                                 const gchar *uri,
+                                 const gchar *module,
                                  GPtrArray *requires,
                                  GPtrArray *extpoints,
                                  GPtrArray *extensions);
 
-const gchar* gimo_pluginfo_get_identifier (GimoPluginfo *self);
-
-const gchar* gimo_pluginfo_get_url (GimoPluginfo *self);
-
-const gchar* gimo_pluginfo_get_symbol (GimoPluginfo *self);
+const gchar* gimo_pluginfo_get_id (GimoPluginfo *self);
 
 const gchar* gimo_pluginfo_get_name (GimoPluginfo *self);
 
@@ -72,7 +68,11 @@ const gchar* gimo_pluginfo_get_version (GimoPluginfo *self);
 
 const gchar* gimo_pluginfo_get_provider (GimoPluginfo *self);
 
-GimoExtpoint* gimo_pluginfo_get_extpoint (GimoPluginfo *self,
+const gchar* gimo_pluginfo_get_uri (GimoPluginfo *self);
+
+const gchar* gimo_pluginfo_get_module (GimoPluginfo *self);
+
+GimoExtPoint* gimo_pluginfo_get_extpoint (GimoPluginfo *self,
                                           const gchar *local_id);
 
 GimoExtension* gimo_pluginfo_get_extension (GimoPluginfo *self,

@@ -26,42 +26,42 @@ G_BEGIN_DECLS
 
 #define GIMO_TYPE_EXTPOINT (gimo_extpoint_get_type())
 #define GIMO_EXTPOINT(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj), GIMO_TYPE_EXTPOINT, GimoExtpoint))
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), GIMO_TYPE_EXTPOINT, GimoExtPoint))
 #define GIMO_IS_EXTPOINT(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj), GIMO_TYPE_EXTPOINT))
 #define GIMO_EXTPOINT_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GIMO_TYPE_EXTPOINT, GimoExtpointClass))
+    (G_TYPE_CHECK_CLASS_CAST((klass), GIMO_TYPE_EXTPOINT, GimoExtPointClass))
 #define GIMO_IS_EXTPOINT_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass), GIMO_TYPE_EXTPOINT))
 #define GIMO_EXTPOINT_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS((obj), GIMO_TYPE_EXTPOINT, GimoExtpointClass))
+    (G_TYPE_INSTANCE_GET_CLASS((obj), GIMO_TYPE_EXTPOINT, GimoExtPointClass))
 
-typedef struct _GimoExtpointPrivate GimoExtpointPrivate;
-typedef struct _GimoExtpointClass GimoExtpointClass;
+typedef struct _GimoExtPointPrivate GimoExtPointPrivate;
+typedef struct _GimoExtPointClass GimoExtPointClass;
 
-struct _GimoExtpoint {
+struct _GimoExtPoint {
     GObject parent_instance;
-    GimoExtpointPrivate *priv;
+    GimoExtPointPrivate *priv;
 };
 
-struct _GimoExtpointClass {
+struct _GimoExtPointClass {
     GObjectClass parent_class;
 };
 
 GType gimo_extpoint_get_type (void) G_GNUC_CONST;
 
-GimoExtpoint* gimo_extpoint_new (const gchar *local_id,
+GimoExtPoint* gimo_extpoint_new (const gchar *id,
                                  const gchar *name);
 
-const gchar* gimo_extpoint_get_local_id (GimoExtpoint *self);
+const gchar* gimo_extpoint_get_local_id (GimoExtPoint *self);
 
-const gchar* gimo_extpoint_get_name (GimoExtpoint *self);
+const gchar* gimo_extpoint_get_id (GimoExtPoint *self);
 
-const gchar* gimo_extpoint_get_identifier (GimoExtpoint *self);
+const gchar* gimo_extpoint_get_name (GimoExtPoint *self);
 
-GimoPluginfo* gimo_extpoint_query_pluginfo (GimoExtpoint *self);
+GimoPluginfo* gimo_extpoint_query_pluginfo (GimoExtPoint *self);
 
-GObject* gimo_extpoint_resolve (GimoExtpoint *self);
+GObject* gimo_extpoint_resolve (GimoExtPoint *self);
 
 G_END_DECLS
 

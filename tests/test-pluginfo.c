@@ -25,11 +25,11 @@
 
 struct _Pluginfo {
     const gchar *id;
-    const gchar *url;
-    const gchar *symbol;
     const gchar *name;
     const gchar *version;
     const gchar *provider;
+    const gchar *uri;
+    const gchar *module;
     GPtrArray *requires;
     GPtrArray *extpoints;
     GPtrArray *extensions;
@@ -59,21 +59,20 @@ static void _test_pluginfo (const struct _Pluginfo *p)
     GimoPluginfo *info;
 
     info = gimo_pluginfo_new (p->id,
-                              p->url,
-                              p->symbol,
                               p->name,
                               p->version,
                               p->provider,
+                              p->uri,
+                              p->module,
                               p->requires,
                               p->extpoints,
                               p->extensions);
-
-    g_assert (!strcmp (gimo_pluginfo_get_identifier (info), p->id));
-    g_assert (!strcmp (gimo_pluginfo_get_url (info), p->url));
-    g_assert (!strcmp (gimo_pluginfo_get_symbol (info), p->symbol));
+    g_assert (!strcmp (gimo_pluginfo_get_id (info), p->id));
     g_assert (!strcmp (gimo_pluginfo_get_name (info), p->name));
     g_assert (!strcmp (gimo_pluginfo_get_version (info), p->version));
     g_assert (!strcmp (gimo_pluginfo_get_provider (info), p->provider));
+    g_assert (!strcmp (gimo_pluginfo_get_uri (info), p->uri));
+    g_assert (!strcmp (gimo_pluginfo_get_module (info), p->module));
     g_assert (_ptr_array_equal (p->requires,
                                 gimo_pluginfo_get_requires (info)));
     g_assert (_ptr_array_equal (p->extpoints,
@@ -96,7 +95,7 @@ int main (int argc, char *argv[])
                              NULL,
                              NULL};
     GimoRequire *req;
-    GimoExtpoint *extp;
+    GimoExtPoint *extpt;
     GimoExtension *ext;
 
     g_type_init ();
@@ -127,17 +126,17 @@ int main (int argc, char *argv[])
     /* extension points */
     info.extpoints = g_ptr_array_new_with_free_func (g_object_unref);
 
-    extp = gimo_extpoint_new ("extp1", "name1");
-    g_ptr_array_add (info.extpoints, extp);
-    g_assert (!strcmp (gimo_extpoint_get_local_id (extp), "extp1"));
-    g_assert (!strcmp (gimo_extpoint_get_name (extp), "name1"));
-    g_assert (gimo_extpoint_get_identifier (extp) == NULL);
-    g_assert (gimo_extpoint_query_pluginfo (extp) == NULL);
+    extpt = gimo_extpoint_new ("extpt1", "name1");
+    g_ptr_array_add (info.extpoints, extpt);
+    g_assert (!strcmp (gimo_extpoint_get_local_id (extpt), "extpt1"));
+    g_assert (!strcmp (gimo_extpoint_get_name (extpt), "name1"));
+    g_assert (gimo_extpoint_get_id (extpt) == NULL);
+    g_assert (gimo_extpoint_query_pluginfo (extpt) == NULL);
 
     _test_pluginfo (&info);
 
-    g_assert (!strcmp (gimo_extpoint_get_identifier (extp), "myplugin.extp1"));
-    g_assert (gimo_extpoint_query_pluginfo (extp) == NULL);
+    g_assert (!strcmp (gimo_extpoint_get_id (extpt), "myplugin.extpt1"));
+    g_assert (gimo_extpoint_query_pluginfo (extpt) == NULL);
     g_ptr_array_unref (info.extpoints);
     info.extpoints = NULL;
 
@@ -149,12 +148,12 @@ int main (int argc, char *argv[])
     g_assert (!strcmp (gimo_extension_get_local_id (ext), "ext1"));
     g_assert (!strcmp (gimo_extension_get_name (ext), "name2"));
     g_assert (!strcmp (gimo_extension_get_extpoint_id (ext), "extp2"));
-    g_assert (gimo_extension_get_identifier (ext) == NULL);
+    g_assert (gimo_extension_get_id (ext) == NULL);
     g_assert (gimo_extension_query_pluginfo (ext) == NULL);
 
     _test_pluginfo (&info);
 
-    g_assert (!strcmp (gimo_extension_get_identifier (ext), "myplugin.ext1"));
+    g_assert (!strcmp (gimo_extension_get_id (ext), "myplugin.ext1"));
     g_assert (gimo_extension_query_pluginfo (ext) == NULL);
     g_ptr_array_unref (info.extensions);
     info.extensions = NULL;

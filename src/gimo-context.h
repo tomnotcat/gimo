@@ -68,7 +68,7 @@ GimoPluginfo* gimo_context_query_plugin (GimoContext *self,
 GPtrArray* gimo_context_query_plugins (GimoContext *self,
                                        const gchar *namesps);
 
-GimoExtpoint* gimo_context_query_extpoint (GimoContext *self,
+GimoExtPoint* gimo_context_query_extpoint (GimoContext *self,
                                            const gchar *extpoint_id);
 
 G_END_DECLS

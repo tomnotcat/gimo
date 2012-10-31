@@ -29,16 +29,16 @@ G_DEFINE_TYPE (GimoExtension, gimo_extension, G_TYPE_OBJECT)
 
 enum {
     PROP_0,
-    PROP_LOCALID,
+    PROP_ID,
     PROP_NAME,
-    PROP_EXTPOINTID
+    PROP_POINT
 };
 
 struct _GimoExtensionPrivate {
     gchar *local_id;
+    gchar *id;
     gchar *name;
     gchar *extpoint_id;
-    gchar *identifier;
     GimoPluginfo *info;
 };
 
@@ -54,9 +54,9 @@ static void gimo_extension_init (GimoExtension *self)
     priv = self->priv;
 
     priv->local_id = NULL;
+    priv->id = NULL;
     priv->name = NULL;
     priv->extpoint_id = NULL;
-    priv->identifier = NULL;
     priv->info = NULL;
 }
 
@@ -68,9 +68,9 @@ static void gimo_extension_finalize (GObject *gobject)
     g_assert (NULL == priv->info);
 
     g_free (priv->local_id);
+    g_free (priv->id);
     g_free (priv->name);
     g_free (priv->extpoint_id);
-    g_free (priv->identifier);
 
     G_OBJECT_CLASS (gimo_extension_parent_class)->finalize (gobject);
 }
@@ -84,7 +84,7 @@ static void gimo_extension_set_property (GObject *object,
     GimoExtensionPrivate *priv = self->priv;
 
     switch (prop_id) {
-    case PROP_LOCALID:
+    case PROP_ID:
         priv->local_id = g_value_dup_string (value);
         break;
 
@@ -92,7 +92,7 @@ static void gimo_extension_set_property (GObject *object,
         priv->name = g_value_dup_string (value);
         break;
 
-    case PROP_EXTPOINTID:
+    case PROP_POINT:
         priv->extpoint_id = g_value_dup_string (value);
         break;
 
@@ -111,7 +111,7 @@ static void gimo_extension_get_property (GObject *object,
     GimoExtensionPrivate *priv = self->priv;
 
     switch (prop_id) {
-    case PROP_LOCALID:
+    case PROP_ID:
         g_value_set_string (value, priv->local_id);
         break;
 
@@ -119,7 +119,7 @@ static void gimo_extension_get_property (GObject *object,
         g_value_set_string (value, priv->name);
         break;
 
-    case PROP_EXTPOINTID:
+    case PROP_POINT:
         g_value_set_string (value, priv->extpoint_id);
         break;
 
@@ -141,8 +141,8 @@ static void gimo_extension_class_init (GimoExtensionClass *klass)
                               sizeof (GimoExtensionPrivate));
 
     g_object_class_install_property (
-        gobject_class, PROP_LOCALID,
-        g_param_spec_string ("local-id",
+        gobject_class, PROP_ID,
+        g_param_spec_string ("id",
                              "Local identifier",
                              "The local identifier of the extension",
                              NULL,
@@ -163,8 +163,8 @@ static void gimo_extension_class_init (GimoExtensionClass *klass)
                              G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property (
-        gobject_class, PROP_EXTPOINTID,
-        g_param_spec_string ("extpoint-id",
+        gobject_class, PROP_POINT,
+        g_param_spec_string ("point",
                              "Extension point identifier",
                              "The identifier of the host extension poit",
                              NULL,
@@ -174,14 +174,14 @@ static void gimo_extension_class_init (GimoExtensionClass *klass)
                              G_PARAM_STATIC_STRINGS));
 }
 
-GimoExtension* gimo_extension_new (const gchar *local_id,
+GimoExtension* gimo_extension_new (const gchar *id,
                                    const gchar *name,
-                                   const gchar *extpoint_id)
+                                   const gchar *point)
 {
     return g_object_new (GIMO_TYPE_EXTENSION,
-                         "local-id", local_id,
+                         "id", id,
                          "name", name,
-                         "extpoint-id", extpoint_id,
+                         "point", point,
                          NULL);
 }
 
@@ -190,6 +190,13 @@ const gchar* gimo_extension_get_local_id (GimoExtension *self)
     g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
 
     return self->priv->local_id;
+}
+
+const gchar* gimo_extension_get_id (GimoExtension *self)
+{
+    g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
+
+    return self->priv->id;
 }
 
 const gchar* gimo_extension_get_name (GimoExtension *self)
@@ -204,13 +211,6 @@ const gchar* gimo_extension_get_extpoint_id (GimoExtension *self)
     g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
 
     return self->priv->extpoint_id;
-}
-
-const gchar* gimo_extension_get_identifier (GimoExtension *self)
-{
-    g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
-
-    return self->priv->identifier;
 }
 
 /**
@@ -245,15 +245,15 @@ void _gimo_extension_setup (GimoExtension *self,
 {
     GimoExtensionPrivate *priv = self->priv;
 
-    g_assert (NULL == priv->identifier);
+    g_assert (NULL == priv->id);
 
     G_LOCK (extension_lock);
 
     priv->info = info;
 
-    priv->identifier = g_strdup_printf ("%s.%s",
-                                        gimo_pluginfo_get_identifier (info),
-                                        priv->local_id);
+    priv->id = g_strdup_printf ("%s.%s",
+                                gimo_pluginfo_get_id (info),
+                                priv->local_id);
     G_UNLOCK (extension_lock);
 }
 
