@@ -477,7 +477,7 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
         g_param_spec_boxed ("requires",
                             "Required plugins",
                             "The plugins required by this plugin",
-                            G_TYPE_PTR_ARRAY,
+                            GIMO_TYPE_OBJECT_ARRAY,
                             G_PARAM_READABLE |
                             G_PARAM_WRITABLE |
                             G_PARAM_CONSTRUCT_ONLY |
@@ -488,7 +488,7 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
         g_param_spec_boxed ("extpoints",
                             "Extension points",
                             "The extension points provided by this plugin",
-                            G_TYPE_PTR_ARRAY,
+                            GIMO_TYPE_OBJECT_ARRAY,
                             G_PARAM_READABLE |
                             G_PARAM_WRITABLE |
                             G_PARAM_CONSTRUCT_ONLY |
@@ -499,7 +499,7 @@ static void gimo_pluginfo_class_init (GimoPluginfoClass *klass)
         g_param_spec_boxed ("extensions",
                             "Extensions",
                             "The extensions provided by this plugin",
-                            G_TYPE_PTR_ARRAY,
+                            GIMO_TYPE_OBJECT_ARRAY,
                             G_PARAM_READABLE |
                             G_PARAM_WRITABLE |
                             G_PARAM_CONSTRUCT_ONLY |

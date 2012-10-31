@@ -30,12 +30,13 @@ G_BEGIN_DECLS
  * @GIMO_ERROR_NO_MEMORY: out of memory
  * @GIMO_ERROR_OPEN_FILE: open file error
  * @GIMO_ERROR_INVALID_ID: invalid identifier
+ * @GIMO_ERROR_NO_OBJECT: object not found
  * @GIMO_ERROR_INVALID_OBJECT: invalid object
  * @GIMO_ERROR_INVALID_STATE: invalid state
  * @GIMO_ERROR_INVALID_RETURN: invalid return
  * @GIMO_ERROR_CONFLICT: object conflict
  * @GIMO_ERROR_NO_TYPE: type not found
- * @GIMO_ERROR_NO_OBJECT: object not found
+ * @GIMO_ERROR_INVALID_TYPE: invalid type
  * @GIMO_ERROR_IMPORT: import module error
  * @GIMO_ERROR_UNLOAD: unload module error
  * @GIMO_ERROR_NO_SYMBOL: symbol not found
@@ -48,12 +49,13 @@ typedef enum {
     GIMO_ERROR_NO_MEMORY,
     GIMO_ERROR_OPEN_FILE,
     GIMO_ERROR_INVALID_ID,
+    GIMO_ERROR_NO_OBJECT,
     GIMO_ERROR_INVALID_OBJECT,
     GIMO_ERROR_INVALID_STATE,
     GIMO_ERROR_INVALID_RETURN,
     GIMO_ERROR_CONFLICT,
     GIMO_ERROR_NO_TYPE,
-    GIMO_ERROR_NO_OBJECT,
+    GIMO_ERROR_INVALID_TYPE,
     GIMO_ERROR_IMPORT,
     GIMO_ERROR_UNLOAD,
     GIMO_ERROR_NO_SYMBOL,

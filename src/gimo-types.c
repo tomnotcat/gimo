@@ -17,29 +17,21 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __GIMO_TYPES_H__
-#define __GIMO_TYPES_H__
+#include "gimo-types.h"
 
-#include "gimo-enums.h"
+GType gimo_object_array_get_type (void)
+{
+    static volatile gsize g_define_type_id__volatile = 0;
 
-G_BEGIN_DECLS
+    if (g_once_init_enter (&g_define_type_id__volatile)) {
+        GType g_define_type_id =
+                g_boxed_type_register_static (
+                    g_intern_static_string ("GimoObjectArray"),
+                    (GBoxedCopyFunc) g_ptr_array_ref,
+                    (GBoxedFreeFunc) g_ptr_array_unref);
 
-typedef struct _GimoContext GimoContext;
-typedef struct _GimoPluginfo GimoPluginfo;
-typedef struct _GimoRequire GimoRequire;
-typedef struct _GimoExtPoint GimoExtPoint;
-typedef struct _GimoExtension GimoExtension;
-typedef struct _GimoExtConfig GimoExtConfig;
-typedef struct _GimoModule GimoModule;
-typedef struct _GimoLoader GimoLoader;
-typedef struct _GimoLoadable GimoLoadable;
-typedef struct _GimoArchive GimoArchive;
-typedef struct _GimoPlugin GimoPlugin;
-typedef struct _GPtrArray GimoObjectArray;
+        g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
 
-GType gimo_object_array_get_type (void) G_GNUC_CONST;
-#define GIMO_TYPE_OBJECT_ARRAY (gimo_object_array_get_type ())
-
-G_END_DECLS
-
-#endif /* __GIMO_TYPES_H__ */
+    return g_define_type_id__volatile;
+}
