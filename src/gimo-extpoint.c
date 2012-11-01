@@ -24,6 +24,7 @@
 
 #include "gimo-extpoint.h"
 #include "gimo-pluginfo.h"
+#include <string.h>
 
 G_DEFINE_TYPE (GimoExtPoint, gimo_extpoint, G_TYPE_OBJECT)
 
@@ -246,6 +247,25 @@ void _gimo_extpoint_teardown (GimoExtPoint *self,
     g_assert (priv->info == info);
 
     G_LOCK (extpoint_lock);
+
     priv->info = NULL;
+
     G_UNLOCK (extpoint_lock);
+}
+
+gint _gimo_extpoint_sort_by_id (gconstpointer a,
+                                gconstpointer b)
+{
+    GimoExtPoint *p1 = *(GimoExtPoint **) a;
+    GimoExtPoint *p2 = *(GimoExtPoint **) b;
+
+    return strcmp (p1->priv->local_id, p2->priv->local_id);
+}
+
+gint _gimo_extpoint_search_by_id (gconstpointer a,
+                                  gconstpointer b)
+{
+    GimoExtPoint *p = *(GimoExtPoint **) b;
+
+    return strcmp (a, p->priv->local_id);
 }

@@ -20,6 +20,8 @@
 #include "gimo-archive.h"
 #include "gimo-dlmodule.h"
 #include "gimo-loader.h"
+#include <math.h>
+#include <string.h>
 
 #define TEST_TYPE_CONFIG (test_config_get_type())
 #define TEST_CONFIG(obj) \
@@ -219,7 +221,7 @@ static void test_config_set_property (GObject *object,
         break;
 
     case PROP_ARRAY:
-        g_assert (0);
+        self->a = g_value_dup_boxed (value);
         break;
 
     default:
@@ -297,7 +299,7 @@ static void test_config_get_property (GObject *object,
         break;
 
     case PROP_ARRAY:
-        g_assert (0);
+        g_value_set_boxed (value, self->a);
         break;
 
     default:
@@ -466,15 +468,32 @@ static void _test_archive_common (void)
     g_object_unref (archive);
 }
 
+static void _test_config_default (TestConfig *config)
+{
+    g_assert (0 == config->u8);
+    g_assert (!config->b);
+    g_assert (0 == config->i32);
+    g_assert (0 == config->u32);
+    g_assert (0 == config->l32);
+    g_assert (0 == config->ul32);
+    g_assert (0 == config->i64);
+    g_assert (0 == config->u64);
+    g_assert (fabs (config->f) < 0.0001);
+    g_assert (fabs (config->d) < 0.0001);
+    g_assert (NULL == config->s);
+    g_assert (NULL == config->o);
+    g_assert (NULL == config->a);
+}
+
 static void _test_archive_xml (void)
 {
     GimoLoader *loader;
     GimoModule *module;
     GObject *archive;
-    TestConfig *config;
+    TestConfig *config, *obj;
 
     /* Register types. */
-    g_type_name (TEST_TYPE_CONFIG);
+    GIMO_REGISTER_TYPE (TEST_TYPE_CONFIG);
 
     loader = gimo_loader_new_cached ();
     g_assert (gimo_loader_register (loader,
@@ -487,10 +506,46 @@ static void _test_archive_xml (void)
                                    NULL);
     g_assert (archive);
     g_assert (gimo_archive_read (GIMO_ARCHIVE (archive),
-                                 "test-archive.xml"));
+                                 "test-archive1.xml"));
     config = TEST_CONFIG (gimo_archive_query_object (GIMO_ARCHIVE (archive),
                                                      "config1"));
     g_assert (config);
+
+    g_assert (-128 == config->i8);
+    g_assert (255 == config->u8);
+    g_assert (config->b);
+    g_assert (-512 == config->i32);
+    g_assert (1024 == config->u32);
+    g_assert (-1024 == config->l32);
+    g_assert (2048 == config->ul32);
+    g_assert (-123456789 == config->i64);
+    g_assert (987654321 == config->u64);
+    g_assert (fabs (config->f - 0.123) < 0.0001);
+    g_assert (fabs (config->d - 1.234) < 0.0001);
+    g_assert (strcmp (config->s, "hello") == 0);
+    g_assert (TEST_ENUM_1 == config->venum);
+    g_assert ((TEST_FLAG_1 | TEST_FLAG_2) == config->vflags);
+    g_assert (config->o);
+    g_assert (config->a);
+    g_assert (config->a->len == 2);
+
+    _test_config_default (config->o);
+    g_assert (0 == config->o->i8);
+    g_assert (TEST_ENUM_2 == config->o->venum);
+    g_assert (0 == config->o->vflags);
+
+    obj = g_ptr_array_index (config->a, 0);
+    _test_config_default (obj);
+    g_assert (123 == obj->i8);
+    g_assert (TEST_ENUM_3 == obj->venum);
+    g_assert (0 == obj->vflags);
+
+    obj = g_ptr_array_index (config->a, 1);
+    _test_config_default (obj);
+    g_assert (-123 == obj->i8);
+    g_assert (0 == obj->venum);
+    g_assert ((TEST_FLAG_2 | TEST_FLAG_3) == obj->vflags);
+
     g_object_unref (config);
     g_object_unref (archive);
     g_object_unref (module);

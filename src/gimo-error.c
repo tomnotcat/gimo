@@ -57,6 +57,19 @@ gint gimo_get_error (void)
     return error_code;
 }
 
+gchar* gimo_dup_error_string (void)
+{
+    gchar *str = NULL;
+
+    if (error_message) {
+        G_LOCK (error_lock);
+        str = g_strdup (error_message);
+        G_UNLOCK (error_lock);
+    }
+
+    return str;
+}
+
 void gimo_clear_error (void)
 {
     error_code = 0;
@@ -71,9 +84,6 @@ void gimo_clear_error (void)
 
 const gchar* gimo_error_to_string (gint code)
 {
-    if (code == error_code && error_message)
-        return error_message;
-
     /* TODO: Add error code to string conversion. */
     return NULL;
 }

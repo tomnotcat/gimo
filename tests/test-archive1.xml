@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archive version="1.0">
+  <object id="config1" type="TestConfig">
+    <char>-128</char>
+    <uchar>255</uchar>
+    <boolean>TRUE</boolean>
+    <int>-512</int>
+    <uint>1024</uint>
+    <long>-1024</long>
+    <ulong>2048</ulong>
+    <int64>-123456789</int64>
+    <uint64>987654321</uint64>
+    <float>0.123</float>
+    <double>1.234</double>
+    <string>hello</string>
+    <enum>TEST_ENUM_1</enum>
+    <flags>TEST_FLAG_1 | TEST_FLAG_2</flags>
+    <object>
+      <enum> TEST_ENUM_2</enum>
+    </object>
+    <array>
+      <TestConfig char="123" enum="TEST_ENUM_3 "/>
+      <TestConfig char="-123" flags=" TEST_FLAG_2|TEST_FLAG_3 "/>
+    </array>
+  </object>
+</archive>

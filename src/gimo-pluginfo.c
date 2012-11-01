@@ -31,12 +31,21 @@
 #include "gimo-require.h"
 #include "gimo-utils.h"
 #include <stdlib.h>
-#include <string.h>
 
 extern void _gimo_extpoint_setup (gpointer data, gpointer user_data);
 extern void _gimo_extpoint_teardown (gpointer data, gpointer user_data);
+extern gint _gimo_extpoint_sort_by_id (gconstpointer a,
+                                       gconstpointer b);
+extern gint _gimo_extpoint_search_by_id (gconstpointer a,
+                                         gconstpointer b);
+
 extern void _gimo_extension_setup (gpointer data, gpointer user_data);
 extern void _gimo_extension_teardown (gpointer data, gpointer user_data);
+extern gint _gimo_extension_sort_by_id (gconstpointer a,
+                                        gconstpointer b);
+extern gint _gimo_extension_search_by_id (gconstpointer a,
+                                          gconstpointer b);
+
 extern GimoPlugin* _gimo_context_load_plugin (GimoContext *self,
                                               GimoPluginfo *info);
 extern void _gimo_context_plugin_state_changed (GimoContext *self,
@@ -75,58 +84,6 @@ struct _GimoPluginfoPrivate {
 };
 
 G_LOCK_DEFINE_STATIC (pluginfo_lock);
-
-static gint _gimo_pluginfo_extpoint_sort (gconstpointer a,
-                                          gconstpointer b)
-{
-    return strcmp (gimo_extpoint_get_local_id (*(GimoExtPoint **) a),
-                   gimo_extpoint_get_local_id (*(GimoExtPoint **) b));
-}
-
-static gint _gimo_pluginfo_extpoint_search (gconstpointer a,
-                                            gconstpointer b)
-{
-    return strcmp (a, gimo_extpoint_get_local_id (*(GimoExtPoint **) b));
-}
-
-static gint _gimo_pluginfo_extension_sort (gconstpointer a,
-                                           gconstpointer b)
-{
-    return strcmp (gimo_extension_get_local_id (*(GimoExtension **) a),
-                   gimo_extension_get_local_id (*(GimoExtension **) b));
-}
-
-static gint _gimo_pluginfo_extension_search (gconstpointer a,
-                                             gconstpointer b)
-{
-    return strcmp (a, gimo_extension_get_local_id (*(GimoExtension **) b));
-}
-
-static GPtrArray* _gimo_pluginfo_clone_array (GimoPluginfo *self,
-                                              GPtrArray *arr,
-                                              GType type,
-                                              void (*func) (gpointer, gpointer))
-{
-    GPtrArray *result;
-    GObject *object;
-    guint i;
-
-    if (NULL == arr)
-        return NULL;
-
-    result = g_ptr_array_new_full (arr->len, g_object_unref);
-    for (i = 0; i < arr->len; ++i) {
-        object = g_ptr_array_index (arr, i);
-
-        g_assert (G_OBJECT_TYPE (object) == type);
-        g_ptr_array_add (result, g_object_ref (object));
-
-        if (func)
-            func (object, self);
-    }
-
-    return result;
-}
 
 static GimoPlugin* _gimo_pluginfo_load_plugin (GimoPluginfo *self)
 {
@@ -306,8 +263,8 @@ static void gimo_pluginfo_set_property (GObject *object,
         {
             GPtrArray *arr = g_value_get_boxed (value);
             if (arr) {
-                priv->requires = _gimo_pluginfo_clone_array (
-                    self, arr, GIMO_TYPE_REQUIRE, NULL);
+                priv->requires = _gimo_utils_clone_object_array (
+                    arr, GIMO_TYPE_REQUIRE, NULL, NULL);
             }
         }
         break;
@@ -316,11 +273,11 @@ static void gimo_pluginfo_set_property (GObject *object,
         {
             GPtrArray *arr = g_value_get_boxed (value);
             if (arr) {
-                priv->extpoints = _gimo_pluginfo_clone_array (
-                    self, arr, GIMO_TYPE_EXTPOINT, _gimo_extpoint_setup);
+                priv->extpoints = _gimo_utils_clone_object_array (
+                    arr, GIMO_TYPE_EXTPOINT, _gimo_extpoint_setup, self);
 
                 g_ptr_array_sort (priv->extpoints,
-                                  _gimo_pluginfo_extpoint_sort);
+                                  _gimo_extpoint_sort_by_id);
             }
         }
         break;
@@ -329,11 +286,11 @@ static void gimo_pluginfo_set_property (GObject *object,
         {
             GPtrArray *arr = g_value_get_boxed (value);
             if (arr) {
-                priv->extensions = _gimo_pluginfo_clone_array (
-                    self, arr, GIMO_TYPE_EXTENSION, _gimo_extension_setup);
+                priv->extensions = _gimo_utils_clone_object_array (
+                    arr, GIMO_TYPE_EXTENSION, _gimo_extension_setup, self);
 
                 g_ptr_array_sort (priv->extensions,
-                                  _gimo_pluginfo_extension_sort);
+                                  _gimo_extension_sort_by_id);
             }
         }
         break;
@@ -614,7 +571,7 @@ GimoExtPoint* gimo_pluginfo_get_extpoint (GimoPluginfo *self,
                       priv->extpoints->pdata,
                       priv->extpoints->len,
                       sizeof (gpointer),
-                      _gimo_pluginfo_extpoint_search);
+                      _gimo_extpoint_search_by_id);
 
     return result ? *result : NULL;
 }
@@ -645,7 +602,7 @@ GimoExtension* gimo_pluginfo_get_extension (GimoPluginfo *self,
                       priv->extensions->pdata,
                       priv->extensions->len,
                       sizeof (gpointer),
-                      _gimo_pluginfo_extension_search);
+                      _gimo_extension_search_by_id);
 
     return result ? *result : NULL;
 }

@@ -40,6 +40,12 @@ typedef struct _GPtrArray GimoObjectArray;
 GType gimo_object_array_get_type (void) G_GNUC_CONST;
 #define GIMO_TYPE_OBJECT_ARRAY (gimo_object_array_get_type ())
 
+#define GIMO_REGISTER_TYPE(type) \
+    G_STMT_START { \
+        GType _type = type; \
+        (void) _type; \
+    } G_STMT_END
+
 G_END_DECLS
 
 #endif /* __GIMO_TYPES_H__ */

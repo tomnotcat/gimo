@@ -143,7 +143,7 @@ int main (int argc, char *argv[])
     /* extensions */
     info.extensions = g_ptr_array_new_with_free_func (g_object_unref);
 
-    ext = gimo_extension_new ("ext1", "name2", "extp2");
+    ext = gimo_extension_new ("ext1", "name2", "extp2", NULL);
     g_ptr_array_add (info.extensions, ext);
     g_assert (!strcmp (gimo_extension_get_local_id (ext), "ext1"));
     g_assert (!strcmp (gimo_extension_get_name (ext), "name2"));

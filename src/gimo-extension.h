@@ -52,7 +52,8 @@ GType gimo_extension_get_type (void) G_GNUC_CONST;
 
 GimoExtension* gimo_extension_new (const gchar *id,
                                    const gchar *name,
-                                   const gchar *point);
+                                   const gchar *point,
+                                   GPtrArray *configs);
 
 const gchar* gimo_extension_get_local_id (GimoExtension *self);
 
@@ -61,6 +62,11 @@ const gchar* gimo_extension_get_id (GimoExtension *self);
 const gchar* gimo_extension_get_name (GimoExtension *self);
 
 const gchar* gimo_extension_get_extpoint_id (GimoExtension *self);
+
+GimoExtConfig* gimo_extension_get_config (GimoExtension *self,
+                                          const gchar *name);
+
+GPtrArray* gimo_extension_get_configs (GimoExtension *self);
 
 GimoPluginfo* gimo_extension_query_pluginfo (GimoExtension *self);
 

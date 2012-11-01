@@ -33,6 +33,11 @@ gint _gimo_utils_string_compare (gconstpointer a,
                                  gconstpointer b,
                                  gpointer user_data);
 
+GPtrArray* _gimo_utils_clone_object_array (GPtrArray *arr,
+                                           GType type,
+                                           void (*func) (gpointer, gpointer),
+                                           gpointer user_data);
+
 G_END_DECLS
 
 #endif /* __GIMO_UTILS_H__ */

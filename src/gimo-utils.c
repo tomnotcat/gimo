@@ -47,3 +47,29 @@ gint _gimo_utils_string_compare (gconstpointer a,
 {
     return strcmp (a, b);
 }
+
+GPtrArray* _gimo_utils_clone_object_array (GPtrArray *arr,
+                                           GType type,
+                                           void (*func) (gpointer, gpointer),
+                                           gpointer user_data)
+{
+    GPtrArray *result;
+    GObject *object;
+    guint i;
+
+    if (NULL == arr)
+        return NULL;
+
+    result = g_ptr_array_new_full (arr->len, g_object_unref);
+    for (i = 0; i < arr->len; ++i) {
+        object = g_ptr_array_index (arr, i);
+
+        g_assert (G_OBJECT_TYPE (object) == type);
+        g_ptr_array_add (result, g_object_ref (object));
+
+        if (func)
+            func (object, user_data);
+    }
+
+    return result;
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archive version="1.0">
+  <object id="org.gimo.test.plugin1" type="GimoPluginfo">
+    <name>test plugin1</name>
+    <version>0.1</version>
+    <provider>tomnotcat</provider>
+    <uri>http://www.xxx.com/org.gimo.test.plugin1</uri>
+    <module>plugin1</module>
+    <extpoints>
+      <GimoExtPoint id="extpt1" name="extension point 1"/>
+    </extpoints>
+  </object>
+  <object id="plugin2" type="GimoPluginfo">
+    <id>org.gimo.test.plugin2</id>
+    <requires>
+      <GimoRequire plugin="org.gimo.test.plugin1"
+                   version="1.0" optional="TRUE"/>
+    </requires>
+    <extensions>
+      <GimoExtension id="ext1" name="extension 1"
+                     point="org.gimo.test.plugin1.extpt1">
+        <configs>
+          <GimoExtConfig name="config1" value="value1"/>
+          <GimoExtConfig name="config2" value="value2"/>
+        </configs>
+      </GimoExtension>
+    </extensions>
+  </object>
+</archive>

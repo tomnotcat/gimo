@@ -19,6 +19,7 @@
  */
 #include "gimo-xmlarchive.h"
 #include "gimo-error.h"
+#include <ctype.h>
 #include <expat.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,6 +56,110 @@ G_DEFINE_TYPE_WITH_CODE (GimoXmlArchive, gimo_xmlarchive, GIMO_TYPE_ARCHIVE,
                          G_IMPLEMENT_INTERFACE (GIMO_TYPE_LOADABLE,
                                                 gimo_loadable_interface_init))
 
+#define DEFINE_SSCANF(func_name, to_member, format) \
+    static void _value_transform_##func_name (const GValue *src_value, \
+                                              GValue *dest_value)      \
+    { \
+        sscanf (src_value->data[0].v_pointer, (format), \
+                &dest_value->data[0].to_member); \
+    } extern void glib_dummy_decl (void)
+
+DEFINE_SSCANF (string_int,     v_int,    "%d");
+DEFINE_SSCANF (string_uint,    v_uint,   "%u");
+DEFINE_SSCANF (string_long,    v_long,   "%ld");
+DEFINE_SSCANF (string_ulong,   v_ulong,  "%lu");
+DEFINE_SSCANF (string_int64,   v_int64,  "%" G_GINT64_FORMAT);
+DEFINE_SSCANF (string_uint64,  v_uint64, "%" G_GUINT64_FORMAT);
+DEFINE_SSCANF (string_float,   v_float,  "%f");
+DEFINE_SSCANF (string_double,  v_double, "%lf");
+
+static void _value_transform_string_bool (const GValue *src_value,
+                                          GValue *dest_value)
+{
+    if (strcmp (src_value->data[0].v_pointer, "TRUE") == 0)
+        dest_value->data[0].v_int = TRUE;
+    else
+        dest_value->data[0].v_int = FALSE;
+}
+
+static void _value_transform_string_enum (const GValue *src_value,
+                                          GValue *dest_value)
+{
+    GEnumClass *klass = g_type_class_ref (G_VALUE_TYPE (dest_value));
+    GEnumValue *enum_value = NULL;
+    gchar *str = g_strdup (src_value->data[0].v_pointer);
+    gchar *name, *end;
+
+    name = str;
+    while (isblank (*name))
+        ++name;
+
+    if (*name) {
+        end = name;
+        while (*end && !isblank (*end))
+            ++end;
+
+        *end = '\0';
+
+        enum_value = g_enum_get_value_by_name (klass, name);
+    }
+
+    if (enum_value) {
+        dest_value->data[0].v_long = enum_value->value;
+    }
+    else {
+        sscanf (src_value->data[0].v_pointer, "%ld",
+                &dest_value->data[0].v_long);
+    }
+
+    g_free (str);
+    g_type_class_unref (klass);
+}
+
+static void _value_transform_string_flags (const GValue *src_value,
+                                           GValue *dest_value)
+{
+    GFlagsClass *klass = g_type_class_ref (G_VALUE_TYPE (dest_value));
+    gchar *str = g_strdup (src_value->data[0].v_pointer);
+    gchar *name, *end;
+    GFlagsValue *flags_value;
+    gboolean stop = FALSE;
+
+    name = str;
+    while (!stop) {
+        while (isblank (*name) || *name == '|')
+            ++name;
+
+        if (!*name)
+            break;
+
+        end = name;
+        while (*end && !isblank (*end) && *end != '|')
+            ++end;
+
+        if (*end)
+            *end = '\0';
+        else
+            stop = TRUE;
+
+        flags_value = g_flags_get_value_by_name (klass, name);
+        if (flags_value) {
+            dest_value->data[0].v_ulong |= flags_value->value;
+        }
+        else {
+            glong value = 0;
+
+            sscanf (name, "%ld", &value);
+            dest_value->data[0].v_ulong |= value;
+        }
+
+        name = end + 1;
+    }
+
+    g_free (str);
+    g_type_class_unref (klass);
+}
+
 static void _parse_param_destroy (gpointer p)
 {
     GParameter *param = p;
@@ -79,15 +184,13 @@ static struct _ParseFrame* _parse_frame_create (const gchar *id,
     if (prop) {
         g_assert (!id && !type);
 
-        if (G_PARAM_SPEC_VALUE_TYPE (prop) == GIMO_TYPE_OBJECT_ARRAY)
-            f->obj_array = g_ptr_array_new_with_free_func (g_object_unref);
+        f->type = G_PARAM_SPEC_VALUE_TYPE (prop);
     }
-    else {
-        g_assert (type);
 
-        if (G_TYPE_IS_OBJECT (type))
-            f->klass = g_type_class_ref (type);
-    }
+    if (G_TYPE_IS_OBJECT (f->type))
+        f->klass = g_type_class_ref (f->type);
+    else if (GIMO_TYPE_OBJECT_ARRAY == f->type)
+        f->obj_array = g_ptr_array_new_with_free_func (g_object_unref);
 
     return f;
 }
@@ -114,6 +217,8 @@ static void _parse_frame_add_param (struct _ParseFrame *f,
                                     const gchar *name,
                                     const GValue *value)
 {
+    GParameter param;
+
     g_assert (f->klass);
 
     if (NULL == f->params) {
@@ -121,16 +226,67 @@ static void _parse_frame_add_param (struct _ParseFrame *f,
         g_array_set_clear_func (f->params, _parse_param_destroy);
     }
 
-    g_array_append_val (f->params, value);
+    param.name = name;
+    param.value = *value;
+    g_array_append_val (f->params, param);
+}
+
+static GParameter* _parse_frame_find_param (struct _ParseFrame *f,
+                                            const gchar *name)
+{
+    if (f->params) {
+        guint i;
+        GParameter *param = (GParameter *) f->params->data;
+
+        for (i = 0; i < f->params->len; ++i) {
+            if (strcmp (param->name, name) == 0)
+                return param;
+
+            ++param;
+        }
+    }
+
+    return NULL;
 }
 
 static void _parse_frame_set_property (struct _ParseFrame *f,
+                                       GParamSpec *prop,
+                                       gpointer object,
                                        const gchar *name,
                                        const gchar *value)
 {
-    GParamSpec *prop = f->prop;
     GValue src_val = G_VALUE_INIT;
     GValue dest_val = G_VALUE_INIT;
+
+    if (f->obj_array) {
+        g_assert (!prop && G_IS_OBJECT (object) && !name && !value);
+        g_ptr_array_add (f->obj_array, g_object_ref (object));
+        return;
+    }
+
+    if (object) {
+        GType type;
+
+        g_assert (f->klass && !name && !value);
+
+        type = G_PARAM_SPEC_VALUE_TYPE (prop);
+        if (G_TYPE_IS_OBJECT (type)) {
+            g_value_init (&dest_val, G_TYPE_OBJECT);
+            g_value_set_object (&dest_val, object);
+        }
+        else if (G_TYPE_IS_BOXED (type)) {
+            g_value_init (&dest_val, type);
+            g_value_set_boxed (&dest_val, object);
+        }
+        else {
+            g_warning ("XmlArchive invalid property type: %s",
+                       g_type_name (type));
+            return;
+        }
+
+        _parse_frame_add_param (f, prop->name, &dest_val);
+        return;
+    }
 
     if (NULL == prop) {
         g_assert (f->klass && name);
@@ -140,8 +296,6 @@ static void _parse_frame_set_property (struct _ParseFrame *f,
             g_warning ("XmlArchive invalid property: %s", name);
             return;
         }
-
-        name = prop->name;
     }
 
     g_value_init (&src_val, G_TYPE_STRING);
@@ -153,18 +307,7 @@ static void _parse_frame_set_property (struct _ParseFrame *f,
         _parse_frame_add_param (f, prop->name, &dest_val);
     }
     else {
-        g_warning ("XmlArchive transform property error: %s", name);
-    }
-}
-
-static void _parse_frame_set_object (struct _ParseFrame *f,
-                                     gpointer p)
-{
-    if (f->klass) {
-    }
-    else if (f->obj_array) {
-        g_assert (G_IS_OBJECT (p));
-        g_ptr_array_add (f->obj_array, g_object_ref (p));
+        g_warning ("XmlArchive transform property error: %s", prop->name);
     }
 }
 
@@ -210,6 +353,9 @@ static void _gimo_xml_start_element (void *data,
 
     ++c->depth;
 
+    if (c->error)
+        return;
+
     if (c->frames->len > 0) {
         struct _ParseFrame *p, *f;
 
@@ -252,7 +398,7 @@ static void _gimo_xml_start_element (void *data,
 
                 f = g_ptr_array_index (c->frames, c->frames->len - 1);
                 while (*attr) {
-                    _parse_frame_set_property (f, attr[0], attr[1]);
+                    _parse_frame_set_property (f, NULL, NULL, attr[0], attr[1]);
                     attr += 2;
                 }
             }
@@ -349,24 +495,39 @@ static void _gimo_xml_end_element (void *data,
     }
 
     f = g_ptr_array_index (c->frames, c->frames->len - 1);
+    if (c->error || !f)
+        goto done;
+
     if (f->klass) {
         GObject *obj;
         GParameter *params;
         guint nparam;
 
+        /* Reuse the buildin properties. */
+        if (f->id && g_object_class_find_property (f->klass, "id")) {
+            if (!_parse_frame_find_param (f, "id")) {
+                GValue val = G_VALUE_INIT;
+
+                g_value_init (&val, G_TYPE_STRING);
+                g_value_set_static_string (&val, f->id);
+
+                _parse_frame_add_param (f, "id", &val);
+            }
+        }
+
         params = f->params ? (GParameter *) f->params->data : NULL;
         nparam = f->params ? f->params->len : 0;
-        obj = g_object_newv (f->type, nparam, params);
 
+        obj = g_object_newv (f->type, nparam, params);
         if (NULL == obj) {
             g_warning ("XmlArchive new object failed: %s",
                        g_type_name (f->type));
             goto done;
         }
 
-        if (c->frames->len > 1) {
+        if (c->frames->len > 2) {
             p = g_ptr_array_index (c->frames, c->frames->len - 2);
-            _parse_frame_set_object (p, obj);
+            _parse_frame_set_property (p, f->prop, obj, NULL, NULL);
         }
         else {
             if (!gimo_archive_add_object (c->archive, f->id, obj))
@@ -376,9 +537,9 @@ static void _gimo_xml_end_element (void *data,
         g_object_unref (obj);
     }
     else if (f->obj_array) {
-        if (c->frames->len > 1) {
+        if (c->frames->len > 2) {
             p = g_ptr_array_index (c->frames, c->frames->len - 2);
-            _parse_frame_set_object (p, f->obj_array);
+            _parse_frame_set_property (p, f->prop, f->obj_array, NULL, NULL);
         }
     }
 
@@ -393,13 +554,20 @@ static void _gimo_xml_handle_char (void *data,
                                    int len)
 {
     struct _ParseContext *c = data;
-    struct _ParseFrame *f;
 
-    f = g_ptr_array_index (c->frames, c->frames->len - 1);
-    if (f && f->prop) {
-        gchar *str = g_strndup (txt, len);
-        _parse_frame_set_property (f, NULL, str);
-        g_free (str);
+    if (c->error)
+        return;
+
+    if (c->frames->len > 2) {
+        struct _ParseFrame *p, *f;
+
+        p = g_ptr_array_index (c->frames, c->frames->len - 2);
+        f = g_ptr_array_index (c->frames, c->frames->len - 1);
+        if (f->prop && !f->klass && !f->obj_array) {
+            gchar *str = g_strndup (txt, len);
+            _parse_frame_set_property (p, f->prop, NULL, NULL, str);
+            g_free (str);
+        }
     }
 }
 
@@ -490,6 +658,47 @@ static void gimo_xmlarchive_class_init (GimoXmlArchiveClass *klass)
 
     archive_class->read = _gimo_xmlarchive_read;
     archive_class->save = _gimo_xmlarchive_save;
+
+    /* Register value transformation functions. */
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_CHAR,
+                                     _value_transform_string_int);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_UCHAR,
+                                     _value_transform_string_uint);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_BOOLEAN,
+                                     _value_transform_string_bool);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_INT,
+                                     _value_transform_string_int);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_UINT,
+                                     _value_transform_string_uint);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_LONG,
+                                     _value_transform_string_long);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_ULONG,
+                                     _value_transform_string_ulong);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_INT64,
+                                     _value_transform_string_int64);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_UINT64,
+                                     _value_transform_string_uint64);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_FLOAT,
+                                     _value_transform_string_float);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_DOUBLE,
+                                     _value_transform_string_double);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_ENUM,
+                                     _value_transform_string_enum);
+
+    g_value_register_transform_func (G_TYPE_STRING, G_TYPE_FLAGS,
+                                     _value_transform_string_flags);
+
 }
 
 GimoXmlArchive* gimo_xmlarchive_new (void)

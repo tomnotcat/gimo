@@ -23,6 +23,7 @@
  */
 
 #include "gimo-extconfig.h"
+#include <string.h>
 
 G_DEFINE_TYPE (GimoExtConfig, gimo_extconfig, G_TYPE_OBJECT)
 
@@ -162,4 +163,21 @@ const gchar* gimo_extconfig_get_value (GimoExtConfig *self)
     g_return_val_if_fail (GIMO_IS_EXTCONFIG (self), NULL);
 
     return self->priv->value;
+}
+
+gint _gimo_extconfig_sort_by_name (gconstpointer a,
+                                   gconstpointer b)
+{
+    GimoExtConfig *p1 = *(GimoExtConfig **) a;
+    GimoExtConfig *p2 = *(GimoExtConfig **) b;
+
+    return strcmp (p1->priv->name, p2->priv->name);
+}
+
+gint _gimo_extconfig_search_by_name (gconstpointer a,
+                                     gconstpointer b)
+{
+    GimoExtConfig *p = *(GimoExtConfig **) b;
+
+    return strcmp (a, p->priv->name);
 }

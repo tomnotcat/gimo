@@ -72,6 +72,8 @@ void gimo_set_error_full (gint code, const gchar *format, ...);
 
 gint gimo_get_error (void);
 
+gchar* gimo_dup_error_string (void);
+
 void gimo_clear_error (void);
 
 const gchar* gimo_error_to_string (gint code);
