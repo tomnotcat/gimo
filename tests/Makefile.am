@@ -34,5 +34,8 @@ check_PROGRAMS += test-context
 test_context_SOURCES = test-context.c
 check_SCRIPTS += test-context.py
 
+# Test plugin launch.
+check_SCRIPTS += test-launch.py
+
 TESTS = ${check_PROGRAMS} ${check_SCRIPTS}
 EXTRA_DIST = ${check_SCRIPTS}

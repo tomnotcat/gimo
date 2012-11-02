@@ -1,4 +1,4 @@
-/* GIMO - A plugin system based on GObject.
+/* GIMO - A plugin framework based on GObject.
  *
  * Copyright (C) 2012 TinySoft, Inc.
  *
@@ -88,9 +88,9 @@ GimoPluginState gimo_pluginfo_get_state (GimoPluginfo *self);
 
 GimoContext* gimo_pluginfo_query_context (GimoPluginfo *self);
 
-gboolean gimo_pluginfo_start (GimoPlugin *self);
+gboolean gimo_pluginfo_start (GimoPluginfo *self);
 
-gboolean gimo_pluginfo_stop (GimoPlugin *self);
+gboolean gimo_pluginfo_stop (GimoPluginfo *self);
 
 GObject* gimo_pluginfo_resolve (GimoPluginfo *self,
                                 const gchar *symbol);

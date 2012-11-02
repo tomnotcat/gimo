@@ -195,6 +195,7 @@ AC_SUBST([GIMO_LDFLAGS])
 AC_CONFIG_FILES([Makefile
         src/Makefile
         src/plugins/Makefile
+        tools/Makefile
         tests/Makefile])
 
 AC_OUTPUT
