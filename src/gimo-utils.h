@@ -24,16 +24,6 @@
 
 G_BEGIN_DECLS
 
-#define GIMO_RUNTIME_SYMBOL_NAME "gimo_plugin_create_runtime"
-
-#define GIMO_DEFINE_RUNTIME_SYMBOL(_C_) \
-    GimoRuntime* gimo_plugin_create_runtime (GObject *plugin) \
-    { \
-        GimoRuntime *runtime = gimo_runtime_new (); \
-        _C_; \
-        return runtime; \
-    }
-
 gchar* _gimo_parse_extension_id (const gchar *ext_id,
                                  gchar **local_id);
 

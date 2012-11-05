@@ -10,7 +10,8 @@ loader = Gimo.Loader ()
 
 # Dynamic library
 assert (loader.load ("demo-plugin") == None)
-assert (loader.register (None, dlmodule_new, "hello"))
+factory = Gimo.Factory.new (dlmodule_new, "hello")
+assert (loader.register (None, factory))
 module = loader.load ("demo-plugin")
 assert (module)
 plugin = module.resolve ("test_plugin_new", None)

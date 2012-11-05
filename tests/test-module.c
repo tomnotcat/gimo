@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "gimo-dlmodule.h"
+#include "gimo-factory.h"
 #include "gimo-loader.h"
 #include "gimo-plugin.h"
 
@@ -27,7 +28,8 @@ int main (int argc, char *argv[])
     GimoModule *module;
     GModule *gmodule;
     GObject *plugin;
-    GimoLoadableCtorFunc new_module;
+    GimoFactory *factory;
+    GimoFactoryFunc new_module;
 
     g_type_init ();
     g_thread_init (NULL);
@@ -36,10 +38,11 @@ int main (int argc, char *argv[])
 
     /* Dynamic library */
     g_assert (!gimo_loader_load (loader, "demo-plugin"));
+    factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
     g_assert (gimo_loader_register (loader,
                                     NULL,
-                                    (GimoLoadableCtorFunc) gimo_dlmodule_new,
-                                    NULL));
+                                    factory));
+    g_object_unref (factory);
     module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin"));
     g_assert (gimo_loader_load (loader, "demo-plugin") ==
               GIMO_LOADABLE (module));
@@ -61,7 +64,9 @@ int main (int argc, char *argv[])
     g_assert (g_module_symbol (gmodule,
                                "gimo_pymodule_new",
                                (gpointer *) &new_module));
-    g_assert (gimo_loader_register (loader, "py", new_module, NULL));
+    factory = gimo_factory_new (new_module, NULL);
+    g_assert (gimo_loader_register (loader, "py", factory));
+    g_object_unref (factory);
     g_object_unref (module);
     module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin.py"));
     g_assert (module);
@@ -81,7 +86,9 @@ int main (int argc, char *argv[])
     g_assert (g_module_symbol (gmodule,
                                "gimo_jsmodule_new",
                                (gpointer *) &new_module));
-    g_assert (gimo_loader_register (loader, "js", new_module, NULL));
+    factory = gimo_factory_new (new_module, NULL);
+    g_assert (gimo_loader_register (loader, "js", factory));
+    g_object_unref (factory);
     g_object_unref (module);
 
     module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin.js"));

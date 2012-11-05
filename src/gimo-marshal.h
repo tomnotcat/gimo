@@ -31,6 +31,20 @@ void _gimo_marshal_VOID__OBJECT_ENUM_ENUM (GClosure *closure,
                                            gpointer invocation_hint G_GNUC_UNUSED,
                                            gpointer marshal_data);
 
+void _gimo_marshal_BOOLEAN__VOID (GClosure *closure,
+                                  GValue *return_value G_GNUC_UNUSED,
+                                  guint n_param_values,
+                                  const GValue *param_values,
+                                  gpointer invocation_hint G_GNUC_UNUSED,
+                                  gpointer marshal_data);
+
+void _gimo_marshal_OBJECT__VOID (GClosure *closure,
+                                 GValue *return_value G_GNUC_UNUSED,
+                                 guint n_param_values,
+                                 const GValue *param_values,
+                                 gpointer invocation_hint G_GNUC_UNUSED,
+                                 gpointer marshal_data);
+
 G_END_DECLS
 
 #endif /* __GIMO_MARSHAL_H__ */

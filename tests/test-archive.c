@@ -19,6 +19,7 @@
  */
 #include "gimo-archive.h"
 #include "gimo-dlmodule.h"
+#include "gimo-factory.h"
 #include "gimo-loader.h"
 #include <math.h>
 #include <string.h>
@@ -494,6 +495,7 @@ static void _test_archive_xml (void)
 {
     GimoLoader *loader;
     GimoModule *module;
+    GimoFactory *factory;
     GObject *archive;
     TestConfig *config, *obj;
 
@@ -501,10 +503,9 @@ static void _test_archive_xml (void)
     GIMO_REGISTER_TYPE (TEST_TYPE_CONFIG);
 
     loader = gimo_loader_new_cached ();
-    g_assert (gimo_loader_register (loader,
-                                    NULL,
-                                    (GimoLoadableCtorFunc) gimo_dlmodule_new,
-                                    NULL));
+    factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
+    g_assert (gimo_loader_register (loader, NULL, factory));
+    g_object_unref (factory);
     module = GIMO_MODULE (gimo_loader_load (loader, "xmlarchive-1.0"));
     archive = gimo_module_resolve (module,
                                    "gimo_xmlarchive_new",

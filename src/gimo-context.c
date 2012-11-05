@@ -28,6 +28,7 @@
 #include "gimo-error.h"
 #include "gimo-extension.h"
 #include "gimo-extpoint.h"
+#include "gimo-factory.h"
 #include "gimo-loader.h"
 #include "gimo-marshal.h"
 #include "gimo-plugin.h"
@@ -159,6 +160,7 @@ static void gimo_context_constructed (GObject *gobject)
     GimoContext *self = GIMO_CONTEXT (gobject);
     GimoPlugin *plugin;
     GimoLoader *loader;
+    GimoFactory *factory;
     GimoRuntime *runtime;
     GimoExtPoint *extpt;
     GimoExtension *ext;
@@ -174,11 +176,12 @@ static void gimo_context_constructed (GObject *gobject)
 
     /* Module loader. */
     loader = gimo_loader_new_cached ();
-    gimo_loader_register (loader,
-                          NULL,
-                          (GimoLoadableCtorFunc) gimo_dlmodule_new,
-                          NULL);
+    factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
+
+    gimo_loader_register (loader, NULL, factory);
     gimo_runtime_define_object (runtime, "module", G_OBJECT (loader));
+
+    g_object_unref (factory);
     g_object_unref (loader);
 
     array = g_ptr_array_new_with_free_func (g_object_unref);
@@ -296,6 +299,8 @@ static void gimo_context_class_init (GimoContextClass *klass)
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoContextPrivate));
+
+    klass->state_changed = NULL;
 
     context_signals[SIG_STATECHANGED] =
             g_signal_new ("state-changed",

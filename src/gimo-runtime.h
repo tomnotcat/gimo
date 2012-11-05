@@ -48,8 +48,6 @@ struct _GimoRuntimeClass {
     GObjectClass parent_class;
     gboolean (*start) (GimoRuntime *self);
     gboolean (*stop) (GimoRuntime *self);
-    GObject* (*resolve) (GimoRuntime *self,
-                         const gchar *symbol);
 };
 
 GType gimo_runtime_get_type (void) G_GNUC_CONST;
@@ -64,8 +62,23 @@ gboolean gimo_runtime_start (GimoRuntime *self);
 
 gboolean gimo_runtime_stop (GimoRuntime *self);
 
-GObject* gimo_runtime_resolve (GimoRuntime *self,
-                               const gchar *symbol);
+GObject* gimo_runtime_resolve (GimoRuntime *self, const gchar *symbol);
+
+GimoPlugin* gimo_runtime_query_plugin (GimoRuntime *self);
+
+#define GIMO_RUNTIME_DEFAULT_SYMBOL gimo_create_plugin
+#define GIMO_RUNTIME_DEFAULT_SYMBOL_NAME "gimo_create_plugin"
+
+#define GIMO_DEFINE_RUNTIME_SYMBOL(_SYMBOL_, _CODE_) \
+    GimoRuntime* _SYMBOL_ (GObject *plugin) \
+    { \
+        GimoRuntime *runtime = gimo_runtime_new (); \
+        _CODE_; \
+        return runtime; \
+    }
+
+#define GIMO_DEFINE_RUNTIME_DEFAULT_SYMBOL(_CODE_) \
+    GIMO_DEFINE_RUNTIME_SYMBOL (GIMO_RUNTIME_DEFAULT_SYMBOL, _CODE_)
 
 G_END_DECLS
 

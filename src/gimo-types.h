@@ -33,6 +33,7 @@ typedef struct _GimoExtConfig GimoExtConfig;
 typedef struct _GimoRuntime GimoRuntime;
 typedef struct _GimoModule GimoModule;
 typedef struct _GimoLoader GimoLoader;
+typedef struct _GimoFactory GimoFactory;
 typedef struct _GimoLoadable GimoLoadable;
 typedef struct _GimoArchive GimoArchive;
 typedef struct _GPtrArray GimoObjectArray;

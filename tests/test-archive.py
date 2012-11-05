@@ -22,12 +22,15 @@ Gimo.ExtPoint
 Gimo.Extension
 Gimo.ExtConfig
 
-def dlmodule_new (user_data):
+def dlmodule_new (factory, user_data):
+    assert (user_data == "world")
     return Gimo.Dlmodule ()
 
 ar = Gimo.Archive ()
 loader = Gimo.Loader (cache=True)
-loader.register (None, dlmodule_new, None)
+factory = Gimo.Factory ()
+factory.connect ("make", dlmodule_new, "world")
+loader.register (None, factory)
 module = loader.load ("xmlarchive-1.0")
 assert (module)
 archive = module.resolve ("gimo_xmlarchive_new", None)

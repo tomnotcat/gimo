@@ -9,10 +9,11 @@ libgimo_1_0_la_SOURCES = gimo-types.h gimo-types.c gimo-enums.h \
 	gimo-context.c gimo-plugin.h gimo-plugin.c gimo-require.h \
 	gimo-require.c gimo-runtime.h gimo-runtime.c gimo-extpoint.h \
 	gimo-extpoint.c gimo-extension.h gimo-extension.c gimo-loader.h \
-	gimo-loader.c gimo-loadable.h gimo-loadable.c gimo-module.h \
-	gimo-module.c gimo-dlmodule.h gimo-dlmodule.c gimo-archive.h \
-	gimo-archive.c gimo-marshal.h gimo-marshal.c gimo-utils.h \
-	gimo-utils.c gimo-extconfig.h gimo-extconfig.c
+	gimo-loader.c gimo-factory.h gimo-factory.c gimo-loadable.h \
+	gimo-loadable.c gimo-module.h gimo-module.c gimo-dlmodule.h \
+	gimo-dlmodule.c gimo-archive.h gimo-archive.c gimo-marshal.h \
+	gimo-marshal.c gimo-utils.h gimo-utils.c gimo-extconfig.h \
+	gimo-extconfig.c
 
 CLEANFILES =
 

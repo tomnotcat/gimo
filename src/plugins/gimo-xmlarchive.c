@@ -20,7 +20,6 @@
 #include "gimo-xmlarchive.h"
 #include "gimo-error.h"
 #include "gimo-runtime.h"
-#include "gimo-utils.h"
 #include <ctype.h>
 #include <expat.h>
 #include <stdio.h>
@@ -708,10 +707,34 @@ GimoXmlArchive* gimo_xmlarchive_new (void)
     return g_object_new (GIMO_TYPE_XMLARCHIVE, NULL);
 }
 
-/*
-GIMO_DEFINE_RUNTIME_SYMBOL (
+static gboolean _gimo_xmlarchive_runtime_start (GimoRuntime *self)
+{
+    /*
+    return _gimo_loadable_register_extension (self,
+                                              "org.gimo.core.loader.archive",
+                                              "xml",
+                                              (GimoLoadableCtorFunc) gimo_xmlarchive_new,
+                                              NULL);
+    */
+    return FALSE;
+}
+
+static gboolean _gimo_xmlarchive_runtime_stop (GimoRuntime *self)
+{
+    /*
+    _gimo_loadable_unregister_extension (self,
+                                         "org.gimo.core.loader.archive",
+                                         "xml");
+    */
+    return TRUE;
+}
+
+GIMO_DEFINE_RUNTIME_DEFAULT_SYMBOL (
     g_signal_connect (runtime,
                       "start",
                       G_CALLBACK (_gimo_xmlarchive_runtime_start),
-                      plugin))
-*/
+                      NULL);
+    g_signal_connect (runtime,
+                      "stop",
+                      G_CALLBACK (_gimo_xmlarchive_runtime_stop),
+                      NULL))

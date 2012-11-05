@@ -49,6 +49,11 @@ extern gint _gimo_extension_sort_by_id (gconstpointer a,
 extern gint _gimo_extension_search_by_id (gconstpointer a,
                                           gconstpointer b);
 
+extern void _gimo_runtime_setup (GimoRuntime *self,
+                                 GimoPlugin *plugin);
+extern void _gimo_runtime_teardown (GimoRuntime *self,
+                                    GimoPlugin *plugin);
+
 extern GimoRuntime* _gimo_context_load_runtime (GimoContext *self,
                                                 GimoPlugin *plugin);
 extern void _gimo_context_plugin_state_changed (GimoContext *self,
@@ -128,7 +133,7 @@ static GimoRuntime* _gimo_plugin_load_runtime (GimoPlugin *self,
     symbol = priv->symbol;
 
     if (NULL == symbol)
-        symbol = GIMO_RUNTIME_SYMBOL_NAME;
+        symbol = GIMO_RUNTIME_DEFAULT_SYMBOL_NAME;
 
     return gimo_safe_cast (gimo_module_resolve (priv->runtime_module,
                                                 symbol,
@@ -159,7 +164,6 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self)
         gimo_set_error_return_val (GIMO_ERROR_NO_OBJECT, NULL);
 
     runtime = _gimo_plugin_load_runtime (self, context);
-    g_assert (runtime);
     if (NULL == runtime)
         gimo_set_error_return_val (GIMO_ERROR_LOAD, NULL);
 
@@ -218,6 +222,8 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self)
     }
 
     if (runtime) {
+        _gimo_runtime_setup (runtime, self);
+
         _gimo_context_plugin_state_changed (context,
                                             self,
                                             GIMO_PLUGIN_INSTALLED,
@@ -284,8 +290,10 @@ static void gimo_plugin_finalize (GObject *gobject)
         g_ptr_array_unref (priv->extensions);
     }
 
-    if (priv->runtime)
+    if (priv->runtime) {
+        _gimo_runtime_teardown (priv->runtime, self);
         g_object_unref (priv->runtime);
+    }
 
     if (priv->runtime_module)
         g_object_unref (priv->runtime_module);
@@ -364,6 +372,9 @@ static void gimo_plugin_set_property (GObject *object,
 
     case PROP_RUNTIME:
         priv->runtime = g_value_dup_object (value);
+
+        if (priv->runtime)
+            _gimo_runtime_setup (priv->runtime, self);
         break;
 
     default:

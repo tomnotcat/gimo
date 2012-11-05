@@ -19,13 +19,26 @@
  */
 #include "gimo-runtime.h"
 #include "gimo-error.h"
+#include "gimo-marshal.h"
+#include "gimo-plugin.h"
 #include "gimo-utils.h"
 
 G_DEFINE_TYPE (GimoRuntime, gimo_runtime, G_TYPE_OBJECT)
 
+enum {
+    SIG_START,
+    SIG_STOP,
+    LAST_SIGNAL
+};
+
 struct _GimoRuntimePrivate {
+    GimoPlugin *plugin;
     GTree *objects;
 };
+
+G_LOCK_DEFINE_STATIC (runtime_lock);
+
+static guint runtime_signals[LAST_SIGNAL] = { 0 };
 
 static void gimo_runtime_init (GimoRuntime *self)
 {
@@ -36,6 +49,7 @@ static void gimo_runtime_init (GimoRuntime *self)
                                               GimoRuntimePrivate);
     priv = self->priv;
 
+    priv->plugin = NULL;
     priv->objects = NULL;
 }
 
@@ -43,6 +57,8 @@ static void gimo_runtime_finalize (GObject *gobject)
 {
     GimoRuntime *self = GIMO_RUNTIME (gobject);
     GimoRuntimePrivate *priv = self->priv;
+
+    g_assert (!priv->plugin);
 
     if (priv->objects)
         g_tree_unref (priv->objects);
@@ -58,6 +74,26 @@ static void gimo_runtime_class_init (GimoRuntimeClass *klass)
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoRuntimePrivate));
+    klass->start = NULL;
+    klass->stop = NULL;
+
+    runtime_signals[SIG_START] =
+            g_signal_new ("start",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_LAST,
+                          G_STRUCT_OFFSET (GimoRuntimeClass, start),
+                          NULL, NULL,
+                          _gimo_marshal_BOOLEAN__VOID,
+                          G_TYPE_BOOLEAN, 0);
+
+    runtime_signals[SIG_STOP] =
+            g_signal_new ("stop",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_LAST,
+                          G_STRUCT_OFFSET (GimoRuntimeClass, stop),
+                          NULL, NULL,
+                          _gimo_marshal_BOOLEAN__VOID,
+                          G_TYPE_BOOLEAN, 0);
 }
 
 GimoRuntime* gimo_runtime_new (void)
@@ -90,12 +126,30 @@ gboolean gimo_runtime_define_object (GimoRuntime *self,
 
 gboolean gimo_runtime_start (GimoRuntime *self)
 {
-    return FALSE;
+    gboolean result = TRUE;
+
+    g_return_val_if_fail (GIMO_IS_RUNTIME (self), FALSE);
+
+    g_signal_emit (self,
+                   runtime_signals[SIG_START],
+                   0,
+                   &result);
+
+    return result;
 }
 
 gboolean gimo_runtime_stop (GimoRuntime *self)
 {
-    return FALSE;
+    gboolean result = TRUE;
+
+    g_return_val_if_fail (GIMO_IS_RUNTIME (self), FALSE);
+
+    g_signal_emit (self,
+                   runtime_signals[SIG_STOP],
+                   0,
+                   &result);
+
+    return result;
 }
 
 /**
@@ -124,4 +178,59 @@ GObject* gimo_runtime_resolve (GimoRuntime *self,
         g_object_ref (object);
 
     return object;
+}
+
+/**
+ * gimo_runtime_query_plugin:
+ * @self: a #GimoRuntime
+ *
+ * Query the plugin descriptor of the runtime.
+ *
+ * Returns: (allow-none) (transfer full): a #GimoPlugin
+ */
+GimoPlugin* gimo_runtime_query_plugin (GimoRuntime *self)
+{
+    GimoRuntimePrivate *priv;
+    GimoPlugin *plugin = NULL;
+
+    g_return_val_if_fail (GIMO_IS_RUNTIME (self), NULL);
+
+    priv = self->priv;
+
+    G_LOCK (runtime_lock);
+
+    if (priv->plugin)
+        plugin = g_object_ref (priv->plugin);
+
+    G_UNLOCK (runtime_lock);
+
+    return plugin;
+}
+
+void _gimo_runtime_setup (GimoRuntime *self,
+                          GimoPlugin *plugin)
+{
+    GimoRuntimePrivate *priv = self->priv;
+
+    g_assert (NULL == priv->plugin);
+
+    G_LOCK (runtime_lock);
+
+    priv->plugin = plugin;
+
+    G_UNLOCK (runtime_lock);
+}
+
+void _gimo_runtime_teardown (GimoRuntime *self,
+                             GimoPlugin *plugin)
+{
+    GimoRuntimePrivate *priv = self->priv;
+
+    g_assert (priv->plugin == plugin);
+
+    G_LOCK (runtime_lock);
+
+    priv->plugin = NULL;
+
+    G_UNLOCK (runtime_lock);
 }

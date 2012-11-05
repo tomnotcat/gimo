@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "gimo-loader.h"
+#include "gimo-factory.h"
 #include "gimo-loadable.h"
 #include "gimo-utils.h"
 #include <string.h>
@@ -37,18 +38,18 @@ struct _GimoLoaderPrivate {
     GMutex mutex;
 };
 
-struct _LoaderInfo {
+struct _FactoryInfo {
     gchar *suffix;
-    GimoLoadableCtorFunc ctor;
-    gpointer user_data;
+    GimoFactory *factory;
     gint ref_count;
 };
 
-static void _loader_info_destroy (gpointer p)
+static void _factory_info_destroy (gpointer p)
 {
-    struct _LoaderInfo *info = p;
+    struct _FactoryInfo *info = p;
 
     if (g_atomic_int_add (&info->ref_count, -1) == 1) {
+        g_object_unref (info->factory);
         g_free (info->suffix);
         g_free (info);
     }
@@ -59,7 +60,7 @@ static GList* _gimo_loader_lookup (GimoLoader *self,
 {
     GimoLoaderPrivate *priv = self->priv;
     GList *it;
-    struct _LoaderInfo *info;
+    struct _FactoryInfo *info;
 
     it = g_queue_peek_head_link (priv->loaders);
     while (it) {
@@ -84,7 +85,7 @@ static GimoLoadable* _gimo_loader_load_file (GPtrArray *loaders,
                                              const gchar *file_name)
 {
     GimoLoadable *object = NULL;
-    struct _LoaderInfo *info;
+    struct _FactoryInfo *info;
     guint i;
 
     for (i = 0; i < loaders->len; ++i) {
@@ -95,7 +96,8 @@ static GimoLoadable* _gimo_loader_load_file (GPtrArray *loaders,
                 continue;
         }
 
-        object = info->ctor (info->user_data);
+        object = gimo_safe_cast (gimo_factory_make (info->factory),
+                                 GIMO_TYPE_LOADABLE);
         if (object) {
             if (!gimo_loadable_load (object, file_name)) {
                 g_object_unref (object);
@@ -150,7 +152,7 @@ static void gimo_loader_finalize (GObject *gobject)
     if (priv->object_tree)
         g_tree_unref (priv->object_tree);
 
-    g_queue_free_full (priv->loaders, _loader_info_destroy);
+    g_queue_free_full (priv->loaders, _factory_info_destroy);
     g_slist_free_full (priv->path_list, g_free);
     g_mutex_clear (&priv->mutex);
 
@@ -266,17 +268,15 @@ GSList* gimo_loader_get_paths (GimoLoader *self)
  * gimo_loader_register:
  * @self: a #GimoLoader
  * @suffix: (allow-none): the file suffix
- * @func: (scope async): the constructor function
- * @user_data: user data for @func
+ * @factory: a #GimoLoadable factory
  *
- * Register a loadable class.
+ * Register a #GimoLoadable factor.
  *
  * Returns: %TRUE if register success.
  */
 gboolean gimo_loader_register (GimoLoader *self,
                                const gchar *suffix,
-                               GimoLoadableCtorFunc func,
-                               gpointer user_data)
+                               GimoFactory *factory)
 {
     GimoLoaderPrivate *priv;
     gboolean result = FALSE;
@@ -288,12 +288,11 @@ gboolean gimo_loader_register (GimoLoader *self,
     g_mutex_lock (&priv->mutex);
 
     if (!_gimo_loader_lookup (self, suffix)) {
-        struct _LoaderInfo *info;
+        struct _FactoryInfo *info;
 
         info = g_malloc (sizeof *info);
         info->suffix = g_strdup (suffix);
-        info->ctor = func;
-        info->user_data = user_data;
+        info->factory = g_object_ref (factory);
         info->ref_count = 1;
 
         if (suffix)
@@ -323,7 +322,7 @@ void gimo_loader_unregister (GimoLoader *self,
 
     node = _gimo_loader_lookup (self, suffix);
     if (node) {
-        _loader_info_destroy (node->data);
+        _factory_info_destroy (node->data);
         g_queue_delete_link (priv->loaders, node);
     }
 
@@ -349,7 +348,7 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
     guint count;
     GPtrArray *arr;
     const gchar *suffix;
-    struct _LoaderInfo *info;
+    struct _FactoryInfo *info;
     GimoLoadable *result = NULL;
 
     g_return_val_if_fail (GIMO_IS_LOADER (self), NULL);
@@ -374,7 +373,7 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
         return NULL;
     }
 
-    arr = g_ptr_array_new_full (count, _loader_info_destroy);
+    arr = g_ptr_array_new_full (count, _factory_info_destroy);
     it = g_queue_peek_head_link (priv->loaders);
     while (it) {
         info = it->data;

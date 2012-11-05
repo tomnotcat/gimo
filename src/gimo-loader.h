@@ -48,16 +48,6 @@ struct _GimoLoaderClass {
     GObjectClass parent_class;
 };
 
-/**
- * GimoLoadableCtorFunc:
- * @user_data: (closure): user data to pass to the function
- *
- * Loadable object constructor.
- *
- * Returns: (allow-none) (transfer full): a #GimoLoadable
- */
-typedef GimoLoadable* (*GimoLoadableCtorFunc) (gpointer user_data);
-
 GType gimo_loader_get_type (void) G_GNUC_CONST;
 
 GimoLoader* gimo_loader_new (void);
@@ -71,8 +61,7 @@ GSList* gimo_loader_get_paths (GimoLoader *self);
 
 gboolean gimo_loader_register (GimoLoader *self,
                                const gchar *suffix,
-                               GimoLoadableCtorFunc func,
-                               gpointer user_data);
+                               GimoFactory *factory);
 
 void gimo_loader_unregister (GimoLoader *self,
                              const gchar *suffix);

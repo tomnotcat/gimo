@@ -19,6 +19,7 @@
  */
 #include "gimo-pymodule.h"
 #include "gimo-error.h"
+#include "gimo-runtime.h"
 
 /* Redefined in Python.h */
 #undef  _POSIX_C_SOURCE
@@ -217,3 +218,23 @@ GimoPymodule* gimo_pymodule_new (void)
 {
     return g_object_new (GIMO_TYPE_PYMODULE, NULL);
 }
+
+static gboolean _gimo_pymodule_runtime_start (GimoRuntime *self)
+{
+    return FALSE;
+}
+
+static gboolean _gimo_pymodule_runtime_stop (GimoRuntime *self)
+{
+    return FALSE;
+}
+
+GIMO_DEFINE_RUNTIME_DEFAULT_SYMBOL (
+    g_signal_connect (runtime,
+                      "start",
+                      G_CALLBACK (_gimo_pymodule_runtime_start),
+                      NULL);
+    g_signal_connect (runtime,
+                      "stop",
+                      G_CALLBACK (_gimo_pymodule_runtime_stop),
+                      NULL))
