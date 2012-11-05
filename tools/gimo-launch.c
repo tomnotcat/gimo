@@ -19,14 +19,23 @@
  */
 #include "gimo-context.h"
 #include "gimo-error.h"
-#include "gimo-pluginfo.h"
+#include "gimo-plugin.h"
 #include <locale.h>
 
 #define GIMO_LAUNCH_DEFAULT_DIR "plugins"
 
-static void _install_plugins (GimoContext *context,
-                              const gchar *file_name)
+static void _load_plugin (GimoContext *context,
+                          const gchar *file_path,
+                          gboolean start)
 {
+    if (!gimo_context_load_plugin (context, file_path, NULL, start)) {
+        gchar *err_str = gimo_dup_error_string ();
+
+        g_warning ("Load plugin error: %s: %s",
+                   file_path, err_str);
+
+        g_free (err_str);
+    }
 }
 
 int main (int argc, char *argv[])
@@ -44,7 +53,7 @@ int main (int argc, char *argv[])
     GOptionContext *optctx;
 
     GimoContext *context = NULL;
-    GimoPluginfo *plugin;
+    GimoPlugin *plugin;
 
     g_type_init();
 
@@ -70,12 +79,12 @@ int main (int argc, char *argv[])
         gchar **it = files;
 
         while (*it) {
-            _install_plugins (context, *it);
+            _load_plugin (context, *it, !starts);
             ++it;
         }
     }
     else {
-        _install_plugins (context, GIMO_LAUNCH_DEFAULT_DIR);
+        _load_plugin (context, GIMO_LAUNCH_DEFAULT_DIR, !starts);
     }
 
     if (starts) {
@@ -84,11 +93,12 @@ int main (int argc, char *argv[])
         while (*it) {
             plugin = gimo_context_query_plugin (context, *it);
             if (plugin) {
-                if (!gimo_pluginfo_start (plugin)) {
+                if (!gimo_plugin_start (plugin)) {
                     gchar *err_str = gimo_dup_error_string ();
 
-                    g_warning ("Start plugin error: %s: %d: %s",
-                               *it, gimo_get_error (), err_str);
+                    g_warning ("Start plugin error: %s: %s",
+                               gimo_plugin_get_id (plugin),
+                               err_str);
 
                     g_free (err_str);
                 }
@@ -99,8 +109,6 @@ int main (int argc, char *argv[])
 
             ++it;
         }
-    }
-    else {
     }
 
     g_object_unref (context);

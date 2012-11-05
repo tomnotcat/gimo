@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General
@@ -17,50 +17,146 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include "gimo-extension.h"
+#include "gimo-extpoint.h"
 #include "gimo-plugin.h"
+#include "gimo-require.h"
+#include <string.h>
 
-#define TEST_TYPE_PLUGIN (test_plugin_get_type())
-#define TEST_PLUGIN(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj), TEST_TYPE_PLUGIN, TestPlugin))
-#define TEST_IS_PLUGIN(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), TEST_TYPE_PLUGIN))
-#define TEST_PLUGIN_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), TEST_TYPE_PLUGIN, TestPluginClass))
-#define TEST_IS_PLUGIN_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), TEST_TYPE_PLUGIN))
-#define TEST_PLUGIN_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS((obj), TEST_TYPE_PLUGIN, TestPluginClass))
-
-typedef struct _TestPlugin TestPlugin;
-typedef struct _TestPluginClass TestPluginClass;
-
-struct _TestPlugin {
-    GimoPlugin parent_instance;
+struct _PluginInfo {
+    const gchar *id;
+    const gchar *name;
+    const gchar *version;
+    const gchar *provider;
+    const gchar *module;
+    const gchar *symbol;
+    GPtrArray *requires;
+    GPtrArray *extpoints;
+    GPtrArray *extensions;
 };
 
-struct _TestPluginClass {
-    GimoPluginClass parent_class;
-};
-
-G_DEFINE_TYPE (TestPlugin, test_plugin, GIMO_TYPE_PLUGIN)
-
-static void test_plugin_init (TestPlugin *self)
+static gboolean _ptr_array_equal (GPtrArray *a, GPtrArray *b)
 {
+    if (a && b) {
+        guint i;
+
+        if (a->len != b->len)
+            return FALSE;
+
+        for (i = 0; i < a->len; ++i) {
+            if (g_ptr_array_index (a, i) != g_ptr_array_index (b, i))
+                return FALSE;
+        }
+
+        return TRUE;
+    }
+
+    return a == b;
 }
 
-static void test_plugin_finalize (GObject *gobject)
+static void _test_plugin_info (const struct _PluginInfo *p)
 {
-    G_OBJECT_CLASS (test_plugin_parent_class)->finalize (gobject);
+    GimoPlugin *plugin;
+
+    plugin = gimo_plugin_new (p->id,
+                              p->name,
+                              p->version,
+                              p->provider,
+                              p->module,
+                              p->symbol,
+                              p->requires,
+                              p->extpoints,
+                              p->extensions);
+    g_assert (!strcmp (gimo_plugin_get_id (plugin), p->id));
+    g_assert (!strcmp (gimo_plugin_get_name (plugin), p->name));
+    g_assert (!strcmp (gimo_plugin_get_version (plugin), p->version));
+    g_assert (!strcmp (gimo_plugin_get_provider (plugin), p->provider));
+    g_assert (!strcmp (gimo_plugin_get_module (plugin), p->module));
+    g_assert (!strcmp (gimo_plugin_get_symbol (plugin), p->symbol));
+    g_assert (_ptr_array_equal (p->requires,
+                                gimo_plugin_get_requires (plugin)));
+    g_assert (_ptr_array_equal (p->extpoints,
+                                gimo_plugin_get_extpoints (plugin)));
+    g_assert (_ptr_array_equal (p->extensions,
+                                gimo_plugin_get_extensions (plugin)));
+    g_assert (gimo_plugin_get_state (plugin) == GIMO_PLUGIN_UNINSTALLED);
+    g_object_unref (plugin);
 }
 
-static void test_plugin_class_init (TestPluginClass *klass)
+int main (int argc, char *argv[])
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+    struct _PluginInfo info = {"test.myplugin",
+                               "hello",
+                               "1.0",
+                               "tom",
+                               "mymodule",
+                               "myplugin_new",
+                               NULL,
+                               NULL,
+                               NULL};
+    GimoRequire *req;
+    GimoExtPoint *extpt;
+    GimoExtension *ext;
 
-    gobject_class->finalize = test_plugin_finalize;
-}
+    g_type_init ();
+    g_thread_init (NULL);
 
-GimoPlugin* test_plugin_new (void)
-{
-    return g_object_new (TEST_TYPE_PLUGIN, NULL);
+    /* basic */
+    _test_plugin_info (&info);
+
+    /* requires */
+    info.requires = g_ptr_array_new_with_free_func (g_object_unref);
+    req = gimo_require_new ("plugin1", "1.0", FALSE);
+    g_ptr_array_add (info.requires, req);
+    g_assert (!strcmp (gimo_require_get_plugin_id (req), "plugin1"));
+    g_assert (!strcmp (gimo_require_get_version (req), "1.0"));
+    g_assert (!gimo_require_is_optional (req));
+
+    req = gimo_require_new ("plugin2", "2.0", TRUE);
+    g_ptr_array_add (info.requires, req);
+    g_assert (!strcmp (gimo_require_get_plugin_id (req), "plugin2"));
+    g_assert (!strcmp (gimo_require_get_version (req), "2.0"));
+    g_assert (gimo_require_is_optional (req));
+
+    _test_plugin_info (&info);
+
+    g_ptr_array_unref (info.requires);
+    info.requires = NULL;
+
+    /* extension points */
+    info.extpoints = g_ptr_array_new_with_free_func (g_object_unref);
+
+    extpt = gimo_extpoint_new ("extpt1", "name1");
+    g_ptr_array_add (info.extpoints, extpt);
+    g_assert (!strcmp (gimo_extpoint_get_local_id (extpt), "extpt1"));
+    g_assert (!strcmp (gimo_extpoint_get_name (extpt), "name1"));
+    g_assert (gimo_extpoint_get_id (extpt) == NULL);
+    g_assert (gimo_extpoint_query_plugin (extpt) == NULL);
+
+    _test_plugin_info (&info);
+
+    g_assert (!strcmp (gimo_extpoint_get_id (extpt), "test.myplugin.extpt1"));
+    g_assert (gimo_extpoint_query_plugin (extpt) == NULL);
+    g_ptr_array_unref (info.extpoints);
+    info.extpoints = NULL;
+
+    /* extensions */
+    info.extensions = g_ptr_array_new_with_free_func (g_object_unref);
+
+    ext = gimo_extension_new ("ext1", "name2", "extp2", NULL);
+    g_ptr_array_add (info.extensions, ext);
+    g_assert (!strcmp (gimo_extension_get_local_id (ext), "ext1"));
+    g_assert (!strcmp (gimo_extension_get_name (ext), "name2"));
+    g_assert (!strcmp (gimo_extension_get_extpoint_id (ext), "extp2"));
+    g_assert (gimo_extension_get_id (ext) == NULL);
+    g_assert (gimo_extension_query_plugin (ext) == NULL);
+
+    _test_plugin_info (&info);
+
+    g_assert (!strcmp (gimo_extension_get_id (ext), "test.myplugin.ext1"));
+    g_assert (gimo_extension_query_plugin (ext) == NULL);
+    g_ptr_array_unref (info.extensions);
+    info.extensions = NULL;
+
+    return 0;
 }

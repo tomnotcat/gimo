@@ -6,8 +6,8 @@ libgimo_1_0_la_LDFLAGS = -version-info ${LT_VERSION_INFO} \
 	${GLIB_LIBS}
 libgimo_1_0_la_SOURCES = gimo-types.h gimo-types.c gimo-enums.h \
 	gimo-enums.c gimo-error.h gimo-error.c gimo-context.h \
-	gimo-context.c gimo-pluginfo.h gimo-pluginfo.c gimo-require.h \
-	gimo-require.c gimo-plugin.h gimo-plugin.c gimo-extpoint.h \
+	gimo-context.c gimo-plugin.h gimo-plugin.c gimo-require.h \
+	gimo-require.c gimo-runtime.h gimo-runtime.c gimo-extpoint.h \
 	gimo-extpoint.c gimo-extension.h gimo-extension.c gimo-loader.h \
 	gimo-loader.c gimo-loadable.h gimo-loadable.c gimo-module.h \
 	gimo-module.c gimo-dlmodule.h gimo-dlmodule.c gimo-archive.h \
@@ -27,7 +27,7 @@ INTROSPECTION_GIRS = Gimo-1.0.gir
 
 Gimo-1.0.gir: $(INTROSPECTION_SCANNER) Makefile
 
-Gimo_1_0_gir_INCLUDES = GObject-2.0
+Gimo_1_0_gir_INCLUDES = GLib-2.0 GObject-2.0 Gio-2.0
 Gimo_1_0_gir_CFLAGS = $(INCLUDES) -I${srcdir}
 Gimo_1_0_gir_LIBS = ./libgimo-1.0.la
 Gimo_1_0_gir_FILES = ${libgimo_1_0_la_SOURCES}

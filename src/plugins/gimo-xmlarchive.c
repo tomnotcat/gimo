@@ -19,6 +19,8 @@
  */
 #include "gimo-xmlarchive.h"
 #include "gimo-error.h"
+#include "gimo-runtime.h"
+#include "gimo-utils.h"
 #include <ctype.h>
 #include <expat.h>
 #include <stdio.h>
@@ -605,7 +607,7 @@ static gboolean _gimo_xmlarchive_read (GimoArchive *self,
         status = XML_Parse (parser, buf, len, done);
 
         if (XML_STATUS_ERROR == status) {
-            gimo_set_error_full (GIMO_ERROR_IMPORT,
+            gimo_set_error_full (GIMO_ERROR_LOAD,
                                  "XmlArchive parse error: %s at line %"
                                  XML_FMT_INT_MOD "u\n",
                                  XML_ErrorString (XML_GetErrorCode (parser)),
@@ -705,3 +707,11 @@ GimoXmlArchive* gimo_xmlarchive_new (void)
 {
     return g_object_new (GIMO_TYPE_XMLARCHIVE, NULL);
 }
+
+/*
+GIMO_DEFINE_RUNTIME_SYMBOL (
+    g_signal_connect (runtime,
+                      "start",
+                      G_CALLBACK (_gimo_xmlarchive_runtime_start),
+                      plugin))
+*/

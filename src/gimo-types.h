@@ -25,16 +25,16 @@
 G_BEGIN_DECLS
 
 typedef struct _GimoContext GimoContext;
-typedef struct _GimoPluginfo GimoPluginfo;
+typedef struct _GimoPlugin GimoPlugin;
 typedef struct _GimoRequire GimoRequire;
 typedef struct _GimoExtPoint GimoExtPoint;
 typedef struct _GimoExtension GimoExtension;
 typedef struct _GimoExtConfig GimoExtConfig;
+typedef struct _GimoRuntime GimoRuntime;
 typedef struct _GimoModule GimoModule;
 typedef struct _GimoLoader GimoLoader;
 typedef struct _GimoLoadable GimoLoadable;
 typedef struct _GimoArchive GimoArchive;
-typedef struct _GimoPlugin GimoPlugin;
 typedef struct _GPtrArray GimoObjectArray;
 
 GType gimo_object_array_get_type (void) G_GNUC_CONST;

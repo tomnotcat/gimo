@@ -55,7 +55,7 @@ static gboolean _gimo_jsmodule_open (GimoModule *module,
                                 &status,
                                 &error))
     {
-        gimo_set_error_full (GIMO_ERROR_IMPORT,
+        gimo_set_error_full (GIMO_ERROR_LOAD,
                              "Eval JS failed: %s: %s",
                              file_name, error->message);
         g_error_free (error);

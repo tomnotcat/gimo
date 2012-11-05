@@ -87,7 +87,7 @@ dnl Checks for GLib
 dnl ================================================================
 
 GLIB_REQUIRED_VERSION=2.32.0
-GLIB_MODULES="glib-2.0 >= $GLIB_REQUIRED_VERSION gobject-2.0 gthread-2.0 gmodule-no-export-2.0"
+GLIB_MODULES="glib-2.0 >= $GLIB_REQUIRED_VERSION gobject-2.0 gthread-2.0 gmodule-no-export-2.0 gio-2.0"
 
 PKG_CHECK_MODULES(GLIB, $GLIB_MODULES, :,
     AC_MSG_ERROR([

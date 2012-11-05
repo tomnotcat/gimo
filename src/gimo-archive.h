@@ -66,11 +66,13 @@ gboolean gimo_archive_add_object (GimoArchive *self,
                                   const gchar *id,
                                   GObject *object);
 
+void gimo_archive_remove_object (GimoArchive *self,
+                                 const gchar *id);
+
 GObject* gimo_archive_query_object (GimoArchive *self,
                                     const gchar *id);
 
-void gimo_archive_remove_object (GimoArchive *self,
-                                 const gchar *id);
+GPtrArray* gimo_archive_query_objects (GimoArchive *self);
 
 G_END_DECLS
 

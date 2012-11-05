@@ -20,7 +20,7 @@
 #include "gimo-context.h"
 #include "gimo-error.h"
 #include "gimo-extpoint.h"
-#include "gimo-pluginfo.h"
+#include "gimo-plugin.h"
 #include <string.h>
 
 struct _StateChange {
@@ -29,13 +29,13 @@ struct _StateChange {
     gint count;
 };
 
-static void _test_context_state_changed (GimoContext *ctx,
-                                         GimoPluginfo *info,
+static void _test_context_state_changed (GimoContext *context,
+                                         GimoPlugin *plugin,
                                          GimoPluginState old_state,
                                          GimoPluginState new_state,
                                          struct _StateChange *data)
 {
-    g_assert (gimo_pluginfo_get_state (info) == new_state);
+    g_assert (gimo_plugin_get_state (plugin) == new_state);
 
     data->old_state = old_state;
     data->new_state = new_state;
@@ -44,8 +44,8 @@ static void _test_context_state_changed (GimoContext *ctx,
 
 static void _test_context_common (void)
 {
-    GimoContext *ctx;
-    GimoPluginfo *info;
+    GimoContext *context;
+    GimoPlugin *plugin;
     GimoExtPoint *extpt;
     GPtrArray *array;
 
@@ -55,9 +55,9 @@ static void _test_context_common (void)
         0,
     };
 
-    ctx = gimo_context_new ();
+    context = gimo_context_new ();
 
-    g_signal_connect (ctx,
+    g_signal_connect (context,
                       "state-changed",
                       G_CALLBACK (_test_context_state_changed),
                       &param);
@@ -65,75 +65,75 @@ static void _test_context_common (void)
     array = g_ptr_array_new_with_free_func (g_object_unref);
     extpt = gimo_extpoint_new ("extpt1", "extptname1");
     g_ptr_array_add (array, extpt);
-    info = gimo_pluginfo_new ("test.plugin1", NULL, NULL, NULL,
+    plugin = gimo_plugin_new ("test.plugin1", NULL, NULL, NULL,
                               NULL, NULL, NULL, array, NULL);
     g_ptr_array_unref (array);
-    g_assert (!gimo_context_query_plugin (ctx, "test.plugin1"));
-    g_assert (gimo_context_install_plugin (ctx, info));
-    g_assert (gimo_context_query_plugin (ctx, "test.plugin1") == info);
-    g_object_unref (info);
-    g_object_unref (info);
+    g_assert (!gimo_context_query_plugin (context, "test.plugin1"));
+    g_assert (gimo_context_install_plugin (context, plugin));
+    g_assert (gimo_context_query_plugin (context, "test.plugin1") == plugin);
+    g_object_unref (plugin);
+    g_object_unref (plugin);
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.old_state);
     g_assert (GIMO_PLUGIN_INSTALLED == param.new_state);
     g_assert (1 == param.count);
 
-    info = gimo_pluginfo_new ("test.plugin1", NULL, NULL, NULL,
+    plugin = gimo_plugin_new ("test.plugin1", NULL, NULL, NULL,
                               NULL, NULL, NULL, NULL, NULL);
-    g_assert (!gimo_context_install_plugin (ctx, info));
+    g_assert (!gimo_context_install_plugin (context, plugin));
     g_assert (gimo_get_error () == GIMO_ERROR_CONFLICT);
-    g_object_unref (info);
-    info = gimo_pluginfo_new ("test.plugin2", NULL, NULL, NULL,
+    g_object_unref (plugin);
+    plugin = gimo_plugin_new ("test.plugin2", NULL, NULL, NULL,
                               NULL, NULL, NULL, NULL, NULL);
-    g_assert (gimo_context_install_plugin (ctx, info));
+    g_assert (gimo_context_install_plugin (context, plugin));
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.old_state);
     g_assert (GIMO_PLUGIN_INSTALLED == param.new_state);
     g_assert (2 == param.count);
-    g_object_unref (info);
+    g_object_unref (plugin);
 
-    g_assert (gimo_context_query_plugin (ctx, "test.plugin2") == info);
-    g_object_unref (info);
+    g_assert (gimo_context_query_plugin (context, "test.plugin2") == plugin);
+    g_object_unref (plugin);
 
-    array = gimo_context_query_plugins (ctx, "hello");
-    g_assert (NULL == array);
-
-    array = gimo_context_query_plugins (ctx, NULL);
-    g_assert (2 == array->len);
+    array = gimo_context_query_plugins (context);
+    /* With core plugins. */
+    g_assert (array->len > 2);
     g_ptr_array_unref (array);
 
-    if (1) {
-        guint i;
-        const gchar *plugin_id = "test.plugin";
-        gchar id_prefix[32] = { 0 };
-
-        for (i = 0; i < strlen (plugin_id); ++i) {
-            id_prefix[i] = plugin_id[i];
-            array = gimo_context_query_plugins (ctx, id_prefix);
-            g_assert (2 == array->len);
-            g_ptr_array_unref (array);
-        }
-    }
-
-    array = gimo_context_query_plugins (ctx, "test.plugin2");
-    g_assert (1 == array->len);
-    g_ptr_array_unref (array);
-
-    extpt = gimo_context_query_extpoint (ctx, "test.plugin1.extpt1");
+    extpt = gimo_context_query_extpoint (context, "test.plugin1.extpt1");
     g_assert (extpt);
-    info = gimo_extpoint_query_pluginfo (extpt);
-    g_assert (info);
-    g_object_unref (info);
+    plugin = gimo_extpoint_query_plugin (extpt);
+    g_assert (plugin);
+    g_object_unref (plugin);
 
-    gimo_context_uninstall_plugin (ctx, "test.plugin1");
-    g_assert (!gimo_context_query_plugin (ctx, "test.plugin1"));
-    g_assert (!gimo_context_query_extpoint (ctx, "test.plugin1.extpt1"));
+    gimo_context_uninstall_plugin (context, "test.plugin1");
+    g_assert (!gimo_context_query_plugin (context, "test.plugin1"));
+    g_assert (!gimo_context_query_extpoint (context, "test.plugin1.extpt1"));
     g_assert (GIMO_PLUGIN_INSTALLED == param.old_state);
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.new_state);
     g_assert (3 == param.count);
 
-    g_assert (!gimo_extpoint_query_pluginfo (extpt));
+    g_assert (!gimo_extpoint_query_plugin (extpt));
     g_object_unref (extpt);
-    g_object_unref (ctx);
+    g_object_unref (context);
     g_assert (3 == param.count);
+}
+
+static void _test_context_load_plugin (void)
+{
+    GimoContext *context;
+
+    context = gimo_context_new ();
+    g_assert (gimo_context_load_plugin (context,
+                                        "plugins/plugin1.xml",
+                                        NULL,
+                                        FALSE) == 1);
+    g_object_unref (context);
+
+    context = gimo_context_new ();
+    g_assert (gimo_context_load_plugin (context,
+                                        "plugins",
+                                        NULL,
+                                        FALSE) == 2);
+    g_object_unref (context);
 }
 
 int main (int argc, char *argv[])
@@ -142,6 +142,7 @@ int main (int argc, char *argv[])
     g_thread_init (NULL);
 
     _test_context_common ();
+    _test_context_load_plugin ();
 
     return 0;
 }

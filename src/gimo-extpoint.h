@@ -59,9 +59,7 @@ const gchar* gimo_extpoint_get_id (GimoExtPoint *self);
 
 const gchar* gimo_extpoint_get_name (GimoExtPoint *self);
 
-GimoPluginfo* gimo_extpoint_query_pluginfo (GimoExtPoint *self);
-
-GObject* gimo_extpoint_resolve (GimoExtPoint *self);
+GimoPlugin* gimo_extpoint_query_plugin (GimoExtPoint *self);
 
 G_END_DECLS
 

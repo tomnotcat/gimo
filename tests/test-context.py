@@ -6,7 +6,7 @@ g_old_state = Gimo.PluginState.UNINSTALLED
 g_new_state = Gimo.PluginState.UNINSTALLED
 g_state_count = 0
 
-def _plugin_state_changed (ctx, info, old_state, new_state):
+def _plugin_state_changed (context, plugin, old_state, new_state):
     global g_old_state
     global g_new_state
     global g_state_count
@@ -15,59 +15,57 @@ def _plugin_state_changed (ctx, info, old_state, new_state):
     g_new_state = new_state
     g_state_count += 1
 
-ctx = Gimo.Context ()
-ctx.connect ("state-changed", _plugin_state_changed)
+context = Gimo.Context ()
+context.connect ("state-changed", _plugin_state_changed)
 
-info = Gimo.Pluginfo (id="test.plugin")
-assert (not ctx.query_plugin ("test.plugin"))
-assert (ctx.install_plugin (info))
-assert (ctx.query_plugin ("test.plugin") == info)
+plugin = Gimo.Plugin (id="test.plugin")
+assert (not context.query_plugin ("test.plugin"))
+assert (context.install_plugin (plugin))
+assert (context.query_plugin ("test.plugin") == plugin)
 
 assert (Gimo.PluginState.UNINSTALLED == g_old_state)
 assert (Gimo.PluginState.INSTALLED == g_new_state)
 assert (1 == g_state_count)
 
-info = Gimo.Pluginfo (id="test.plugin")
-assert (not ctx.install_plugin (info))
+plugin = Gimo.Plugin (id="test.plugin")
+assert (not context.install_plugin (plugin))
 assert (Gimo.get_error () == Gimo.Errors.CONFLICT)
 
 extpts = [Gimo.ExtPoint (id="extpt1"),
           Gimo.ExtPoint (id="extpt2")]
-info = Gimo.Pluginfo.new ("test.plugin2",
-                          "/home/test",
-                          "myklass",
-                          "myname",
+plugin = Gimo.Plugin.new ("test.plugin2",
+                          "plugin2",
                           "1.0",
                           "tomnotcat",
+                          None,
+                          None,
                           None,
                           extpts,
                           None)
 
-assert (info.query_context () == None)
-assert (ctx.install_plugin (info))
+assert (plugin.query_context () == None)
+assert (context.install_plugin (plugin))
 assert (Gimo.PluginState.UNINSTALLED == g_old_state)
 assert (Gimo.PluginState.INSTALLED == g_new_state)
 assert (2 == g_state_count)
 
-assert (ctx.query_plugin ("test.plugin2") == info)
-assert (info.query_context () == ctx)
+assert (context.query_plugin ("test.plugin2") == plugin)
+assert (plugin.query_context () == context)
 
-array = ctx.query_plugins ("hello")
-assert (len (array) == 0)
+# With core plugins.
+array = context.query_plugins ()
+assert (len (array) > 2)
 
-array = ctx.query_plugins (None)
-assert (len (array) == 2)
+assert (context.query_extpoint ("test.plugin2.extpt1") == extpts[0])
+assert (context.query_extpoint ("test.plugin2.extpt2") == extpts[1])
+assert (context.query_extpoint ("test.plugin2.extpt3") == None)
 
-assert (ctx.query_extpoint ("test.plugin2.extpt1") == extpts[0])
-assert (ctx.query_extpoint ("test.plugin2.extpt2") == extpts[1])
-assert (ctx.query_extpoint ("test.plugin2.extpt3") == None)
-
-ctx.uninstall_plugin ("test.plugin2");
-assert (not ctx.query_plugin ("test.plugin2"))
-assert (info.query_context () == None)
-assert (ctx.query_plugin ("test.plugin"))
-assert (ctx.query_extpoint ("test.plugin2.extpt1") == None)
-assert (ctx.query_extpoint ("test.plugin2.extpt2") == None)
+context.uninstall_plugin ("test.plugin2");
+assert (not context.query_plugin ("test.plugin2"))
+assert (plugin.query_context () == None)
+assert (context.query_plugin ("test.plugin"))
+assert (context.query_extpoint ("test.plugin2.extpt1") == None)
+assert (context.query_extpoint ("test.plugin2.extpt2") == None)
 assert (Gimo.PluginState.INSTALLED == g_old_state)
 assert (Gimo.PluginState.UNINSTALLED == g_new_state)
 assert (3 == g_state_count)

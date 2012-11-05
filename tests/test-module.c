@@ -35,13 +35,13 @@ int main (int argc, char *argv[])
     loader = gimo_loader_new_cached ();
 
     /* Dynamic library */
-    g_assert (!gimo_loader_load (loader, "testplugin"));
+    g_assert (!gimo_loader_load (loader, "demo-plugin"));
     g_assert (gimo_loader_register (loader,
                                     NULL,
                                     (GimoLoadableCtorFunc) gimo_dlmodule_new,
                                     NULL));
-    module = GIMO_MODULE (gimo_loader_load (loader, "testplugin"));
-    g_assert (gimo_loader_load (loader, "testplugin") ==
+    module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin"));
+    g_assert (gimo_loader_load (loader, "demo-plugin") ==
               GIMO_LOADABLE (module));
     g_object_unref (module);
     g_assert (GIMO_IS_DLMODULE (module));
@@ -53,7 +53,7 @@ int main (int argc, char *argv[])
     g_object_unref (module);
 
     /* Python module */
-    g_assert (!gimo_loader_load (loader, "testplugin.py"));
+    g_assert (!gimo_loader_load (loader, "demo-plugin.py"));
     module = GIMO_MODULE (gimo_loader_load (loader, "pymodule-1.0"));
     g_assert (module);
     gmodule = _gimo_dlmodule_get_gmodule (GIMO_DLMODULE (module));
@@ -63,7 +63,7 @@ int main (int argc, char *argv[])
                                (gpointer *) &new_module));
     g_assert (gimo_loader_register (loader, "py", new_module, NULL));
     g_object_unref (module);
-    module = GIMO_MODULE (gimo_loader_load (loader, "test-plugin.py"));
+    module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin.py"));
     g_assert (module);
     plugin = gimo_module_resolve (module,
                                   "test_plugin_new",
@@ -73,7 +73,7 @@ int main (int argc, char *argv[])
     g_object_unref (module);
 
     /* JavaScript module */
-    g_assert (!gimo_loader_load (loader, "testplugin.js"));
+    g_assert (!gimo_loader_load (loader, "demo-plugin.js"));
     module = GIMO_MODULE (gimo_loader_load (loader, "jsmodule-1.0"));
     g_assert (module);
     gmodule = _gimo_dlmodule_get_gmodule (GIMO_DLMODULE (module));
@@ -84,7 +84,7 @@ int main (int argc, char *argv[])
     g_assert (gimo_loader_register (loader, "js", new_module, NULL));
     g_object_unref (module);
 
-    module = GIMO_MODULE (gimo_loader_load (loader, "test-plugin.js"));
+    module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin.js"));
     g_assert (module);
     plugin = gimo_module_resolve (module,
                                   "test_plugin_new",

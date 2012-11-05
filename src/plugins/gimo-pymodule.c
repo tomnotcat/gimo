@@ -61,7 +61,7 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
 
     priv->module = PyImport_Import (name);
     if (NULL == priv->module) {
-        gimo_set_error_full (GIMO_ERROR_IMPORT,
+        gimo_set_error_full (GIMO_ERROR_LOAD,
                              "Import python module error: %s",
                              path);
         goto fail;

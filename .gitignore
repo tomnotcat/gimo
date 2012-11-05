@@ -40,5 +40,5 @@ Makefile
 tools/gimo-launch
 tests/test-module
 tests/test-archive
-tests/test-pluginfo
+tests/test-plugin
 tests/test-context

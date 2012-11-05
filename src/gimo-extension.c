@@ -24,7 +24,7 @@
 
 #include "gimo-extension.h"
 #include "gimo-extconfig.h"
-#include "gimo-pluginfo.h"
+#include "gimo-plugin.h"
 #include "gimo-utils.h"
 #include <stdlib.h>
 #include <string.h>
@@ -45,11 +45,11 @@ enum {
 };
 
 struct _GimoExtensionPrivate {
+    GimoPlugin *plugin;
     gchar *local_id;
     gchar *id;
     gchar *name;
     gchar *extpoint_id;
-    GimoPluginfo *info;
     GPtrArray *configs;
 };
 
@@ -64,11 +64,11 @@ static void gimo_extension_init (GimoExtension *self)
                                               GimoExtensionPrivate);
     priv = self->priv;
 
+    priv->plugin = NULL;
     priv->local_id = NULL;
     priv->id = NULL;
     priv->name = NULL;
     priv->extpoint_id = NULL;
-    priv->info = NULL;
     priv->configs = NULL;
 }
 
@@ -77,7 +77,7 @@ static void gimo_extension_finalize (GObject *gobject)
     GimoExtension *self = GIMO_EXTENSION (gobject);
     GimoExtensionPrivate *priv = self->priv;
 
-    g_assert (NULL == priv->info);
+    g_assert (NULL == priv->plugin);
 
     g_free (priv->local_id);
     g_free (priv->id);
@@ -115,7 +115,7 @@ static void gimo_extension_set_property (GObject *object,
         {
             GPtrArray *arr = g_value_get_boxed (value);
             if (arr) {
-                priv->configs = _gimo_utils_clone_object_array (
+                priv->configs = _gimo_clone_object_array (
                     arr, GIMO_TYPE_EXTCONFIG, NULL, NULL);
 
                 g_ptr_array_sort (priv->configs,
@@ -306,17 +306,17 @@ GPtrArray* gimo_extension_get_configs (GimoExtension *self)
 }
 
 /**
- * gimo_extension_query_pluginfo:
+ * gimo_extension_query_plugin:
  * @self: a #GimoExtpoint
  *
  * Query the plugin descriptor of the extension.
  *
- * Returns: (allow-none) (transfer full): a #GimoPluginfo
+ * Returns: (allow-none) (transfer full): a #GimoPlugin
  */
-GimoPluginfo* gimo_extension_query_pluginfo (GimoExtension *self)
+GimoPlugin* gimo_extension_query_plugin (GimoExtension *self)
 {
     GimoExtensionPrivate *priv;
-    GimoPluginfo *info = NULL;
+    GimoPlugin *plugin = NULL;
 
     g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
 
@@ -324,16 +324,16 @@ GimoPluginfo* gimo_extension_query_pluginfo (GimoExtension *self)
 
     G_LOCK (extension_lock);
 
-    if (priv->info)
-        info = g_object_ref (priv->info);
+    if (priv->plugin)
+        plugin = g_object_ref (priv->plugin);
 
     G_UNLOCK (extension_lock);
 
-    return info;
+    return plugin;
 }
 
 void _gimo_extension_setup (GimoExtension *self,
-                            GimoPluginfo *info)
+                            GimoPlugin *plugin)
 {
     GimoExtensionPrivate *priv = self->priv;
 
@@ -341,24 +341,24 @@ void _gimo_extension_setup (GimoExtension *self,
 
     G_LOCK (extension_lock);
 
-    priv->info = info;
+    priv->plugin = plugin;
 
     priv->id = g_strdup_printf ("%s.%s",
-                                gimo_pluginfo_get_id (info),
+                                gimo_plugin_get_id (plugin),
                                 priv->local_id);
     G_UNLOCK (extension_lock);
 }
 
 void _gimo_extension_teardown (GimoExtension *self,
-                               GimoPluginfo *info)
+                               GimoPlugin *plugin)
 {
     GimoExtensionPrivate *priv = self->priv;
 
-    g_assert (priv->info == info);
+    g_assert (priv->plugin == plugin);
 
     G_LOCK (extension_lock);
 
-    priv->info = NULL;
+    priv->plugin = NULL;
 
     G_UNLOCK (extension_lock);
 }

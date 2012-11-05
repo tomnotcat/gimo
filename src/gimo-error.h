@@ -20,24 +20,56 @@
 #ifndef __GIMO_ERROR_H__
 #define __GIMO_ERROR_H__
 
-#include <glib-object.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
+
+#define GIMO_LIST_TO_ENUM(ITEM) ITEM,
+#define GIMO_LIST_ITEM(ITEM) ITEM
+#define GIMO_LIST_TO_STRING(ITEM) case ITEM: return #ITEM;
+
+#define GIMO_ERROR_LIST(_, __)        \
+    _(GIMO_ERROR_NONE)                \
+    _(GIMO_ERROR_NO_MEMORY)           \
+    _(GIMO_ERROR_NO_FILE)             \
+    _(GIMO_ERROR_OPEN_FILE)           \
+    _(GIMO_ERROR_INVALID_FILE)        \
+    _(GIMO_ERROR_INVALID_ID)          \
+    _(GIMO_ERROR_NO_OBJECT)           \
+    _(GIMO_ERROR_INVALID_OBJECT)      \
+    _(GIMO_ERROR_INVALID_STATE)       \
+    _(GIMO_ERROR_INVALID_RETURN)      \
+    _(GIMO_ERROR_NO_PLUGIN)           \
+    _(GIMO_ERROR_NO_EXTPOINT)         \
+    _(GIMO_ERROR_NO_EXTENSION)        \
+    _(GIMO_ERROR_CONFLICT)            \
+    _(GIMO_ERROR_NO_TYPE)             \
+    _(GIMO_ERROR_INVALID_TYPE)        \
+    _(GIMO_ERROR_LOAD)                \
+    _(GIMO_ERROR_UNLOAD)              \
+    _(GIMO_ERROR_NO_SYMBOL)           \
+    _(GIMO_ERROR_INVALID_SYMBOL)      \
+    _(GIMO_ERROR_NO_ATTRIBUTE)        \
+    __(GIMO_ERROR_INVALID_ATTRIBUTE)
 
 /**
  * GimoErrors:
  * @GIMO_ERROR_NONE: no error
  * @GIMO_ERROR_NO_MEMORY: out of memory
+ * @GIMO_ERROR_NO_FILE: file not exist
  * @GIMO_ERROR_OPEN_FILE: open file error
+ * @GIMO_ERROR_INVALID_FILE: invalid file type
  * @GIMO_ERROR_INVALID_ID: invalid identifier
  * @GIMO_ERROR_NO_OBJECT: object not found
  * @GIMO_ERROR_INVALID_OBJECT: invalid object
  * @GIMO_ERROR_INVALID_STATE: invalid state
  * @GIMO_ERROR_INVALID_RETURN: invalid return
+ * @GIMO_ERROR_NO_EXTPOINT: extension point not exist
+ * @GIMO_ERROR_NO_EXTENSION: extension not exist
  * @GIMO_ERROR_CONFLICT: object conflict
  * @GIMO_ERROR_NO_TYPE: type not found
  * @GIMO_ERROR_INVALID_TYPE: invalid type
- * @GIMO_ERROR_IMPORT: import module error
+ * @GIMO_ERROR_LOAD: load module error
  * @GIMO_ERROR_UNLOAD: unload module error
  * @GIMO_ERROR_NO_SYMBOL: symbol not found
  * @GIMO_ERROR_INVALID_SYMBOL: invalid symbol
@@ -45,23 +77,8 @@ G_BEGIN_DECLS
  * @GIMO_ERROR_INVALID_ATTRIBUTE: invalid attribute
  */
 typedef enum {
-    GIMO_ERROR_NONE,
-    GIMO_ERROR_NO_MEMORY,
-    GIMO_ERROR_OPEN_FILE,
-    GIMO_ERROR_INVALID_ID,
-    GIMO_ERROR_NO_OBJECT,
-    GIMO_ERROR_INVALID_OBJECT,
-    GIMO_ERROR_INVALID_STATE,
-    GIMO_ERROR_INVALID_RETURN,
-    GIMO_ERROR_CONFLICT,
-    GIMO_ERROR_NO_TYPE,
-    GIMO_ERROR_INVALID_TYPE,
-    GIMO_ERROR_IMPORT,
-    GIMO_ERROR_UNLOAD,
-    GIMO_ERROR_NO_SYMBOL,
-    GIMO_ERROR_INVALID_SYMBOL,
-    GIMO_ERROR_NO_ATTRIBUTE,
-    GIMO_ERROR_INVALID_ATTRIBUTE
+    GIMO_ERROR_LIST (GIMO_LIST_TO_ENUM,
+                     GIMO_LIST_ITEM)
 } GimoErrors;
 
 void gimo_set_error (gint code);

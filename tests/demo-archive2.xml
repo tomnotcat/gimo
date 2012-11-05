@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive version="1.0">
-  <object id="org.gimo.test.plugin1" type="GimoPluginfo">
+  <object id="org.gimo.test.plugin1" type="GimoPlugin">
     <name>test plugin1</name>
     <version>0.1</version>
     <provider>tomnotcat</provider>
-    <uri>http://www.xxx.com/org.gimo.test.plugin1</uri>
     <module>plugin1</module>
+    <symbol>symbol1</symbol>
     <extpoints>
       <GimoExtPoint id="extpt1" name="extension point 1"/>
     </extpoints>
   </object>
-  <object id="plugin2" type="GimoPluginfo">
+  <object id="plugin2" type="GimoPlugin">
     <id>org.gimo.test.plugin2</id>
     <requires>
       <GimoRequire plugin="org.gimo.test.plugin1"

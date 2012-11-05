@@ -452,9 +452,11 @@ static void _test_archive_common (void)
 {
     GimoArchive *archive;
     GObject *object;
+    GPtrArray *array;
 
     archive = gimo_archive_new ();
     object = G_OBJECT (gimo_archive_new ());
+    g_assert (!gimo_archive_query_objects (archive));
     g_assert (gimo_archive_add_object (archive, "1", object));
     g_assert (!gimo_archive_add_object (archive, "1", object));
     g_assert (!gimo_archive_query_object (archive, "2"));
@@ -463,6 +465,9 @@ static void _test_archive_common (void)
     object = gimo_archive_query_object (archive, "1");
     g_assert (object);
     g_object_unref (object);
+    array = gimo_archive_query_objects (archive);
+    g_assert (array->len == 2);
+    g_ptr_array_unref (array);
     gimo_archive_remove_object (archive, "1");
     g_assert (!gimo_archive_query_object (archive, "1"));
     g_object_unref (archive);
@@ -506,7 +511,7 @@ static void _test_archive_xml (void)
                                    NULL);
     g_assert (archive);
     g_assert (gimo_archive_read (GIMO_ARCHIVE (archive),
-                                 "test-archive1.xml"));
+                                 "demo-archive1.xml"));
     config = TEST_CONFIG (gimo_archive_query_object (GIMO_ARCHIVE (archive),
                                                      "config1"));
     g_assert (config);

@@ -24,19 +24,29 @@
 
 G_BEGIN_DECLS
 
-void gimo_context_install_core_plugins (GimoContext *self);
+#define GIMO_RUNTIME_SYMBOL_NAME "gimo_plugin_create_runtime"
 
-gchar* _gimo_utils_parse_extension_id (const gchar *ext_id,
-                                       gchar **local_id);
+#define GIMO_DEFINE_RUNTIME_SYMBOL(_C_) \
+    GimoRuntime* gimo_plugin_create_runtime (GObject *plugin) \
+    { \
+        GimoRuntime *runtime = gimo_runtime_new (); \
+        _C_; \
+        return runtime; \
+    }
 
-gint _gimo_utils_string_compare (gconstpointer a,
+gchar* _gimo_parse_extension_id (const gchar *ext_id,
+                                 gchar **local_id);
+
+gint _gimo_gtree_string_compare (gconstpointer a,
                                  gconstpointer b,
                                  gpointer user_data);
 
-GPtrArray* _gimo_utils_clone_object_array (GPtrArray *arr,
-                                           GType type,
-                                           void (*func) (gpointer, gpointer),
-                                           gpointer user_data);
+GPtrArray* _gimo_clone_object_array (GPtrArray *arr,
+                                     GType type,
+                                     void (*func) (gpointer, gpointer),
+                                     gpointer user_data);
+
+gpointer gimo_safe_cast (gpointer object, GType type);
 
 G_END_DECLS
 

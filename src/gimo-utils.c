@@ -18,14 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "gimo-utils.h"
+#include "gimo-error.h"
 #include <string.h>
 
-void gimo_context_install_core_plugins (GimoContext *self)
-{
-}
-
-gchar* _gimo_utils_parse_extension_id (const gchar *ext_id,
-                                       gchar **local_id)
+gchar* _gimo_parse_extension_id (const gchar *ext_id,
+                                 gchar **local_id)
 {
     gchar *dot = strrchr (ext_id, '.');
     gchar *result;
@@ -41,17 +38,17 @@ gchar* _gimo_utils_parse_extension_id (const gchar *ext_id,
     return result;
 }
 
-gint _gimo_utils_string_compare (gconstpointer a,
+gint _gimo_gtree_string_compare (gconstpointer a,
                                  gconstpointer b,
                                  gpointer user_data)
 {
     return strcmp (a, b);
 }
 
-GPtrArray* _gimo_utils_clone_object_array (GPtrArray *arr,
-                                           GType type,
-                                           void (*func) (gpointer, gpointer),
-                                           gpointer user_data)
+GPtrArray* _gimo_clone_object_array (GPtrArray *arr,
+                                     GType type,
+                                     void (*func) (gpointer, gpointer),
+                                     gpointer user_data)
 {
     GPtrArray *result;
     GObject *object;
@@ -72,4 +69,32 @@ GPtrArray* _gimo_utils_clone_object_array (GPtrArray *arr,
     }
 
     return result;
+}
+
+/**
+ * gimo_safe_cast:
+ * @object: (type GObject.Object) (allow-none): a #GObject
+ * @type: the target type to cast
+ *
+ * Cast a object to the specified type, unref the object if failed.
+ *
+ * Returns: (type GObject.Object) (allow-none) (transfer full):
+ *     A #GObject if successful, %NULL on error.
+ */
+gpointer gimo_safe_cast (gpointer object, GType type)
+{
+    gpointer result;
+
+    if (object) {
+        result = G_TYPE_CHECK_INSTANCE_CAST (object, type, gpointer);
+
+        if (!result) {
+            g_object_unref (object);
+            gimo_set_error (GIMO_ERROR_INVALID_OBJECT);
+        }
+
+        return result;
+    }
+
+    return NULL;
 }

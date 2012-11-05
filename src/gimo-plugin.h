@@ -46,12 +46,56 @@ struct _GimoPlugin {
 
 struct _GimoPluginClass {
     GObjectClass parent_class;
-    gboolean (*start) (GimoPlugin *self);
-    gboolean (*stop) (GimoPlugin *self);
-    GObject* (*resolve) (GimoPlugin *self, const gchar *symbol);
 };
 
 GType gimo_plugin_get_type (void) G_GNUC_CONST;
+
+GimoPlugin* gimo_plugin_new (const gchar *id,
+                             const gchar *name,
+                             const gchar *version,
+                             const gchar *provider,
+                             const gchar *module,
+                             const gchar *symbol,
+                             GPtrArray *requires,
+                             GPtrArray *extpoints,
+                             GPtrArray *extensions);
+
+const gchar* gimo_plugin_get_id (GimoPlugin *self);
+
+const gchar* gimo_plugin_get_name (GimoPlugin *self);
+
+const gchar* gimo_plugin_get_version (GimoPlugin *self);
+
+const gchar* gimo_plugin_get_provider (GimoPlugin *self);
+
+const gchar* gimo_plugin_get_uri (GimoPlugin *self);
+
+const gchar* gimo_plugin_get_module (GimoPlugin *self);
+
+const gchar* gimo_plugin_get_symbol (GimoPlugin *self);
+
+GimoExtPoint* gimo_plugin_get_extpoint (GimoPlugin *self,
+                                        const gchar *local_id);
+
+GimoExtension* gimo_plugin_get_extension (GimoPlugin *self,
+                                          const gchar *local_id);
+
+GPtrArray* gimo_plugin_get_requires (GimoPlugin *self);
+
+GPtrArray* gimo_plugin_get_extpoints (GimoPlugin *self);
+
+GPtrArray* gimo_plugin_get_extensions (GimoPlugin *self);
+
+GimoPluginState gimo_plugin_get_state (GimoPlugin *self);
+
+GimoContext* gimo_plugin_query_context (GimoPlugin *self);
+
+gboolean gimo_plugin_start (GimoPlugin *self);
+
+gboolean gimo_plugin_stop (GimoPlugin *self);
+
+GObject* gimo_plugin_resolve (GimoPlugin *self,
+                              const gchar *symbol);
 
 G_END_DECLS
 

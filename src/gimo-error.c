@@ -66,6 +66,9 @@ gchar* gimo_dup_error_string (void)
         str = g_strdup (error_message);
         G_UNLOCK (error_lock);
     }
+    else {
+        str = g_strdup (gimo_error_to_string (error_code));
+    }
 
     return str;
 }
@@ -84,6 +87,12 @@ void gimo_clear_error (void)
 
 const gchar* gimo_error_to_string (gint code)
 {
-    /* TODO: Add error code to string conversion. */
+    switch (code) {
+        GIMO_ERROR_LIST (GIMO_LIST_TO_STRING,
+                         GIMO_LIST_TO_STRING);
+    default:
+        break;
+    }
+
     return NULL;
 }

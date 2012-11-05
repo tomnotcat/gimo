@@ -66,9 +66,11 @@ const gchar* gimo_module_get_name (GimoModule *self)
  * @symbol: the constructor symbol
  * @param: (allow-none): the parameter for constructor
  *
- * Resolve the symbol as an object constructor and new an object.
+ * Resolve the symbol as an object constructor and create an object.
  *
- * Returns: (allow-none) (transfer full): a #GObject
+ * Returns: (type GObject.Object) (allow-none) (transfer full):
+ *     A #GObject if successful, %NULL on error. Free the
+ *     returned object with g_object_unref().
  */
 GObject* gimo_module_resolve (GimoModule *self,
                               const gchar *symbol,

@@ -169,7 +169,7 @@ static void gimo_loader_set_property (GObject *object,
     case PROP_CACHE:
         if (g_value_get_boolean (value)) {
             priv->object_tree = g_tree_new_full (
-                _gimo_utils_string_compare, NULL, g_free, NULL);
+                _gimo_gtree_string_compare, NULL, g_free, NULL);
         }
         break;
 
@@ -337,7 +337,9 @@ void gimo_loader_unregister (GimoLoader *self,
  *
  * Load a file.
  *
- * Returns: (allow-none) (transfer full): a #GimoLoadable
+ * Returns: (allow-none) (transfer full):
+ *     A #GimoLoadable if successful, %NULL on error.
+ *     Free the returned object with g_object_unref().
  */
 GimoLoadable* gimo_loader_load (GimoLoader *self,
                                 const gchar *file_name)

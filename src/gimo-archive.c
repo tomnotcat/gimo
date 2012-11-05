@@ -32,6 +32,17 @@ struct _GimoArchivePrivate {
     GMutex mutex;
 };
 
+static gboolean _gimo_archive_query_objects (gpointer key,
+                                             gpointer value,
+                                             gpointer data)
+{
+    GPtrArray *param = data;
+
+    g_ptr_array_add (param, g_object_ref (value));
+
+    return FALSE;
+}
+
 static void gimo_archive_init (GimoArchive *self)
 {
     GimoArchivePrivate *priv;
@@ -41,7 +52,7 @@ static void gimo_archive_init (GimoArchive *self)
                                               GimoArchivePrivate);
     priv = self->priv;
 
-    priv->objects = g_tree_new_full (_gimo_utils_string_compare,
+    priv->objects = g_tree_new_full (_gimo_gtree_string_compare,
                                      NULL, g_free, g_object_unref);
     g_mutex_init (&priv->mutex);
 }
@@ -117,6 +128,22 @@ gboolean gimo_archive_add_object (GimoArchive *self,
     return TRUE;
 }
 
+void gimo_archive_remove_object (GimoArchive *self,
+                                 const gchar *id)
+{
+    GimoArchivePrivate *priv;
+
+    g_return_if_fail (GIMO_IS_ARCHIVE (self));
+
+    priv = self->priv;
+
+    g_mutex_lock (&priv->mutex);
+
+    g_tree_remove (priv->objects, id);
+
+    g_mutex_unlock (&priv->mutex);
+}
+
 /**
  * gimo_archive_query_object:
  * @self: a #GimoArchive
@@ -148,18 +175,35 @@ GObject* gimo_archive_query_object (GimoArchive *self,
     return object;
 }
 
-void gimo_archive_remove_object (GimoArchive *self,
-                                 const gchar *id)
+/**
+ * gimo_archive_query_objects:
+ * @self: a #GimoArchive
+ *
+ * Query all the objects in the archive.
+ *
+ * Returns: (element-type GObject.Object) (transfer container):
+ *          an array of objects.
+ */
+GPtrArray* gimo_archive_query_objects (GimoArchive *self)
 {
     GimoArchivePrivate *priv;
+    GPtrArray *param = NULL;
 
-    g_return_if_fail (GIMO_IS_ARCHIVE (self));
+    g_return_val_if_fail (GIMO_IS_ARCHIVE (self), NULL);
 
     priv = self->priv;
 
     g_mutex_lock (&priv->mutex);
 
-    g_tree_remove (priv->objects, id);
+    if (g_tree_nnodes (priv->objects) > 0) {
+        param = g_ptr_array_new_with_free_func (g_object_unref);
+
+        g_tree_foreach (priv->objects,
+                        _gimo_archive_query_objects,
+                        param);
+    }
 
     g_mutex_unlock (&priv->mutex);
+
+    return param;
 }

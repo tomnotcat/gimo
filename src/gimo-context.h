@@ -21,6 +21,7 @@
 #define __GIMO_CONTEXT_H__
 
 #include "gimo-types.h"
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +48,7 @@ struct _GimoContext {
 struct _GimoContextClass {
     GObjectClass parent_class;
     void (*state_changed) (GimoContext *self,
-                           GimoPluginfo *info,
+                           GimoPlugin *plugin,
                            GimoPluginState old_state,
                            GimoPluginState new_state);
 };
@@ -57,19 +58,30 @@ GType gimo_context_get_type (void) G_GNUC_CONST;
 GimoContext* gimo_context_new (void);
 
 gboolean gimo_context_install_plugin (GimoContext *self,
-                                      GimoPluginfo *info);
+                                      GimoPlugin *plugin);
 
 void gimo_context_uninstall_plugin (GimoContext *self,
                                     const gchar *plugin_id);
 
-GimoPluginfo* gimo_context_query_plugin (GimoContext *self,
-                                         const gchar *plugin_id);
+guint gimo_context_load_plugin (GimoContext *self,
+                                const gchar *file_path,
+                                GCancellable *cancellable,
+                                gboolean start);
 
-GPtrArray* gimo_context_query_plugins (GimoContext *self,
-                                       const gchar *namesps);
+GimoPlugin* gimo_context_query_plugin (GimoContext *self,
+                                       const gchar *plugin_id);
+
+GPtrArray* gimo_context_query_plugins (GimoContext *self);
 
 GimoExtPoint* gimo_context_query_extpoint (GimoContext *self,
-                                           const gchar *extpoint_id);
+                                           const gchar *extpt_id);
+
+GPtrArray* gimo_context_query_extensions (GimoContext *self,
+                                          const gchar *extpt_id);
+
+gpointer gimo_context_resolve_extpoint (GimoContext *self,
+                                        const gchar *extpt_id,
+                                        GType type);
 
 G_END_DECLS
 

@@ -68,7 +68,7 @@ GimoExtConfig* gimo_extension_get_config (GimoExtension *self,
 
 GPtrArray* gimo_extension_get_configs (GimoExtension *self);
 
-GimoPluginfo* gimo_extension_query_pluginfo (GimoExtension *self);
+GimoPlugin* gimo_extension_query_plugin (GimoExtension *self);
 
 G_END_DECLS
 

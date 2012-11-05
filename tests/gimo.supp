@@ -21,12 +21,11 @@
 }
 
 {
-    g_object_newv
+    g_type_class_ref
     Memcheck:Leak
     ...
     fun:type_iface_vtable_base_init_Wm
     fun:g_type_class_ref
-    fun:g_object_newv
 }
 
 {
@@ -103,6 +102,13 @@
     fun:g_type_class_ref
     fun:g_type_create_instance
     fun:g_param_spec_internal
+}
+
+{
+    g_get_any_init_do
+    Memcheck:Leak
+    ...
+    fun:g_get_any_init_do
 }
 
 {
