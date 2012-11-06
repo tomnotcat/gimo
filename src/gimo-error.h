@@ -26,7 +26,7 @@ G_BEGIN_DECLS
 
 #define GIMO_LIST_TO_ENUM(ITEM) ITEM,
 #define GIMO_LIST_ITEM(ITEM) ITEM
-#define GIMO_LIST_TO_STRING(ITEM) case ITEM: return #ITEM;
+#define GIMO_LIST_TO_STRING(ITEM) case ITEM: return _(#ITEM);
 
 #define GIMO_ERROR_LIST(_, __)        \
     _(GIMO_ERROR_NONE)                \

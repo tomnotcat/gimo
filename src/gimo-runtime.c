@@ -186,7 +186,9 @@ GObject* gimo_runtime_resolve (GimoRuntime *self,
  *
  * Query the plugin descriptor of the runtime.
  *
- * Returns: (allow-none) (transfer full): a #GimoPlugin
+ * Returns: (allow-none) (transfer full):
+ *          A #GimoPlugin if successful, %NULL on error.
+ *          Free the returned object with g_object_unref().
  */
 GimoPlugin* gimo_runtime_query_plugin (GimoRuntime *self)
 {
@@ -205,6 +207,35 @@ GimoPlugin* gimo_runtime_query_plugin (GimoRuntime *self)
     G_UNLOCK (runtime_lock);
 
     return plugin;
+}
+
+/**
+ * gimo_runtime_query_context:
+ * @self: a #GimoRuntime
+ *
+ * Query the context of the runtime.
+ *
+ * Returns: (allow-none) (transfer full):
+ *          A #GimoContext if successful, %NULL on error.
+ *          Free the returned object with g_object_unref().
+ */
+GimoContext* gimo_runtime_query_context (GimoRuntime *self)
+{
+    GimoRuntimePrivate *priv;
+    GimoContext *context = NULL;
+
+    g_return_val_if_fail (GIMO_IS_RUNTIME (self), NULL);
+
+    priv = self->priv;
+
+    G_LOCK (runtime_lock);
+
+    if (priv->plugin)
+        context = gimo_plugin_query_context (priv->plugin);
+
+    G_UNLOCK (runtime_lock);
+
+    return context;
 }
 
 void _gimo_runtime_setup (GimoRuntime *self,

@@ -142,7 +142,6 @@ int main (int argc, char *argv[])
     g_thread_init (NULL);
 
     _test_context_common ();
-    if (0)
     _test_context_load_plugin ();
 
     return 0;

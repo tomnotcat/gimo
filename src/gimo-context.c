@@ -26,12 +26,14 @@
 #include "gimo-archive.h"
 #include "gimo-dlmodule.h"
 #include "gimo-error.h"
+#include "gimo-extconfig.h"
 #include "gimo-extension.h"
 #include "gimo-extpoint.h"
 #include "gimo-factory.h"
 #include "gimo-loader.h"
 #include "gimo-marshal.h"
 #include "gimo-plugin.h"
+#include "gimo-require.h"
 #include "gimo-runtime.h"
 #include "gimo-utils.h"
 #include <string.h>
@@ -72,7 +74,6 @@ static gboolean _gimo_context_load_plugin (GimoContext *self,
     GimoArchive *archive;
     GPtrArray *objects;
     GObject *object;
-    guint i;
 
     archive = gimo_safe_cast (gimo_loader_load (loader, file_name),
                               GIMO_TYPE_ARCHIVE);
@@ -84,14 +85,19 @@ static gboolean _gimo_context_load_plugin (GimoContext *self,
     }
 
     objects = gimo_archive_query_objects (archive);
-    for (i = 0; i < objects->len; ++i) {
-        object = g_ptr_array_index (objects, i);
+    if (objects) {
+        guint i;
 
-        if (GIMO_IS_PLUGIN (object))
-            gimo_context_install_plugin (self, GIMO_PLUGIN (object));
+        for (i = 0; i < objects->len; ++i) {
+            object = g_ptr_array_index (objects, i);
+
+            if (GIMO_IS_PLUGIN (object))
+                gimo_context_install_plugin (self, GIMO_PLUGIN (object));
+        }
+
+        g_ptr_array_unref (objects);
     }
 
-    g_ptr_array_unref (objects);
     g_object_unref (archive);
 
     return TRUE;
@@ -171,11 +177,15 @@ static void gimo_context_constructed (GObject *gobject)
 
     /* Archive loader. */
     loader = gimo_loader_new ();
+    gimo_loader_add_paths (loader, g_getenv ("GIMO_ARCHIVE_PATH"));
+
     gimo_runtime_define_object (runtime, "archive", G_OBJECT (loader));
     g_object_unref (loader);
 
     /* Module loader. */
     loader = gimo_loader_new_cached ();
+    gimo_loader_add_paths (loader, g_getenv ("GIMO_MODULE_PATH"));
+
     factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
 
     gimo_loader_register (loader, NULL, factory);
@@ -293,6 +303,12 @@ static void gimo_context_finalize (GObject *gobject)
 static void gimo_context_class_init (GimoContextClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+    GIMO_REGISTER_TYPE (GIMO_TYPE_PLUGIN);
+    GIMO_REGISTER_TYPE (GIMO_TYPE_REQUIRE);
+    GIMO_REGISTER_TYPE (GIMO_TYPE_EXTPOINT);
+    GIMO_REGISTER_TYPE (GIMO_TYPE_EXTENSION);
+    GIMO_REGISTER_TYPE (GIMO_TYPE_EXTCONFIG);
 
     gobject_class->constructed = gimo_context_constructed;
     gobject_class->finalize = gimo_context_finalize;
@@ -652,8 +668,8 @@ GPtrArray* gimo_context_query_extensions (GimoContext *self,
  * Resolve an extension point.
  *
  * Returns: (type GObject.Object) (allow-none) (transfer full):
- *     A #GObject if successful, %NULL on error. Free the
- *     returned object with g_object_unref().
+ *          A #GObject if successful, %NULL on error. Free the
+ *          returned object with g_object_unref().
  */
 gpointer gimo_context_resolve_extpoint (GimoContext *self,
                                         const gchar *extpt_id,

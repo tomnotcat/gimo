@@ -503,6 +503,8 @@ static void _test_archive_xml (void)
     GIMO_REGISTER_TYPE (TEST_TYPE_CONFIG);
 
     loader = gimo_loader_new_cached ();
+    gimo_loader_add_paths (loader, TEST_MODULE_PATH);
+
     factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
     g_assert (gimo_loader_register (loader, NULL, factory));
     g_object_unref (factory);

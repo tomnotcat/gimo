@@ -35,6 +35,7 @@ int main (int argc, char *argv[])
     g_thread_init (NULL);
 
     loader = gimo_loader_new_cached ();
+    gimo_loader_add_paths (loader, TEST_MODULE_PATH);
 
     /* Dynamic library */
     g_assert (!gimo_loader_load (loader, "demo-plugin"));

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 from gi.repository import Gimo
 
 def dlmodule_new (user_data):
@@ -7,6 +8,7 @@ def dlmodule_new (user_data):
     return Gimo.Dlmodule ()
 
 loader = Gimo.Loader ()
+loader.add_paths (os.getenv ("GIMO_MODULE_PATH"))
 
 # Dynamic library
 assert (loader.load ("demo-plugin") == None)

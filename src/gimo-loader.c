@@ -114,7 +114,6 @@ static GimoLoadable* _gimo_loader_load_file (GPtrArray *loaders,
 static void gimo_loader_init (GimoLoader *self)
 {
     GimoLoaderPrivate *priv;
-    const gchar *plugin_path = g_getenv ("GIMO_PLUGIN_PATH");
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               GIMO_TYPE_LOADER,
@@ -126,19 +125,6 @@ static void gimo_loader_init (GimoLoader *self)
     priv->object_tree = NULL;
     priv->object_list = NULL;
     g_mutex_init (&priv->mutex);
-
-    if (plugin_path) {
-        gchar **dirs;
-        guint i = 0;
-
-        dirs = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
-        while (dirs[i]) {
-            priv->path_list = g_slist_prepend (priv->path_list, dirs[i]);
-            ++i;
-        }
-
-        g_free (dirs);
-    }
 }
 
 static void gimo_loader_finalize (GObject *gobject)
@@ -233,8 +219,8 @@ GimoLoader* gimo_loader_new_cached (void)
     return g_object_new (GIMO_TYPE_LOADER, "cache", TRUE, NULL);
 }
 
-void gimo_loader_add_path (GimoLoader *self,
-                           const gchar *path)
+void gimo_loader_add_paths (GimoLoader *self,
+                            const gchar *paths)
 {
     GimoLoaderPrivate *priv;
 
@@ -243,8 +229,18 @@ void gimo_loader_add_path (GimoLoader *self,
     priv = self->priv;
 
     /* TODO: Make this function thread safe. */
-    priv->path_list = g_slist_prepend (priv->path_list,
-                                       g_strdup (path));
+    if (paths) {
+        gchar **dirs;
+        guint i = 0;
+
+        dirs = g_strsplit (paths, G_SEARCHPATH_SEPARATOR_S, 0);
+        while (dirs[i]) {
+            priv->path_list = g_slist_prepend (priv->path_list, dirs[i]);
+            ++i;
+        }
+
+        g_free (dirs);
+    }
 }
 
 /**

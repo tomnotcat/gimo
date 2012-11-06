@@ -66,6 +66,8 @@ GObject* gimo_runtime_resolve (GimoRuntime *self, const gchar *symbol);
 
 GimoPlugin* gimo_runtime_query_plugin (GimoRuntime *self);
 
+GimoContext* gimo_runtime_query_context (GimoRuntime *self);
+
 #define GIMO_RUNTIME_DEFAULT_SYMBOL gimo_create_plugin
 #define GIMO_RUNTIME_DEFAULT_SYMBOL_NAME "gimo_create_plugin"
 

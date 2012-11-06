@@ -70,19 +70,6 @@ AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, [ ],
     [AC_MSG_ERROR([You need to have pkg-config installed!])])
 
 dnl ================================================================
-dnl Checks for Gettext.
-dnl ================================================================
-
-#IT_PROG_INTLTOOL([0.40.0])
-
-#AM_GNU_GETTEXT([external])
-#AM_GNU_GETTEXT_VERSION([0.18.1])
-
-#GETTEXT_PACKAGE=libgimo
-#AC_SUBST(GETTEXT_PACKAGE)
-#AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Gettext package])
-
-dnl ================================================================
 dnl Checks for GLib
 dnl ================================================================
 
@@ -132,6 +119,15 @@ AC_CHECK_LIB([expat], [XML_ParseBuffer], \
 AC_SUBST([EXPAT_LIBS])
 
 dnl ================================================================
+dnl i18n stuff.
+dnl ================================================================
+
+GETTEXT_PACKAGE=gimo10
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",
+                   [The prefix for our gettext translation domains.])
+
+dnl ================================================================
 dnl Checks for header files.
 dnl ================================================================
 
@@ -165,7 +161,7 @@ if test "x${debug}" != "xno"; then
 fi
 
 RUN_ENVIRONMENT="GI_TYPELIB_PATH=\$(top_builddir)/src \
-   GIMO_PLUGIN_PATH=\$(top_builddir)/src/plugins \
+   GIMO_MODULE_PATH=\$(top_builddir)/src/plugins \
    LD_LIBRARY_PATH=/usr/local/lib:\$(top_builddir)/src/.libs"
 
 TESTS_ENVIRONMENT="${RUN_ENVIRONMENT}"

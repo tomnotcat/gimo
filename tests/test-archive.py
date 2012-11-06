@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 from gi.repository import Gimo
 
 # Common
@@ -26,8 +27,9 @@ def dlmodule_new (factory, user_data):
     assert (user_data == "world")
     return Gimo.Dlmodule ()
 
-ar = Gimo.Archive ()
 loader = Gimo.Loader (cache=True)
+loader.add_paths (os.getenv ("GIMO_MODULE_PATH"))
+
 factory = Gimo.Factory ()
 factory.connect ("make", dlmodule_new, "world")
 loader.register (None, factory)

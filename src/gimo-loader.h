@@ -54,8 +54,8 @@ GimoLoader* gimo_loader_new (void);
 
 GimoLoader* gimo_loader_new_cached (void);
 
-void gimo_loader_add_path (GimoLoader *self,
-                           const gchar *path);
+void gimo_loader_add_paths (GimoLoader *self,
+                            const gchar *paths);
 
 GSList* gimo_loader_get_paths (GimoLoader *self);
 
