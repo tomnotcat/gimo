@@ -1,3 +1,8 @@
+all: all-am
+	if test -n "${TEST}"; then \
+		$(TESTS_ENVIRONMENT) ${TEST}; \
+	fi
+
 AM_CPPFLAGS = ${STRICT_CFLAGS} ${GLIB_CFLAGS} ${GIMO_CFLAGS} \
 	-DTEST_MODULE_PATH="\"${top_builddir}/src/plugins\""
 AM_LDFLAGS = ${GLIB_LIBS} ${GIMO_LDFLAGS}
@@ -35,5 +40,15 @@ check_PROGRAMS += test-context
 test_context_SOURCES = test-context.c
 check_SCRIPTS += test-context.py
 
-TESTS = ${check_PROGRAMS} ${check_SCRIPTS}
+TESTS = ${check_PROGRAMS}
+
+-include $(INTROSPECTION_MAKEFILE)
+
+if HAVE_INTROSPECTION
+	TESTS += ${check_SCRIPTS}
+endif
+
 EXTRA_DIST = ${check_SCRIPTS}
+
+test:
+	$(TESTS_ENVIRONMENT) ${TEST}

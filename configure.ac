@@ -93,7 +93,22 @@ dnl ================================================================
 dnl Checks for GObject Introspection
 dnl ================================================================
 
-GOBJECT_INTROSPECTION_CHECK([1.30.0])
+GOBJECT_INTROSPECTION_REQUIRED=1.30.0
+AC_SUBST(GOBJECT_INTROSPECTION_REQUIRED)
+
+AC_ARG_ENABLE([introspection],
+    AS_HELP_STRING([--enable-introspection],
+        [enable GObject introspection]),
+        [], [enable_introspection=yes])
+
+if test "x$enable_introspection" != "xno" ; then
+    GOBJECT_INTROSPECTION_CHECK([$GOBJECT_INTROSPECTION_REQUIRED])
+
+    AC_DEFINE([HAVE_INTROSPECTION], [1],
+        [enable GObject introspection support])
+else
+    AM_CONDITIONAL([HAVE_INTROSPECTION], false)
+fi
 
 dnl Check pygobject
 PKG_CHECK_MODULES(PYGOBJECT, [pygobject-3.0 python-2.7],

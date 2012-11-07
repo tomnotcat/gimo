@@ -17,6 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include "config.h"
 #include "gimo-dlmodule.h"
 #include "gimo-factory.h"
 #include "gimo-loader.h"
@@ -26,10 +27,13 @@ int main (int argc, char *argv[])
 {
     GimoLoader *loader;
     GimoModule *module;
-    GModule *gmodule;
     GObject *plugin;
     GimoFactory *factory;
+
+#ifdef HAVE_INTROSPECTION
+    GModule *gmodule;
     GimoFactoryFunc new_module;
+#endif
 
     g_type_init ();
     g_thread_init (NULL);
@@ -56,6 +60,7 @@ int main (int argc, char *argv[])
     g_object_unref (plugin);
     g_object_unref (module);
 
+#ifdef HAVE_INTROSPECTION
     /* Python module */
     g_assert (!gimo_loader_load (loader, "demo-plugin.py"));
     module = GIMO_MODULE (gimo_loader_load (loader, "pymodule-1.0"));
@@ -100,6 +105,7 @@ int main (int argc, char *argv[])
     g_assert (GIMO_IS_PLUGIN (plugin));
     g_object_unref (plugin);
     g_object_unref (module);
+#endif /* HAVE_INTROSPECTION */
 
     g_object_unref (loader);
     return 0;
