@@ -540,7 +540,7 @@ static void _test_archive_xml (void)
     _test_config_default (config->o);
     g_assert (0 == config->o->i8);
     g_assert (TEST_ENUM_2 == config->o->venum);
-    g_assert (0 == config->o->vflags);
+    g_assert (TEST_FLAG_2 == config->o->vflags);
 
     obj = g_ptr_array_index (config->a, 0);
     _test_config_default (obj);
@@ -555,6 +555,13 @@ static void _test_archive_xml (void)
     g_assert ((TEST_FLAG_2 | TEST_FLAG_3) == obj->vflags);
 
     g_object_unref (config);
+
+    config = TEST_CONFIG (gimo_archive_query_object (GIMO_ARCHIVE (archive),
+                                                     "config2"));
+    g_assert (config);
+    _test_config_default (config);
+    g_object_unref (config);
+
     g_object_unref (archive);
     g_object_unref (module);
     g_object_unref (loader);

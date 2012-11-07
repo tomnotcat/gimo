@@ -52,6 +52,7 @@ struct _ParseFrame {
     GParamSpec *prop;
     GArray *params;
     GType type;
+    GType obj_array_type;
 };
 
 static void gimo_loadable_interface_init (GimoLoadableInterface *iface);
@@ -170,51 +171,38 @@ static void _parse_param_destroy (gpointer p)
     g_value_unset (&param->value);
 }
 
-static struct _ParseFrame* _parse_frame_create (const gchar *id,
-                                                GType type,
-                                                GParamSpec *prop)
+static const char* _gimo_xml_find_attr (const char **attr,
+                                        gint index,
+                                        const char *key)
 {
-    struct _ParseFrame *f;
+    gint i, j = index + index;
 
-    f = g_malloc (sizeof *f);
-
-    f->id = g_strdup (id);
-    f->klass = NULL;
-    f->obj_array = NULL;
-    f->prop = prop;
-    f->params = NULL;
-    f->type = type;
-
-    if (prop) {
-        g_assert (!id && !type);
-
-        f->type = G_PARAM_SPEC_VALUE_TYPE (prop);
+    for (i = 0; attr[i]; i += 2) {
+        if (-1 == index || i == j) {
+            if (strcmp (attr[i], key) == 0)
+                return attr[i + 1];
+        }
     }
 
-    if (G_TYPE_IS_OBJECT (f->type))
-        f->klass = g_type_class_ref (f->type);
-    else if (GIMO_TYPE_OBJECT_ARRAY == f->type)
-        f->obj_array = g_ptr_array_new_with_free_func (g_object_unref);
-
-    return f;
+    return NULL;
 }
 
-static void _parse_frame_destroy (gpointer p)
+static GType _gimo_class_from_name (const gchar *name)
 {
-    struct _ParseFrame *f = p;
+    GType type;
 
-    if (f) {
-        if (f->obj_array)
-            g_ptr_array_unref (f->obj_array);
-        else if (f->klass)
-            g_type_class_unref (f->klass);
-
-        if (f->params)
-            g_array_unref (f->params);
-
-        g_free (f->id);
-        g_free (f);
+    type = g_type_from_name (name);
+    if (!type) {
+        g_warning ("XmlArchive type not exists: %s", name);
+        return 0;
     }
+
+    if (!G_TYPE_IS_OBJECT (type)) {
+        g_warning ("XmlArchive type not class: %s", name);
+        return 0;
+    }
+
+    return type;
 }
 
 static void _parse_frame_add_param (struct _ParseFrame *f,
@@ -233,24 +221,6 @@ static void _parse_frame_add_param (struct _ParseFrame *f,
     param.name = name;
     param.value = *value;
     g_array_append_val (f->params, param);
-}
-
-static GParameter* _parse_frame_find_param (struct _ParseFrame *f,
-                                            const gchar *name)
-{
-    if (f->params) {
-        guint i;
-        GParameter *param = (GParameter *) f->params->data;
-
-        for (i = 0; i < f->params->len; ++i) {
-            if (strcmp (param->name, name) == 0)
-                return param;
-
-            ++param;
-        }
-    }
-
-    return NULL;
 }
 
 static void _parse_frame_set_property (struct _ParseFrame *f,
@@ -315,6 +285,70 @@ static void _parse_frame_set_property (struct _ParseFrame *f,
     }
 }
 
+static struct _ParseFrame* _parse_frame_create (const gchar *id,
+                                                GType type,
+                                                GParamSpec *prop,
+                                                const gchar **attr)
+{
+    struct _ParseFrame *f;
+
+    f = g_malloc (sizeof *f);
+
+    f->id = g_strdup (id);
+    f->klass = NULL;
+    f->obj_array = NULL;
+    f->obj_array_type = 0;
+    f->prop = prop;
+    f->params = NULL;
+    f->type = type;
+
+    if (prop) {
+        g_assert (!id && !type);
+
+        f->type = G_PARAM_SPEC_VALUE_TYPE (prop);
+    }
+
+    if (G_TYPE_IS_OBJECT (f->type)) {
+        f->klass = g_type_class_ref (f->type);
+
+        while (*attr) {
+            _parse_frame_set_property (
+                f, NULL, NULL, attr[0], attr[1]);
+
+            attr += 2;
+        }
+    }
+    else if (GIMO_TYPE_OBJECT_ARRAY == f->type) {
+        const gchar *val;
+
+        f->obj_array = g_ptr_array_new_with_free_func (g_object_unref);
+
+        val = _gimo_xml_find_attr (attr, 0, "class");
+        if (val)
+            f->obj_array_type = _gimo_class_from_name (val);
+    }
+
+    return f;
+}
+
+static void _parse_frame_destroy (gpointer p)
+{
+    struct _ParseFrame *f = p;
+
+    if (f) {
+        if (f->obj_array)
+            g_ptr_array_unref (f->obj_array);
+        else if (f->klass)
+            g_type_class_unref (f->klass);
+
+        if (f->params)
+            g_array_unref (f->params);
+
+        g_free (f->id);
+        g_free (f);
+    }
+}
+
 static struct _ParseContext* _parse_context_create (GimoArchive *archive)
 {
     struct _ParseContext *c;
@@ -334,19 +368,6 @@ static void _parse_context_destroy (gpointer p)
 
     g_ptr_array_unref (c->frames);
     g_free (c);
-}
-
-static const char* _gimo_xml_find_attr (const char **attr,
-                                        const char *key)
-{
-    int i;
-
-    for (i = 0; attr[i]; i += 2) {
-        if (strcmp (attr[i], key) == 0)
-            return attr[i + 1];
-    }
-
-    return NULL;
 }
 
 static void _gimo_xml_start_element (void *data,
@@ -371,8 +392,8 @@ static void _gimo_xml_start_element (void *data,
 
                 prop = g_object_class_find_property (p->klass, el);
                 if (prop) {
-                    g_ptr_array_add (c->frames,
-                                     _parse_frame_create (NULL, 0, prop));
+                    f = _parse_frame_create (NULL, 0, prop, attr);
+                    g_ptr_array_add (c->frames, f);
                 }
                 else {
                     g_warning ("XmlArchive invalid property: %s", el);
@@ -380,31 +401,28 @@ static void _gimo_xml_start_element (void *data,
             }
             else if (p->obj_array) {
                 /* Object array element. */
+                const gchar *val;
                 GType el_type;
 
-                el_type = g_type_from_name (el);
-                if (!el_type) {
-                    gimo_set_error_full (GIMO_ERROR_NO_TYPE,
-                                         "XmlArchive type not exists: %s", el);
-                    c->error = TRUE;
-                    return;
-                }
+                val = _gimo_xml_find_attr (attr, 0, "class");
+                if (val) {
+                    el_type = _gimo_class_from_name (val);
 
-                if (!G_TYPE_IS_OBJECT (el_type)) {
-                    gimo_set_error_full (GIMO_ERROR_INVALID_TYPE,
-                                         "XmlArchive not object type: %s", el);
-                    c->error = TRUE;
-                    return;
-                }
+                    if (!el_type)
+                        return;
 
-                g_ptr_array_add (c->frames,
-                                 _parse_frame_create (NULL, el_type, NULL));
-
-                f = g_ptr_array_index (c->frames, c->frames->len - 1);
-                while (*attr) {
-                    _parse_frame_set_property (f, NULL, NULL, attr[0], attr[1]);
                     attr += 2;
                 }
+                else {
+                    el_type = p->obj_array_type;
+                    if (!el_type) {
+                        g_warning ("XmlArchive element type unknown: %s", el);
+                        return;
+                    }
+                }
+
+                f = _parse_frame_create (NULL, el_type, NULL, attr);
+                g_ptr_array_add (c->frames, f);
             }
             else {
                 g_warning ("XmlArchive invalid element: %s", el);
@@ -422,30 +440,17 @@ static void _gimo_xml_start_element (void *data,
                 return;
             }
 
-            val = _gimo_xml_find_attr (attr, "type");
+            val = _gimo_xml_find_attr (attr, 0, "class");
             if (NULL == val) {
-                gimo_set_error_full (GIMO_ERROR_NO_ATTRIBUTE,
-                                     "XmlArchive object type not found");
-                c->error = TRUE;
+                g_warning ("XmlArchive class attrubite not found");
                 return;
             }
 
-            type = g_type_from_name (val);
-            if (!type) {
-                gimo_set_error_full (GIMO_ERROR_NO_TYPE,
-                                     "XmlArchive type not exists: %s", val);
-                c->error = TRUE;
+            type = _gimo_class_from_name (val);
+            if (!type)
                 return;
-            }
 
-            if (!G_TYPE_IS_OBJECT (type)) {
-                gimo_set_error_full (GIMO_ERROR_INVALID_TYPE,
-                                     "XmlArchive not object type: %s", val);
-                c->error = TRUE;
-                return;
-            }
-
-            val = _gimo_xml_find_attr (attr, "id");
+            val = _gimo_xml_find_attr (attr, 1, "id");
             if (NULL == val) {
                 gimo_set_error_full (GIMO_ERROR_NO_ATTRIBUTE,
                                      "XmlArchive object id not found");
@@ -453,8 +458,8 @@ static void _gimo_xml_start_element (void *data,
                 return;
             }
 
-            g_ptr_array_add (c->frames,
-                             _parse_frame_create (val, type, NULL));
+            f = _parse_frame_create (val, type, NULL, attr + 4);
+            g_ptr_array_add (c->frames, f);
         }
     }
     else {
@@ -468,7 +473,7 @@ static void _gimo_xml_start_element (void *data,
             return;
         }
 
-        version = _gimo_xml_find_attr (attr, "version");
+        version = _gimo_xml_find_attr (attr, -1, "version");
         if (NULL == version) {
             gimo_set_error_full (GIMO_ERROR_NO_ATTRIBUTE,
                                  "XmlArchive version not found");
@@ -506,18 +511,6 @@ static void _gimo_xml_end_element (void *data,
         GObject *obj;
         GParameter *params;
         guint nparam;
-
-        /* Reuse the buildin properties. */
-        if (f->id && g_object_class_find_property (f->klass, "id")) {
-            if (!_parse_frame_find_param (f, "id")) {
-                GValue val = G_VALUE_INIT;
-
-                g_value_init (&val, G_TYPE_STRING);
-                g_value_set_static_string (&val, f->id);
-
-                _parse_frame_add_param (f, "id", &val);
-            }
-        }
 
         params = f->params ? (GParameter *) f->params->data : NULL;
         nparam = f->params ? f->params->len : 0;

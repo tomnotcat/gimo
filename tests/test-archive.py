@@ -39,7 +39,7 @@ archive = module.resolve ("gimo_xmlarchive_new", None)
 assert (archive)
 assert (archive.read ("demo-archive2.xml"))
 
-info = archive.query_object ("org.gimo.test.plugin1")
+info = archive.query_object ("plugin1")
 assert (info)
 assert (info.get_id () == "org.gimo.test.plugin1")
 assert (info.get_name () == "test plugin1")

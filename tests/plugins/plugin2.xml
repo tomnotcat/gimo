@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive version="1.0">
-  <object type="GimoPlugin" id="org.gimo.test.plugin2">
-    <requires>
-      <GimoRequire plugin="org.gimo.test.plugin1"
-                   version="1.0" optional="TRUE"/>
+  <object class="GimoPlugin" id="org.gimo.test.plugin2">
+    <requires class="GimoRequire">
+      <require plugin="org.gimo.test.plugin1"
+               version="1.0" optional="TRUE"/>
     </requires>
-    <extensions>
-      <GimoExtension id="ext1" name="extension 1"
-                     point="org.gimo.test.plugin1.extpt1">
-        <configs>
-          <GimoExtConfig name="config1" value="value1"/>
-          <GimoExtConfig name="config2" value="value2"/>
+    <extensions class="GimoExtension">
+      <extension id="ext1" name="extension 1"
+                 point="org.gimo.test.plugin1.extpt1">
+        <configs class="GimoExtConfig">
+          <config name="config1" value="value1"/>
+          <config name="config2" value="value2"/>
         </configs>
-      </GimoExtension>
+      </extension>
     </extensions>
   </object>
 </archive>

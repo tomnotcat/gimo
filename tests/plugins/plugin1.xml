@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive version="1.0">
-  <object type="GimoPlugin" id="org.gimo.test.plugin1">
+  <object class="GimoPlugin" id="org.gimo.test.plugin1">
     <name>test plugin1</name>
     <version>0.1</version>
     <provider>tomnotcat</provider>
     <module>plugin1</module>
     <symbol>symbol1</symbol>
-    <extpoints>
-      <GimoExtPoint id="extpt1" name="extension point 1"/>
+    <extpoints class="GimoExtPoint">
+      <extpoint id="extpt1" name="extension point 1"/>
     </extpoints>
   </object>
 </archive>
