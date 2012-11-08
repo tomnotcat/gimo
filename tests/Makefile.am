@@ -1,5 +1,5 @@
 all: all-am
-	if test -n "${TEST}"; then \
+	@if test -n "${TEST}"; then \
 		$(TESTS_ENVIRONMENT) ${TEST}; \
 	fi
 

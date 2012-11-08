@@ -191,10 +191,10 @@ fi
 AC_SUBST([RUN_ENVIRONMENT])
 AC_SUBST([TESTS_ENVIRONMENT])
 
-STRICT_CFLAGS="-Werror -Wstrict-prototypes"
+STRICT_CFLAGS="-pedantic -Wstrict-prototypes"
 AC_SUBST([STRICT_CFLAGS])
 
-CFLAGS="${CFLAGS} -pedantic -Wall -Wno-long-long"
+CFLAGS="${CFLAGS} -Wall -Werror -Wno-long-long"
 CXXFLAGS="${CXXFLAGS} -pedantic -Wall -Werror -Wno-long-long"
 
 GIMO_CFLAGS="-I\$(top_srcdir)/src"
@@ -204,6 +204,7 @@ AC_SUBST([GIMO_CFLAGS])
 AC_SUBST([GIMO_LDFLAGS])
 
 AC_CONFIG_FILES([Makefile
+        gimo-1.0.pc
         src/Makefile
         src/plugins/Makefile
         tools/Makefile
