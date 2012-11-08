@@ -2,7 +2,8 @@ PLUGIN_LIBTOOL_FLAGS = -module -avoid-version -shared
 AM_CPPFLAGS = ${GLIB_CFLAGS} ${GIMO_CFLAGS}
 AM_LDFLAGS = ${GLIB_LIBS} ${GIMO_LDFLAGS} ${PLUGIN_LIBTOOL_FLAGS}
 
-lib_LTLIBRARIES = pymodule-1.0.la jsmodule-1.0.la xmlarchive-1.0.la
+pluginlibdir = ${libdir}/gimo-plugins-1.0
+pluginlib_LTLIBRARIES = pymodule-1.0.la jsmodule-1.0.la xmlarchive-1.0.la
 
 pymodule_1_0_la_SOURCES = gimo-pymodule.h gimo-pymodule.c
 pymodule_1_0_la_CFLAGS = ${AM_CPPFLAGS} ${PYGOBJECT_CFLAGS}

@@ -2,6 +2,7 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
+plugindir=${libdir}/gimo-plugins-1.0
 
 Name: Gimo
 Description: A Plugin Framework

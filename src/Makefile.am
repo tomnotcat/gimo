@@ -16,6 +16,13 @@ libgimo_1_0_la_SOURCES_COMMON = gimo-types.h gimo-types.c \
 	gimo-extconfig.h gimo-extconfig.c
 libgimo_1_0_la_SOURCES = ${libgimo_1_0_la_SOURCES_COMMON} gimo-intl.h
 
+gimoincludedir=$(includedir)/gimo-1.0
+gimoinclude_HEADERS = gimo-types.h gimo-enums.h gimo-error.h \
+	gimo-context.h gimo-plugin.h gimo-require.h gimo-runtime.h \
+	gimo-extpoint.h gimo-extension.h gimo-loader.h gimo-factory.h \
+	gimo-loadable.h gimo-module.h gimo-dlmodule.h gimo-archive.h \
+	gimo-marshal.h gimo-utils.h gimo-extconfig.h gimo.h
+
 CLEANFILES =
 
 -include $(INTROSPECTION_MAKEFILE)
