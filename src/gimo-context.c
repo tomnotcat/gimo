@@ -195,9 +195,9 @@ static void gimo_context_constructed (GObject *gobject)
     g_object_unref (loader);
 
     array = g_ptr_array_new_with_free_func (g_object_unref);
-    extpt = gimo_extpoint_new ("archive", "Object Archive Loader");
+    extpt = gimo_ext_point_new ("archive", "Object Archive Loader");
     g_ptr_array_add (array, extpt);
-    extpt = gimo_extpoint_new ("module", "Dynamic Module Loader");
+    extpt = gimo_ext_point_new ("module", "Dynamic Module Loader");
     g_ptr_array_add (array, extpt);
 
     plugin = g_object_new (GIMO_TYPE_PLUGIN,
@@ -303,12 +303,6 @@ static void gimo_context_finalize (GObject *gobject)
 static void gimo_context_class_init (GimoContextClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-    GIMO_REGISTER_TYPE (GIMO_TYPE_PLUGIN);
-    GIMO_REGISTER_TYPE (GIMO_TYPE_REQUIRE);
-    GIMO_REGISTER_TYPE (GIMO_TYPE_EXTPOINT);
-    GIMO_REGISTER_TYPE (GIMO_TYPE_EXTENSION);
-    GIMO_REGISTER_TYPE (GIMO_TYPE_EXTCONFIG);
 
     gobject_class->constructed = gimo_context_constructed;
     gobject_class->finalize = gimo_context_finalize;
@@ -563,17 +557,17 @@ GPtrArray* gimo_context_query_plugins (GimoContext *self)
 
     priv = self->priv;
 
-    g_mutex_lock (&priv->mutex);
-
     if (g_tree_nnodes (priv->plugins) > 0) {
         param = g_ptr_array_new_with_free_func (g_object_unref);
+
+        g_mutex_lock (&priv->mutex);
 
         g_tree_foreach (priv->plugins,
                         _gimo_context_query_plugins,
                         param);
-    }
 
-    g_mutex_unlock (&priv->mutex);
+        g_mutex_unlock (&priv->mutex);
+    }
 
     return param;
 }
@@ -684,11 +678,11 @@ gpointer gimo_context_resolve_extpoint (GimoContext *self,
     if (NULL == extpt)
         goto done;
 
-    plugin = gimo_extpoint_query_plugin (extpt);
+    plugin = gimo_ext_point_query_plugin (extpt);
     if (NULL == plugin)
         goto done;
 
-    symbol = gimo_extpoint_get_local_id (extpt);
+    symbol = gimo_ext_point_get_local_id (extpt);
     object = gimo_plugin_resolve (plugin, symbol);
 
 done:

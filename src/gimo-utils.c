@@ -19,6 +19,7 @@
  */
 #include "gimo-utils.h"
 #include "gimo-error.h"
+#include <gmodule.h>
 #include <string.h>
 
 gchar* _gimo_parse_extension_id (const gchar *ext_id,
@@ -97,4 +98,46 @@ gpointer gimo_safe_cast (gpointer object, GType type)
     }
 
     return NULL;
+}
+
+gchar* _gimo_symbol_from_type_name (const gchar *name)
+{
+    GString *symbol_name = g_string_new ("");
+    char c;
+    int i;
+
+    for (i = 0; name[i] != '\0'; i++) {
+        c = name[i];
+        /* skip if uppercase, first or previous is uppercase */
+        if ((c == g_ascii_toupper (c) &&
+             i > 0 && name[i-1] != g_ascii_toupper (name[i-1])) ||
+            (i > 2 && name[i]   == g_ascii_toupper (name[i]) &&
+             name[i-1] == g_ascii_toupper (name[i-1]) &&
+             name[i-2] == g_ascii_toupper (name[i-2])))
+            g_string_append_c (symbol_name, '_');
+        g_string_append_c (symbol_name, g_ascii_tolower (c));
+    }
+
+    g_string_append (symbol_name, "_get_type");
+
+    return g_string_free (symbol_name, FALSE);
+}
+
+GType gimo_resolve_type_lazily (const gchar *name)
+{
+    static GModule *module = NULL;
+    GType (*func) (void);
+    gchar *symbol;
+    GType gtype = G_TYPE_INVALID;
+
+    if (!module)
+        module = g_module_open (NULL, 0);
+
+    symbol = _gimo_symbol_from_type_name (name);
+    if (g_module_symbol (module, symbol, (gpointer) &func))
+        gtype = func ();
+
+    g_free (symbol);
+
+    return gtype;
 }

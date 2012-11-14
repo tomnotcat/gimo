@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-#define GIMO_TYPE_EXTCONFIG (gimo_extconfig_get_type())
+#define GIMO_TYPE_EXTCONFIG (gimo_ext_config_get_type())
 #define GIMO_EXTCONFIG(obj) \
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GIMO_TYPE_EXTCONFIG, GimoExtConfig))
 #define GIMO_IS_EXTCONFIG(obj) \
@@ -48,14 +48,14 @@ struct _GimoExtConfigClass {
     GObjectClass parent_class;
 };
 
-GType gimo_extconfig_get_type (void) G_GNUC_CONST;
+GType gimo_ext_config_get_type (void) G_GNUC_CONST;
 
-GimoExtConfig* gimo_extconfig_new (const gchar *name,
-                                     const gchar *value);
+GimoExtConfig* gimo_ext_config_new (const gchar *name,
+                                    const gchar *value);
 
-const gchar* gimo_extconfig_get_name (GimoExtConfig *self);
+const gchar* gimo_ext_config_get_name (GimoExtConfig *self);
 
-const gchar* gimo_extconfig_get_value (GimoExtConfig *self);
+const gchar* gimo_ext_config_get_value (GimoExtConfig *self);
 
 G_END_DECLS
 

@@ -63,7 +63,7 @@ static void _test_context_common (void)
                       &param);
 
     array = g_ptr_array_new_with_free_func (g_object_unref);
-    extpt = gimo_extpoint_new ("extpt1", "extptname1");
+    extpt = gimo_ext_point_new ("extpt1", "extptname1");
     g_ptr_array_add (array, extpt);
     plugin = gimo_plugin_new ("test.plugin1", NULL, NULL, NULL,
                               NULL, NULL, NULL, array, NULL);
@@ -100,7 +100,7 @@ static void _test_context_common (void)
 
     extpt = gimo_context_query_extpoint (context, "test.plugin1.extpt1");
     g_assert (extpt);
-    plugin = gimo_extpoint_query_plugin (extpt);
+    plugin = gimo_ext_point_query_plugin (extpt);
     g_assert (plugin);
     g_object_unref (plugin);
 
@@ -111,7 +111,7 @@ static void _test_context_common (void)
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.new_state);
     g_assert (3 == param.count);
 
-    g_assert (!gimo_extpoint_query_plugin (extpt));
+    g_assert (!gimo_ext_point_query_plugin (extpt));
     g_object_unref (extpt);
     g_object_unref (context);
     g_assert (3 == param.count);

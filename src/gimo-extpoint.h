@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-#define GIMO_TYPE_EXTPOINT (gimo_extpoint_get_type())
+#define GIMO_TYPE_EXTPOINT (gimo_ext_point_get_type())
 #define GIMO_EXTPOINT(obj) \
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GIMO_TYPE_EXTPOINT, GimoExtPoint))
 #define GIMO_IS_EXTPOINT(obj) \
@@ -48,18 +48,18 @@ struct _GimoExtPointClass {
     GObjectClass parent_class;
 };
 
-GType gimo_extpoint_get_type (void) G_GNUC_CONST;
+GType gimo_ext_point_get_type (void) G_GNUC_CONST;
 
-GimoExtPoint* gimo_extpoint_new (const gchar *id,
-                                 const gchar *name);
+GimoExtPoint* gimo_ext_point_new (const gchar *id,
+                                  const gchar *name);
 
-const gchar* gimo_extpoint_get_local_id (GimoExtPoint *self);
+const gchar* gimo_ext_point_get_local_id (GimoExtPoint *self);
 
-const gchar* gimo_extpoint_get_id (GimoExtPoint *self);
+const gchar* gimo_ext_point_get_id (GimoExtPoint *self);
 
-const gchar* gimo_extpoint_get_name (GimoExtPoint *self);
+const gchar* gimo_ext_point_get_name (GimoExtPoint *self);
 
-GimoPlugin* gimo_extpoint_query_plugin (GimoExtPoint *self);
+GimoPlugin* gimo_ext_point_query_plugin (GimoExtPoint *self);
 
 G_END_DECLS
 

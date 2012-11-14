@@ -27,7 +27,7 @@
 #include "gimo-plugin.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GimoExtPoint, gimo_extpoint, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GimoExtPoint, gimo_ext_point, G_TYPE_OBJECT)
 
 enum {
     PROP_0,
@@ -44,7 +44,7 @@ struct _GimoExtPointPrivate {
 
 G_LOCK_DEFINE_STATIC (extpoint_lock);
 
-static void gimo_extpoint_init (GimoExtPoint *self)
+static void gimo_ext_point_init (GimoExtPoint *self)
 {
     GimoExtPointPrivate *priv;
 
@@ -59,7 +59,7 @@ static void gimo_extpoint_init (GimoExtPoint *self)
     priv->name = NULL;
 }
 
-static void gimo_extpoint_finalize (GObject *gobject)
+static void gimo_ext_point_finalize (GObject *gobject)
 {
     GimoExtPoint *self = GIMO_EXTPOINT (gobject);
     GimoExtPointPrivate *priv = self->priv;
@@ -70,13 +70,13 @@ static void gimo_extpoint_finalize (GObject *gobject)
     g_free (priv->id);
     g_free (priv->name);
 
-    G_OBJECT_CLASS (gimo_extpoint_parent_class)->finalize (gobject);
+    G_OBJECT_CLASS (gimo_ext_point_parent_class)->finalize (gobject);
 }
 
-static void gimo_extpoint_set_property (GObject *object,
-                                        guint prop_id,
-                                        const GValue *value,
-                                        GParamSpec *pspec)
+static void gimo_ext_point_set_property (GObject *object,
+                                         guint prop_id,
+                                         const GValue *value,
+                                         GParamSpec *pspec)
 {
     GimoExtPoint *self = GIMO_EXTPOINT (object);
     GimoExtPointPrivate *priv = self->priv;
@@ -96,10 +96,10 @@ static void gimo_extpoint_set_property (GObject *object,
     }
 }
 
-static void gimo_extpoint_get_property (GObject *object,
-                                        guint prop_id,
-                                        GValue *value,
-                                        GParamSpec *pspec)
+static void gimo_ext_point_get_property (GObject *object,
+                                         guint prop_id,
+                                         GValue *value,
+                                         GParamSpec *pspec)
 {
     GimoExtPoint *self = GIMO_EXTPOINT (object);
     GimoExtPointPrivate *priv = self->priv;
@@ -119,13 +119,13 @@ static void gimo_extpoint_get_property (GObject *object,
     }
 }
 
-static void gimo_extpoint_class_init (GimoExtPointClass *klass)
+static void gimo_ext_point_class_init (GimoExtPointClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-    gobject_class->finalize = gimo_extpoint_finalize;
-    gobject_class->set_property = gimo_extpoint_set_property;
-    gobject_class->get_property = gimo_extpoint_get_property;
+    gobject_class->finalize = gimo_ext_point_finalize;
+    gobject_class->set_property = gimo_ext_point_set_property;
+    gobject_class->get_property = gimo_ext_point_get_property;
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoExtPointPrivate));
@@ -153,8 +153,8 @@ static void gimo_extpoint_class_init (GimoExtPointClass *klass)
                              G_PARAM_STATIC_STRINGS));
 }
 
-GimoExtPoint* gimo_extpoint_new (const gchar *id,
-                                 const gchar *name)
+GimoExtPoint* gimo_ext_point_new (const gchar *id,
+                                  const gchar *name)
 {
     return g_object_new (GIMO_TYPE_EXTPOINT,
                          "id", id,
@@ -162,21 +162,21 @@ GimoExtPoint* gimo_extpoint_new (const gchar *id,
                          NULL);
 }
 
-const gchar* gimo_extpoint_get_local_id (GimoExtPoint *self)
+const gchar* gimo_ext_point_get_local_id (GimoExtPoint *self)
 {
     g_return_val_if_fail (GIMO_IS_EXTPOINT (self), NULL);
 
     return self->priv->local_id;
 }
 
-const gchar* gimo_extpoint_get_name (GimoExtPoint *self)
+const gchar* gimo_ext_point_get_name (GimoExtPoint *self)
 {
     g_return_val_if_fail (GIMO_IS_EXTPOINT (self), NULL);
 
     return self->priv->name;
 }
 
-const gchar* gimo_extpoint_get_id (GimoExtPoint *self)
+const gchar* gimo_ext_point_get_id (GimoExtPoint *self)
 {
     g_return_val_if_fail (GIMO_IS_EXTPOINT (self), NULL);
 
@@ -184,14 +184,14 @@ const gchar* gimo_extpoint_get_id (GimoExtPoint *self)
 }
 
 /**
- * gimo_extpoint_query_plugin:
+ * gimo_ext_point_query_plugin:
  * @self: a #GimoExtPoint
  *
  * Query the plugin descriptor of the extension point.
  *
  * Returns: (allow-none) (transfer full): a #GimoPlugin
  */
-GimoPlugin* gimo_extpoint_query_plugin (GimoExtPoint *self)
+GimoPlugin* gimo_ext_point_query_plugin (GimoExtPoint *self)
 {
     GimoExtPointPrivate *priv;
     GimoPlugin *plugin = NULL;
@@ -210,8 +210,8 @@ GimoPlugin* gimo_extpoint_query_plugin (GimoExtPoint *self)
     return plugin;
 }
 
-void _gimo_extpoint_setup (GimoExtPoint *self,
-                           GimoPlugin *plugin)
+void _gimo_ext_point_setup (GimoExtPoint *self,
+                            GimoPlugin *plugin)
 {
     GimoExtPointPrivate *priv = self->priv;
 
@@ -227,8 +227,8 @@ void _gimo_extpoint_setup (GimoExtPoint *self,
     G_UNLOCK (extpoint_lock);
 }
 
-void _gimo_extpoint_teardown (GimoExtPoint *self,
-                              GimoPlugin *plugin)
+void _gimo_ext_point_teardown (GimoExtPoint *self,
+                               GimoPlugin *plugin)
 {
     GimoExtPointPrivate *priv = self->priv;
 
@@ -241,8 +241,8 @@ void _gimo_extpoint_teardown (GimoExtPoint *self,
     G_UNLOCK (extpoint_lock);
 }
 
-gint _gimo_extpoint_sort_by_id (gconstpointer a,
-                                gconstpointer b)
+gint _gimo_ext_point_sort_by_id (gconstpointer a,
+                                 gconstpointer b)
 {
     GimoExtPoint *p1 = *(GimoExtPoint **) a;
     GimoExtPoint *p2 = *(GimoExtPoint **) b;
@@ -250,8 +250,8 @@ gint _gimo_extpoint_sort_by_id (gconstpointer a,
     return strcmp (p1->priv->local_id, p2->priv->local_id);
 }
 
-gint _gimo_extpoint_search_by_id (gconstpointer a,
-                                  gconstpointer b)
+gint _gimo_ext_point_search_by_id (gconstpointer a,
+                                   gconstpointer b)
 {
     GimoExtPoint *p = *(GimoExtPoint **) b;
 

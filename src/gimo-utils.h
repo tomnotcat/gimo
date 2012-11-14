@@ -38,6 +38,10 @@ GPtrArray* _gimo_clone_object_array (GPtrArray *arr,
 
 gpointer gimo_safe_cast (gpointer object, GType type);
 
+gchar* _gimo_symbol_from_type_name (const gchar *name);
+
+GType gimo_resolve_type_lazily (const gchar *name);
+
 G_END_DECLS
 
 #endif /* __GIMO_UTILS_H__ */

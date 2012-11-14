@@ -25,7 +25,7 @@
 #include "gimo-extconfig.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GimoExtConfig, gimo_extconfig, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GimoExtConfig, gimo_ext_config, G_TYPE_OBJECT)
 
 enum {
     PROP_0,
@@ -38,7 +38,7 @@ struct _GimoExtConfigPrivate {
     gchar *value;
 };
 
-static void gimo_extconfig_init (GimoExtConfig *self)
+static void gimo_ext_config_init (GimoExtConfig *self)
 {
     GimoExtConfigPrivate *priv;
 
@@ -51,7 +51,7 @@ static void gimo_extconfig_init (GimoExtConfig *self)
     priv->value = NULL;
 }
 
-static void gimo_extconfig_finalize (GObject *gobject)
+static void gimo_ext_config_finalize (GObject *gobject)
 {
     GimoExtConfig *self = GIMO_EXTCONFIG (gobject);
     GimoExtConfigPrivate *priv = self->priv;
@@ -59,13 +59,13 @@ static void gimo_extconfig_finalize (GObject *gobject)
     g_free (priv->name);
     g_free (priv->value);
 
-    G_OBJECT_CLASS (gimo_extconfig_parent_class)->finalize (gobject);
+    G_OBJECT_CLASS (gimo_ext_config_parent_class)->finalize (gobject);
 }
 
-static void gimo_extconfig_set_property (GObject *object,
-                                         guint prop_id,
-                                         const GValue *value,
-                                         GParamSpec *pspec)
+static void gimo_ext_config_set_property (GObject *object,
+                                          guint prop_id,
+                                          const GValue *value,
+                                          GParamSpec *pspec)
 {
     GimoExtConfig *self = GIMO_EXTCONFIG (object);
     GimoExtConfigPrivate *priv = self->priv;
@@ -85,10 +85,10 @@ static void gimo_extconfig_set_property (GObject *object,
     }
 }
 
-static void gimo_extconfig_get_property (GObject *object,
-                                         guint prop_id,
-                                         GValue *value,
-                                         GParamSpec *pspec)
+static void gimo_ext_config_get_property (GObject *object,
+                                          guint prop_id,
+                                          GValue *value,
+                                          GParamSpec *pspec)
 {
     GimoExtConfig *self = GIMO_EXTCONFIG (object);
     GimoExtConfigPrivate *priv = self->priv;
@@ -108,16 +108,16 @@ static void gimo_extconfig_get_property (GObject *object,
     }
 }
 
-static void gimo_extconfig_class_init (GimoExtConfigClass *klass)
+static void gimo_ext_config_class_init (GimoExtConfigClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoExtConfigPrivate));
 
-    gobject_class->finalize = gimo_extconfig_finalize;
-    gobject_class->set_property = gimo_extconfig_set_property;
-    gobject_class->get_property = gimo_extconfig_get_property;
+    gobject_class->finalize = gimo_ext_config_finalize;
+    gobject_class->set_property = gimo_ext_config_set_property;
+    gobject_class->get_property = gimo_ext_config_get_property;
 
     g_object_class_install_property (
         gobject_class, PROP_NAME,
@@ -142,8 +142,8 @@ static void gimo_extconfig_class_init (GimoExtConfigClass *klass)
                              G_PARAM_STATIC_STRINGS));
 }
 
-GimoExtConfig* gimo_extconfig_new (const gchar *name,
-                                   const gchar *value)
+GimoExtConfig* gimo_ext_config_new (const gchar *name,
+                                    const gchar *value)
 {
     return g_object_new (GIMO_TYPE_EXTCONFIG,
                          "name", name,
@@ -151,22 +151,22 @@ GimoExtConfig* gimo_extconfig_new (const gchar *name,
                          NULL);
 }
 
-const gchar* gimo_extconfig_get_name (GimoExtConfig *self)
+const gchar* gimo_ext_config_get_name (GimoExtConfig *self)
 {
     g_return_val_if_fail (GIMO_IS_EXTCONFIG (self), NULL);
 
     return self->priv->name;
 }
 
-const gchar* gimo_extconfig_get_value (GimoExtConfig *self)
+const gchar* gimo_ext_config_get_value (GimoExtConfig *self)
 {
     g_return_val_if_fail (GIMO_IS_EXTCONFIG (self), NULL);
 
     return self->priv->value;
 }
 
-gint _gimo_extconfig_sort_by_name (gconstpointer a,
-                                   gconstpointer b)
+gint _gimo_ext_config_sort_by_name (gconstpointer a,
+                                    gconstpointer b)
 {
     GimoExtConfig *p1 = *(GimoExtConfig **) a;
     GimoExtConfig *p2 = *(GimoExtConfig **) b;
@@ -174,8 +174,8 @@ gint _gimo_extconfig_sort_by_name (gconstpointer a,
     return strcmp (p1->priv->name, p2->priv->name);
 }
 
-gint _gimo_extconfig_search_by_name (gconstpointer a,
-                                     gconstpointer b)
+gint _gimo_ext_config_search_by_name (gconstpointer a,
+                                      gconstpointer b)
 {
     GimoExtConfig *p = *(GimoExtConfig **) b;
 

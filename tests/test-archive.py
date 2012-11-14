@@ -17,12 +17,6 @@ assert (not ar.query_object ("hello"))
 assert (len (ar.query_objects ()) == 0)
 
 # Xml read
-Gimo.Plugin
-Gimo.Require
-Gimo.ExtPoint
-Gimo.Extension
-Gimo.ExtConfig
-
 def dlmodule_new (factory, user_data):
     assert (user_data == "world")
     return Gimo.Dlmodule ()

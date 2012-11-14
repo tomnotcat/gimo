@@ -177,7 +177,7 @@ fi
 
 RUN_ENVIRONMENT="GI_TYPELIB_PATH=\$(top_builddir)/src \
    GIMO_MODULE_PATH=\$(top_builddir)/src/plugins \
-   LD_LIBRARY_PATH=/usr/local/lib:\$(top_builddir)/src/.libs"
+   LD_LIBRARY_PATH=\$(top_builddir)/src/.libs:/usr/local/lib"
 
 TESTS_ENVIRONMENT="${RUN_ENVIRONMENT}"
 

@@ -69,6 +69,8 @@ void gimo_loader_unregister (GimoLoader *self,
 GimoLoadable* gimo_loader_load (GimoLoader *self,
                                 const gchar *file_name);
 
+GPtrArray* gimo_loader_query_cached (GimoLoader *self);
+
 G_END_DECLS
 
 #endif /* __GIMO_LOADER_H__ */

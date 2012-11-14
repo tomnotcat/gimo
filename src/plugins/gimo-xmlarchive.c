@@ -23,8 +23,10 @@
 #include "gimo-factory.h"
 #include "gimo-loader.h"
 #include "gimo-runtime.h"
+#include "gimo-utils.h"
 #include <ctype.h>
 #include <expat.h>
+#include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -192,6 +194,10 @@ static GType _gimo_class_from_name (const gchar *name)
     GType type;
 
     type = g_type_from_name (name);
+
+    if (!type)
+        type = gimo_resolve_type_lazily (name);
+
     if (!type) {
         g_warning ("XmlArchive type not exists: %s", name);
         return 0;
@@ -580,7 +586,7 @@ static gboolean _gimo_xmlarchive_read (GimoArchive *self,
     struct _ParseContext *context;
     gboolean error;
 
-    fp = fopen (file_name, "rb");
+    fp = g_fopen (file_name, "rb");
     if (NULL == fp)
         gimo_set_error_return_val (GIMO_ERROR_OPEN_FILE, FALSE);
 

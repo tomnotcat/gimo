@@ -29,10 +29,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern gint _gimo_extconfig_sort_by_name (gconstpointer a,
-                                          gconstpointer b);
-extern gint _gimo_extconfig_search_by_name (gconstpointer a,
-                                            gconstpointer b);
+extern gint _gimo_ext_config_sort_by_name (gconstpointer a,
+                                           gconstpointer b);
+extern gint _gimo_ext_config_search_by_name (gconstpointer a,
+                                             gconstpointer b);
 
 G_DEFINE_TYPE (GimoExtension, gimo_extension, G_TYPE_OBJECT)
 
@@ -119,7 +119,7 @@ static void gimo_extension_set_property (GObject *object,
                     arr, GIMO_TYPE_EXTCONFIG, NULL, NULL);
 
                 g_ptr_array_sort (priv->configs,
-                                  _gimo_extconfig_sort_by_name);
+                                  _gimo_ext_config_sort_by_name);
             }
         }
         break;
@@ -284,7 +284,7 @@ GimoExtConfig* gimo_extension_get_config (GimoExtension *self,
                       priv->configs->pdata,
                       priv->configs->len,
                       sizeof (gpointer),
-                      _gimo_extconfig_search_by_name);
+                      _gimo_ext_config_search_by_name);
 
     return result ? *result : NULL;
 }

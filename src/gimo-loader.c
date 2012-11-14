@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "gimo-loader.h"
+#include "gimo-dlmodule.h"
 #include "gimo-factory.h"
 #include "gimo-loadable.h"
 #include "gimo-utils.h"
@@ -78,6 +79,17 @@ static GList* _gimo_loader_lookup (GimoLoader *self,
     }
 
     return NULL;
+}
+
+static gboolean _gimo_loader_query_cached (gpointer key,
+                                           gpointer value,
+                                           gpointer data)
+{
+    GPtrArray *param = data;
+
+    g_ptr_array_add (param, g_object_ref (value));
+
+    return FALSE;
 }
 
 static GimoLoadable* _gimo_loader_load_file (GPtrArray *loaders,
@@ -431,6 +443,40 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
         }
 
         g_object_ref (result);
+        g_mutex_unlock (&priv->mutex);
+    }
+
+    return result;
+}
+
+/**
+ * gimo_loader_query_cached:
+ * @self: a #GimoLoader
+ *
+ * Query all the cached loaded objects.
+ *
+ * Returns: (element-type Gimo.Loadable) (transfer container):
+ *          An #GPtrArray if successful or %NULL if there's none.
+ *          Free the returned array with g_ptr_array_unref().
+ */
+GPtrArray* gimo_loader_query_cached (GimoLoader *self)
+{
+    GimoLoaderPrivate *priv;
+    GPtrArray *result = NULL;
+
+    g_return_val_if_fail (GIMO_IS_LOADER (self), NULL);
+
+    priv = self->priv;
+
+    if (priv->object_tree && g_tree_nnodes (priv->object_tree) > 0) {
+        result = g_ptr_array_new_with_free_func (g_object_unref);
+
+        g_mutex_lock (&priv->mutex);
+
+        g_tree_foreach (priv->object_tree,
+                        _gimo_loader_query_cached,
+                        result);
+
         g_mutex_unlock (&priv->mutex);
     }
 

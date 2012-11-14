@@ -35,12 +35,12 @@
 #include "gimo-utils.h"
 #include <stdlib.h>
 
-extern void _gimo_extpoint_setup (gpointer data, gpointer user_data);
-extern void _gimo_extpoint_teardown (gpointer data, gpointer user_data);
-extern gint _gimo_extpoint_sort_by_id (gconstpointer a,
-                                       gconstpointer b);
-extern gint _gimo_extpoint_search_by_id (gconstpointer a,
-                                         gconstpointer b);
+extern void _gimo_ext_point_setup (gpointer data, gpointer user_data);
+extern void _gimo_ext_point_teardown (gpointer data, gpointer user_data);
+extern gint _gimo_ext_point_sort_by_id (gconstpointer a,
+                                        gconstpointer b);
+extern gint _gimo_ext_point_search_by_id (gconstpointer a,
+                                          gconstpointer b);
 
 extern void _gimo_extension_setup (gpointer data, gpointer user_data);
 extern void _gimo_extension_teardown (gpointer data, gpointer user_data);
@@ -278,7 +278,7 @@ static void gimo_plugin_finalize (GObject *gobject)
 
     if (priv->extpoints) {
         g_ptr_array_foreach (priv->extpoints,
-                             _gimo_extpoint_teardown,
+                             _gimo_ext_point_teardown,
                              self);
         g_ptr_array_unref (priv->extpoints);
     }
@@ -349,10 +349,10 @@ static void gimo_plugin_set_property (GObject *object,
             GPtrArray *arr = g_value_get_boxed (value);
             if (arr) {
                 priv->extpoints = _gimo_clone_object_array (
-                    arr, GIMO_TYPE_EXTPOINT, _gimo_extpoint_setup, self);
+                    arr, GIMO_TYPE_EXTPOINT, _gimo_ext_point_setup, self);
 
                 g_ptr_array_sort (priv->extpoints,
-                                  _gimo_extpoint_sort_by_id);
+                                  _gimo_ext_point_sort_by_id);
             }
         }
         break;
@@ -668,7 +668,7 @@ GimoExtPoint* gimo_plugin_get_extpoint (GimoPlugin *self,
                       priv->extpoints->pdata,
                       priv->extpoints->len,
                       sizeof (gpointer),
-                      _gimo_extpoint_search_by_id);
+                      _gimo_ext_point_search_by_id);
 
     return result ? *result : NULL;
 }
