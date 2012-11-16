@@ -164,8 +164,10 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self)
         gimo_set_error_return_val (GIMO_ERROR_NO_OBJECT, NULL);
 
     runtime = _gimo_plugin_load_runtime (self, context);
-    if (NULL == runtime)
+    if (NULL == runtime) {
+        g_object_unref (context);
         gimo_set_error_return_val (GIMO_ERROR_LOAD, NULL);
+    }
 
     G_LOCK (plugin_lock);
 
