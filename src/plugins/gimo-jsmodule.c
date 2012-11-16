@@ -18,7 +18,10 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "gimo-jsmodule.h"
+#include "gimo-context.h"
 #include "gimo-error.h"
+#include "gimo-factory.h"
+#include "gimo-loader.h"
 #include "gimo-runtime.h"
 
 #include <gi/object.h>
@@ -203,20 +206,41 @@ GimoJsmodule* gimo_jsmodule_new (void)
 
 static gboolean _gimo_jsmodule_runtime_start (GimoRuntime *self)
 {
-    return FALSE;
-}
+    GimoContext *context = NULL;
+    GimoLoader *loader = NULL;
+    GimoFactory *factory = NULL;
+    gboolean result = FALSE;
 
-static gboolean _gimo_jsmodule_runtime_stop (GimoRuntime *self)
-{
-    return FALSE;
+    do {
+        context = gimo_runtime_query_context (self);
+        if (NULL == context)
+            break;
+
+        loader = gimo_context_resolve_extpoint (context,
+                                                "org.gimo.core.loader.module",
+                                                GIMO_TYPE_LOADER);
+        if (NULL == loader)
+            break;
+
+        factory = gimo_factory_new ((GimoFactoryFunc) gimo_jsmodule_new,
+                                    NULL);
+        result = gimo_loader_register (loader, "js", factory);
+    } while (0);
+
+    if (factory)
+        g_object_unref (factory);
+
+    if (loader)
+        g_object_unref (loader);
+
+    if (context)
+        g_object_unref (context);
+
+    return result;
 }
 
 GIMO_DEFINE_RUNTIME_DEFAULT_SYMBOL (
     g_signal_connect (runtime,
                       "start",
                       G_CALLBACK (_gimo_jsmodule_runtime_start),
-                      NULL);
-    g_signal_connect (runtime,
-                      "stop",
-                      G_CALLBACK (_gimo_jsmodule_runtime_stop),
                       NULL))

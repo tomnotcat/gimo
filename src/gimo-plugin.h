@@ -90,7 +90,8 @@ GimoPluginState gimo_plugin_get_state (GimoPlugin *self);
 
 GimoContext* gimo_plugin_query_context (GimoPlugin *self);
 
-gboolean gimo_plugin_start (GimoPlugin *self);
+gboolean gimo_plugin_start (GimoPlugin *self,
+                            GimoLoader *loader);
 
 gboolean gimo_plugin_stop (GimoPlugin *self);
 

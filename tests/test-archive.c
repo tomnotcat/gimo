@@ -17,10 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include "gimo-archive.h"
-#include "gimo-dlmodule.h"
-#include "gimo-factory.h"
-#include "gimo-loader.h"
+#include "gimo-xmlarchive.h"
 #include <math.h>
 #include <string.h>
 
@@ -493,28 +490,14 @@ static void _test_config_default (TestConfig *config)
 
 static void _test_archive_xml (void)
 {
-    GimoLoader *loader;
-    GimoModule *module;
-    GimoFactory *factory;
-    GObject *archive;
+    GimoArchive *archive;
     TestConfig *config, *obj;
 
     /* Register types. */
     GIMO_REGISTER_TYPE (TEST_TYPE_CONFIG);
 
-    loader = gimo_loader_new_cached ();
-    gimo_loader_add_paths (loader, TEST_MODULE_PATH);
-
-    factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
-    g_assert (gimo_loader_register (loader, NULL, factory));
-    g_object_unref (factory);
-    module = GIMO_MODULE (gimo_loader_load (loader, "xmlarchive-1.0"));
-    archive = gimo_module_resolve (module,
-                                   "gimo_xmlarchive_new",
-                                   NULL);
-    g_assert (archive);
-    g_assert (gimo_archive_read (GIMO_ARCHIVE (archive),
-                                 "demo-archive1.xml"));
+    archive = GIMO_ARCHIVE (gimo_xmlarchive_new ());
+    g_assert (gimo_archive_read (archive, "demo-archive1.xml"));
     config = TEST_CONFIG (gimo_archive_query_object (GIMO_ARCHIVE (archive),
                                                      "config1"));
     g_assert (config);
@@ -563,8 +546,6 @@ static void _test_archive_xml (void)
     g_object_unref (config);
 
     g_object_unref (archive);
-    g_object_unref (module);
-    g_object_unref (loader);
 }
 
 int main (int argc, char *argv[])

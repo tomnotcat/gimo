@@ -17,20 +17,7 @@ assert (not ar.query_object ("hello"))
 assert (len (ar.query_objects ()) == 0)
 
 # Xml read
-def dlmodule_new (factory, user_data):
-    assert (user_data == "world")
-    return Gimo.Dlmodule ()
-
-loader = Gimo.Loader (cache=True)
-loader.add_paths (os.getenv ("GIMO_MODULE_PATH"))
-
-factory = Gimo.Factory ()
-factory.connect ("make", dlmodule_new, "world")
-loader.register (None, factory)
-module = loader.load ("xmlarchive-1.0")
-assert (module)
-archive = module.resolve ("gimo_xmlarchive_new", None)
-assert (archive)
+archive = Gimo.XmlArchive ()
 assert (archive.read ("demo-archive2.xml"))
 
 info = archive.query_object ("plugin1")

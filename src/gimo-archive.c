@@ -107,6 +107,7 @@ gboolean gimo_archive_add_object (GimoArchive *self,
                                   GObject *object)
 {
     GimoArchivePrivate *priv;
+    gchar *real_id;
 
     g_return_val_if_fail (GIMO_IS_ARCHIVE (self), FALSE);
 
@@ -114,13 +115,18 @@ gboolean gimo_archive_add_object (GimoArchive *self,
 
     g_mutex_lock (&priv->mutex);
 
-    if (g_tree_lookup (priv->objects, id)) {
+    if (id && g_tree_lookup (priv->objects, id)) {
         g_mutex_unlock (&priv->mutex);
         return FALSE;
     }
 
+    if (id)
+        real_id = g_strdup (id);
+    else
+        real_id = g_strdup_printf ("<%d>", g_tree_nnodes (priv->objects));
+
     g_tree_insert (priv->objects,
-                   g_strdup (id),
+                   real_id,
                    g_object_ref (object));
 
     g_mutex_unlock (&priv->mutex);

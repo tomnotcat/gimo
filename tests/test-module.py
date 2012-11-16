@@ -8,7 +8,11 @@ def dlmodule_new (user_data):
     return Gimo.Dlmodule ()
 
 loader = Gimo.Loader ()
+assert (len (loader.dup_paths ()) == 0)
 loader.add_paths (os.getenv ("GIMO_MODULE_PATH"))
+paths = loader.dup_paths ()
+assert (len (paths) == 1)
+assert (paths[0] == os.getenv ("GIMO_MODULE_PATH"))
 
 # Dynamic library
 assert (loader.load ("demo-plugin") == None)

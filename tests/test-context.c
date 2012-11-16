@@ -17,9 +17,11 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include "config.h"
 #include "gimo-context.h"
 #include "gimo-error.h"
 #include "gimo-extpoint.h"
+#include "gimo-loader.h"
 #include "gimo-plugin.h"
 #include <string.h>
 
@@ -120,6 +122,7 @@ static void _test_context_common (void)
 static void _test_context_load_plugin (void)
 {
     GimoContext *context;
+    GimoLoader *loader;
 
     context = gimo_context_new ();
     g_assert (gimo_context_load_plugin (context,
@@ -133,6 +136,35 @@ static void _test_context_load_plugin (void)
                                         "plugins",
                                         NULL,
                                         FALSE) == 2);
+
+    loader = gimo_context_resolve_extpoint (context,
+                                            "org.gimo.core.loader.module",
+                                            GIMO_TYPE_LOADER);
+    g_assert (loader);
+
+    g_assert (!gimo_loader_load (loader, "demo-plugin.py"));
+    g_assert (!gimo_loader_load (loader, "demo-plugin.js"));
+
+#ifdef HAVE_INTROSPECTION
+    {
+        GimoLoadable *module;
+
+        g_assert (gimo_context_load_plugin (context,
+                                            TEST_MODULE_PATH,
+                                            NULL,
+                                            TRUE) == 2);
+
+        module = gimo_loader_load (loader, "demo-plugin.py");
+        g_assert (module);
+        g_object_unref (module);
+
+        module = gimo_loader_load (loader, "demo-plugin.js");
+        g_assert (module);
+        g_object_unref (module);
+    }
+#endif /* HAVE_INTROSPECTION */
+
+    g_object_unref (loader);
     g_object_unref (context);
 }
 

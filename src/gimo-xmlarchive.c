@@ -456,15 +456,13 @@ static void _gimo_xml_start_element (void *data,
             if (!type)
                 return;
 
-            val = _gimo_xml_find_attr (attr, 1, "id");
-            if (NULL == val) {
-                gimo_set_error_full (GIMO_ERROR_NO_ATTRIBUTE,
-                                     "XmlArchive object id not found");
-                c->error = TRUE;
-                return;
-            }
+            attr += 2;
 
-            f = _parse_frame_create (val, type, NULL, attr + 4);
+            val = _gimo_xml_find_attr (attr, 0, "id");
+            if (val)
+                attr += 2;
+
+            f = _parse_frame_create (val, type, NULL, attr);
             g_ptr_array_add (c->frames, f);
         }
     }
@@ -744,7 +742,8 @@ static gboolean _gimo_xmlarchive_runtime_start (GimoRuntime *self)
     return result;
 }
 
-GIMO_DEFINE_RUNTIME_DEFAULT_SYMBOL (
+GIMO_DEFINE_RUNTIME_SYMBOL (
+    gimo_xmlarchive_plugin_new,
     g_signal_connect (runtime,
                       "start",
                       G_CALLBACK (_gimo_xmlarchive_runtime_start),

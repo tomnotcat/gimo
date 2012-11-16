@@ -33,7 +33,6 @@
 #include <gimo-factory.h>
 #include <gimo-loadable.h>
 #include <gimo-module.h>
-#include <gimo-dlmodule.h>
 #include <gimo-archive.h>
 #include <gimo-marshal.h>
 #include <gimo-utils.h>

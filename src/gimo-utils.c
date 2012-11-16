@@ -43,7 +43,16 @@ gint _gimo_gtree_string_compare (gconstpointer a,
                                  gconstpointer b,
                                  gpointer user_data)
 {
-    return strcmp (a, b);
+    if (a && b)
+        return strcmp (a, b);
+
+    if (a)
+        return 1;
+
+    if (b)
+        return -1;
+
+    return 0;
 }
 
 GPtrArray* _gimo_clone_object_array (GPtrArray *arr,

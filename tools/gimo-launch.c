@@ -93,7 +93,7 @@ int main (int argc, char *argv[])
         while (*it) {
             plugin = gimo_context_query_plugin (context, *it);
             if (plugin) {
-                if (!gimo_plugin_start (plugin)) {
+                if (!gimo_plugin_start (plugin, NULL)) {
                     gchar *err_str = gimo_dup_error_string ();
 
                     g_warning ("Start plugin error: %s: %s",

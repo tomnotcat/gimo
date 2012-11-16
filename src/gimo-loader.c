@@ -32,7 +32,7 @@ enum {
 };
 
 struct _GimoLoaderPrivate {
-    GSList *path_list;
+    GQueue *paths;
     GQueue *loaders;
     GTree *object_tree;
     GSList *object_list;
@@ -45,13 +45,40 @@ struct _FactoryInfo {
     gint ref_count;
 };
 
-static void _factory_info_destroy (gpointer p)
+struct _PathInfo {
+    gchar *path;
+    gint ref_count;
+};
+
+static void _factory_info_unref (gpointer p)
 {
     struct _FactoryInfo *info = p;
 
     if (g_atomic_int_add (&info->ref_count, -1) == 1) {
         g_object_unref (info->factory);
         g_free (info->suffix);
+        g_free (info);
+    }
+}
+
+static gint _path_info_compare (gconstpointer a,
+                                gconstpointer b)
+{
+    const struct _PathInfo *info = a;
+    return strcmp (info->path, b);
+}
+
+static void _path_info_ref (struct _PathInfo *info)
+{
+    g_atomic_int_add (&info->ref_count, 1);
+}
+
+static void _path_info_unref (gpointer p)
+{
+    struct _PathInfo *info = p;
+
+    if (g_atomic_int_add (&info->ref_count, -1) == 1) {
+        g_free (info->path);
         g_free (info);
     }
 }
@@ -132,7 +159,7 @@ static void gimo_loader_init (GimoLoader *self)
                                               GimoLoaderPrivate);
     priv = self->priv;
 
-    priv->path_list = NULL;
+    priv->paths = g_queue_new ();
     priv->loaders = g_queue_new ();
     priv->object_tree = NULL;
     priv->object_list = NULL;
@@ -150,8 +177,8 @@ static void gimo_loader_finalize (GObject *gobject)
     if (priv->object_tree)
         g_tree_unref (priv->object_tree);
 
-    g_queue_free_full (priv->loaders, _factory_info_destroy);
-    g_slist_free_full (priv->path_list, g_free);
+    g_queue_free_full (priv->loaders, _factory_info_unref);
+    g_queue_free_full (priv->paths, _path_info_unref);
     g_mutex_clear (&priv->mutex);
 
     G_OBJECT_CLASS (gimo_loader_parent_class)->finalize (gobject);
@@ -240,36 +267,97 @@ void gimo_loader_add_paths (GimoLoader *self,
 
     priv = self->priv;
 
-    /* TODO: Make this function thread safe. */
     if (paths) {
         gchar **dirs;
+        struct _PathInfo *info;
         guint i = 0;
 
         dirs = g_strsplit (paths, G_SEARCHPATH_SEPARATOR_S, 0);
+
+        g_mutex_lock (&priv->mutex);
         while (dirs[i]) {
-            priv->path_list = g_slist_prepend (priv->path_list, dirs[i]);
+            info = g_malloc (sizeof *info);
+            info->path = dirs[i];
+            info->ref_count = 1;
+            g_queue_push_head (priv->paths, info);
             ++i;
         }
 
+        g_mutex_unlock (&priv->mutex);
         g_free (dirs);
     }
 }
 
+void gimo_loader_remove_paths (GimoLoader *self,
+                               const gchar *paths)
+{
+    GimoLoaderPrivate *priv;
+
+    g_return_if_fail (GIMO_IS_LOADER (self));
+
+    priv = self->priv;
+
+    if (paths) {
+        gchar **dirs;
+        GList *l;
+        guint i = 0;
+
+        dirs = g_strsplit (paths, G_SEARCHPATH_SEPARATOR_S, 0);
+
+        g_mutex_lock (&priv->mutex);
+        while (dirs[i]) {
+            l = g_queue_find_custom (priv->paths,
+                                     dirs[i],
+                                     _path_info_compare);
+            if (l) {
+                _path_info_unref (l->data);
+                g_queue_delete_link (priv->paths, l);
+            }
+
+            ++i;
+        }
+
+        g_mutex_unlock (&priv->mutex);
+        g_strfreev (dirs);
+    }
+}
+
 /**
- * gimo_loader_get_paths:
+ * gimo_loader_dup_paths:
  * @self: a #GimoLoader
  *
- * Get the load search paths.
+ * Duplicate a copy of load search paths.
  *
- * Returns: (allow-none) (element-type utf8) (transfer none):
- *          the search paths list
+ * Returns: (allow-none) (element-type utf8) (transfer container):
+ *          an array of search paths
  */
-GSList* gimo_loader_get_paths (GimoLoader *self)
+GPtrArray* gimo_loader_dup_paths (GimoLoader *self)
 {
+    GimoLoaderPrivate *priv;
+    GPtrArray *result = NULL;
+
     g_return_val_if_fail (GIMO_IS_LOADER (self), NULL);
 
-    /* TODO: Make this function thread safe. */
-    return self->priv->path_list;
+    priv = self->priv;
+
+    g_mutex_lock (&priv->mutex);
+
+    if (g_queue_get_length (priv->paths) > 0) {
+        GList *it;
+        struct _PathInfo *pi;
+
+        result = g_ptr_array_new_with_free_func (g_free);
+        it = g_queue_peek_head_link (priv->paths);
+        while (it) {
+            pi = it->data;
+            g_ptr_array_add (result, g_strdup (pi->path));
+            it = it->next;
+        }
+    }
+
+    g_mutex_unlock (&priv->mutex);
+
+    return result;
 }
 
 /**
@@ -330,7 +418,7 @@ void gimo_loader_unregister (GimoLoader *self,
 
     node = _gimo_loader_lookup (self, suffix);
     if (node) {
-        _factory_info_destroy (node->data);
+        _factory_info_unref (node->data);
         g_queue_delete_link (priv->loaders, node);
     }
 
@@ -381,7 +469,7 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
         return NULL;
     }
 
-    arr = g_ptr_array_new_full (count, _factory_info_destroy);
+    arr = g_ptr_array_new_full (count, _factory_info_unref);
     it = g_queue_peek_head_link (priv->loaders);
     while (it) {
         info = it->data;
@@ -404,13 +492,26 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
 
     result = _gimo_loader_load_file (arr, suffix, file_name);
 
-    if (NULL == result && !g_path_is_absolute (file_name)) {
-        GSList *it = priv->path_list;
+    if (NULL == result &&
+        !g_path_is_absolute (file_name) &&
+        g_queue_get_length (priv->paths) > 0)
+    {
+        GQueue *paths;
+        GList *it;
+        struct _PathInfo *pi;
         gchar *full_path;
 
-        /* TODO: Make paths thread safe. */
+        g_mutex_lock (&priv->mutex);
+
+        paths = g_queue_copy (priv->paths);
+        g_queue_foreach (paths, (GFunc) _path_info_ref, NULL);
+
+        g_mutex_unlock (&priv->mutex);
+
+        it = g_queue_peek_head_link (paths);
         while (it) {
-            full_path = g_build_filename (it->data, file_name, NULL);
+            pi = it->data;
+            full_path = g_build_filename (pi->path, file_name, NULL);
             result = _gimo_loader_load_file (arr, suffix, full_path);
             g_free (full_path);
 
@@ -419,6 +520,8 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
 
             it = it->next;
         }
+
+        g_queue_free_full (paths, _path_info_unref);
     }
 
     g_ptr_array_unref (arr);

@@ -66,16 +66,18 @@ static void _gimo_context_plugin_destroy (gpointer p)
     g_object_unref (p);
 }
 
-static gboolean _gimo_context_load_plugin (GimoContext *self,
-                                           GimoLoader *loader,
-                                           const gchar *file_name,
-                                           gboolean start)
+static guint _gimo_context_load_plugin (GimoContext *self,
+                                        GimoLoader *aloader,
+                                        GimoLoader *mloader,
+                                        const gchar *file_name,
+                                        gboolean start)
 {
     GimoArchive *archive;
     GPtrArray *objects;
     GObject *object;
+    guint result = 0;
 
-    archive = gimo_safe_cast (gimo_loader_load (loader, file_name),
+    archive = gimo_safe_cast (gimo_loader_load (aloader, file_name),
                               GIMO_TYPE_ARCHIVE);
     if (NULL == archive) {
         gimo_set_error_full (GIMO_ERROR_LOAD,
@@ -91,8 +93,19 @@ static gboolean _gimo_context_load_plugin (GimoContext *self,
         for (i = 0; i < objects->len; ++i) {
             object = g_ptr_array_index (objects, i);
 
-            if (GIMO_IS_PLUGIN (object))
-                gimo_context_install_plugin (self, GIMO_PLUGIN (object));
+            if (!GIMO_IS_PLUGIN (object))
+                continue;
+
+            if (!gimo_context_install_plugin (self, GIMO_PLUGIN (object)))
+                continue;
+
+            if (start) {
+                if (gimo_plugin_start (GIMO_PLUGIN (object), mloader))
+                    ++result;
+            }
+            else {
+                ++result;
+            }
         }
 
         g_ptr_array_unref (objects);
@@ -100,7 +113,7 @@ static gboolean _gimo_context_load_plugin (GimoContext *self,
 
     g_object_unref (archive);
 
-    return TRUE;
+    return result;
 }
 
 static gboolean _gimo_context_query_plugins (gpointer key,
@@ -192,7 +205,6 @@ static void gimo_context_constructed (GObject *gobject)
     gimo_runtime_define_object (runtime, "module", G_OBJECT (loader));
 
     g_object_unref (factory);
-    g_object_unref (loader);
 
     array = g_ptr_array_new_with_free_func (g_object_unref);
     extpt = gimo_ext_point_new ("archive", "Object Archive Loader");
@@ -210,58 +222,10 @@ static void gimo_context_constructed (GObject *gobject)
                            NULL);
 
     gimo_context_install_plugin (self, plugin);
-    gimo_plugin_start (plugin);
+    gimo_plugin_start (plugin, loader);
 
     g_ptr_array_unref (array);
     g_object_unref (runtime);
-    g_object_unref (plugin);
-
-    /* org.gimo.core.python.module */
-    array = g_ptr_array_new_with_free_func (g_object_unref);
-    ext = gimo_extension_new ("loader",
-                              "Python Module Loader",
-                              "org.gimo.core.loader.module",
-                              NULL);
-    g_ptr_array_add (array, ext);
-
-    plugin = gimo_plugin_new ("org.gimo.core.python.module",
-                              "Python Module Plugin",
-                              "1.0",
-                              "gimoapp.com",
-                              "pymodule-1.0",
-                              NULL,
-                              NULL,
-                              NULL,
-                              array);
-
-    gimo_context_install_plugin (self, plugin);
-    gimo_plugin_start (plugin);
-
-    g_ptr_array_unref (array);
-    g_object_unref (plugin);
-
-    /* org.gimo.core.js.module */
-    array = g_ptr_array_new_with_free_func (g_object_unref);
-    ext = gimo_extension_new ("loader",
-                              "JavaScript Module Loader",
-                              "org.gimo.core.loader.module",
-                              NULL);
-    g_ptr_array_add (array, ext);
-
-    plugin = gimo_plugin_new ("org.gimo.core.js.module",
-                              "JavaScript Module Plugin",
-                              "1.0",
-                              "gimoapp.com",
-                              "jsmodule-1.0",
-                              NULL,
-                              NULL,
-                              NULL,
-                              array);
-
-    gimo_context_install_plugin (self, plugin);
-    gimo_plugin_start (plugin);
-
-    g_ptr_array_unref (array);
     g_object_unref (plugin);
 
     /* org.gimo.core.xml.archive */
@@ -276,17 +240,18 @@ static void gimo_context_constructed (GObject *gobject)
                               "XML Archive Plugin",
                               "1.0",
                               "gimoapp.com",
-                              "xmlarchive-1.0",
                               NULL,
+                              "gimo_xmlarchive_plugin_new",
                               NULL,
                               NULL,
                               array);
 
     gimo_context_install_plugin (self, plugin);
-    gimo_plugin_start (plugin);
+    gimo_plugin_start (plugin, loader);
 
     g_ptr_array_unref (array);
     g_object_unref (plugin);
+    g_object_unref (loader);
 }
 
 static void gimo_context_finalize (GObject *gobject)
@@ -409,24 +374,40 @@ guint gimo_context_load_plugin (GimoContext *self,
                                 gboolean start)
 {
     guint result = 0;
-    GimoLoader *loader;
+    GimoLoader *aloader = NULL;
+    GimoLoader *mloader = NULL;
 
     if (!g_file_test (file_path, G_FILE_TEST_EXISTS))
         gimo_set_error_return_val (GIMO_ERROR_NO_FILE, FALSE);
 
-    loader = gimo_context_resolve_extpoint (self,
-                                            "org.gimo.core.loader.archive",
-                                            GIMO_TYPE_LOADER);
-    if (NULL == loader)
-        return 0;
+    aloader = gimo_context_resolve_extpoint (self,
+                                             "org.gimo.core.loader.archive",
+                                             GIMO_TYPE_LOADER);
+    if (NULL == aloader)
+        goto done;
+
+    mloader = gimo_context_resolve_extpoint (self,
+                                             "org.gimo.core.loader.module",
+                                             GIMO_TYPE_LOADER);
+    if (NULL == mloader)
+        goto done;
 
     if (g_file_test (file_path, G_FILE_TEST_IS_REGULAR)) {
-        if (_gimo_context_load_plugin (self,
-                                       loader,
-                                       file_path,
-                                       start))
-        {
-            ++result;
+        gchar *dirname = NULL;
+
+        if (start) {
+            dirname = g_path_get_dirname (file_path);
+            gimo_loader_add_paths (mloader, dirname);
+        }
+
+        result += _gimo_context_load_plugin (self,
+                                             aloader,
+                                             mloader,
+                                             file_path,
+                                             start);
+        if (dirname) {
+            gimo_loader_remove_paths (mloader, dirname);
+            g_free (dirname);
         }
 
         goto done;
@@ -448,6 +429,9 @@ guint gimo_context_load_plugin (GimoContext *self,
             GFile *child;
             gchar *child_path;
 
+            if (start)
+                gimo_loader_add_paths (mloader, file_path);
+
             while (!g_cancellable_is_cancelled (cancellable)) {
                 child_info = g_file_enumerator_next_file (enumerator,
                                                           cancellable,
@@ -461,20 +445,20 @@ guint gimo_context_load_plugin (GimoContext *self,
 
                     child_path = g_file_get_path (child);
 
-                    if (_gimo_context_load_plugin (self,
-                                                   loader,
-                                                   child_path,
-                                                   start))
-                    {
-                        ++result;
-                    }
-
+                    result += _gimo_context_load_plugin (self,
+                                                         aloader,
+                                                         mloader,
+                                                         child_path,
+                                                         start);
                     g_free (child_path);
                     g_object_unref (child);
                 }
 
                 g_object_unref (child_info);
             }
+
+            if (start)
+                gimo_loader_remove_paths (mloader, file_path);
         }
 
         if (enumerator)
@@ -495,7 +479,11 @@ guint gimo_context_load_plugin (GimoContext *self,
     }
 
 done:
-    g_object_unref (loader);
+    if (aloader)
+        g_object_unref (aloader);
+
+    if (mloader)
+        g_object_unref (mloader);
 
     return result;
 }

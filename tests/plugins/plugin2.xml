@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archive version="1.0">
-  <object class="GimoPlugin" id="org.gimo.test.plugin2">
+  <object class="GimoPlugin">
+    <id>org.gimo.test.plugin2</id>
     <requires class="GimoRequire">
       <require plugin="org.gimo.test.plugin1"
                version="1.0" optional="TRUE"/>

@@ -54,8 +54,6 @@ extern void _gimo_runtime_setup (GimoRuntime *self,
 extern void _gimo_runtime_teardown (GimoRuntime *self,
                                     GimoPlugin *plugin);
 
-extern GimoRuntime* _gimo_context_load_runtime (GimoContext *self,
-                                                GimoPlugin *plugin);
 extern void _gimo_context_plugin_state_changed (GimoContext *self,
                                                 GimoPlugin *plugin,
                                                 GimoPluginState old_state,
@@ -96,20 +94,25 @@ struct _GimoPluginPrivate {
 G_LOCK_DEFINE_STATIC (plugin_lock);
 
 static GimoRuntime* _gimo_plugin_load_runtime (GimoPlugin *self,
-                                               GimoContext *context)
+                                               GimoContext *context,
+                                               GimoLoader *loader)
 {
     GimoPluginPrivate *priv = self->priv;
     const gchar *symbol;
 
     if (NULL == priv->runtime_module) {
-        GimoLoader *loader;
         GimoModule *module;
 
-        loader = gimo_context_resolve_extpoint (context,
-                                                "org.gimo.core.loader.module",
-                                                GIMO_TYPE_LOADER);
-        if (NULL == loader)
-            return NULL;
+        if (loader) {
+            g_object_ref (loader);
+        }
+        else {
+            loader = gimo_context_resolve_extpoint (context,
+                                                    "org.gimo.core.loader.module",
+                                                    GIMO_TYPE_LOADER);
+            if (NULL == loader)
+                return NULL;
+        }
 
         module = gimo_safe_cast (gimo_loader_load (loader, priv->module),
                                  GIMO_TYPE_MODULE);
@@ -141,7 +144,9 @@ static GimoRuntime* _gimo_plugin_load_runtime (GimoPlugin *self,
                            GIMO_TYPE_RUNTIME);
 }
 
-static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self)
+static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self,
+                                                GimoLoader *loader,
+                                                gboolean load)
 {
     GimoPluginPrivate *priv = self->priv;
     GimoContext *context;
@@ -159,11 +164,14 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self)
 
     G_UNLOCK (plugin_lock);
 
+    if (!load)
+        return NULL;
+
     context = gimo_plugin_query_context (self);
     if (NULL == context)
         gimo_set_error_return_val (GIMO_ERROR_NO_OBJECT, NULL);
 
-    runtime = _gimo_plugin_load_runtime (self, context);
+    runtime = _gimo_plugin_load_runtime (self, context, loader);
     if (NULL == runtime) {
         g_object_unref (context);
         gimo_set_error_return_val (GIMO_ERROR_LOAD, NULL);
@@ -199,7 +207,7 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self)
             if (NULL == p)
                 break;
 
-            rt = _gimo_plugin_query_runtime (p);
+            rt = _gimo_plugin_query_runtime (p, loader, load);
             g_object_unref (p);
 
             if (NULL == rt)
@@ -788,14 +796,15 @@ GimoContext* gimo_plugin_query_context (GimoPlugin *self)
     return ctx;
 }
 
-gboolean gimo_plugin_start (GimoPlugin *self)
+gboolean gimo_plugin_start (GimoPlugin *self,
+                            GimoLoader *loader)
 {
     GimoRuntime *runtime;
     gboolean result;
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), FALSE);
 
-    runtime = _gimo_plugin_query_runtime (self);
+    runtime = _gimo_plugin_query_runtime (self, loader, TRUE);
     if (NULL == runtime)
         return FALSE;
 
@@ -813,7 +822,7 @@ gboolean gimo_plugin_stop (GimoPlugin *self)
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), FALSE);
 
-    runtime = _gimo_plugin_query_runtime (self);
+    runtime = _gimo_plugin_query_runtime (self, NULL, FALSE);
     if (NULL == runtime)
         return FALSE;
 
@@ -841,7 +850,7 @@ GObject* gimo_plugin_resolve (GimoPlugin *self,
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
 
-    runtime = _gimo_plugin_query_runtime (self);
+    runtime = _gimo_plugin_query_runtime (self, NULL, TRUE);
     if (NULL == runtime)
         return NULL;
 

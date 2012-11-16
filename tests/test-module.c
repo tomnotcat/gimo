@@ -23,23 +23,30 @@
 #include "gimo-loader.h"
 #include "gimo-plugin.h"
 
-int main (int argc, char *argv[])
+static void test_module_common (gboolean cached)
 {
     GimoLoader *loader;
     GimoModule *module;
     GObject *plugin;
     GimoFactory *factory;
+    GPtrArray *paths;
 
 #ifdef HAVE_INTROSPECTION
     GModule *gmodule;
     GimoFactoryFunc new_module;
 #endif
 
-    g_type_init ();
-    g_thread_init (NULL);
+    if (cached)
+        loader = gimo_loader_new_cached ();
+    else
+        loader = gimo_loader_new ();
 
-    loader = gimo_loader_new_cached ();
+    g_assert (gimo_loader_dup_paths (loader) == NULL);
     gimo_loader_add_paths (loader, TEST_MODULE_PATH);
+    paths = gimo_loader_dup_paths (loader);
+
+    g_assert (paths && paths->len == 1);
+    g_ptr_array_unref (paths);
 
     /* Dynamic library */
     g_assert (!gimo_loader_load (loader, "demo-plugin"));
@@ -49,9 +56,18 @@ int main (int argc, char *argv[])
                                     factory));
     g_object_unref (factory);
     module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin"));
-    g_assert (gimo_loader_load (loader, "demo-plugin") ==
-              GIMO_LOADABLE (module));
-    g_object_unref (module);
+
+    if (cached) {
+        g_assert (gimo_loader_load (loader, "demo-plugin") ==
+                  GIMO_LOADABLE (module));
+        g_object_unref (module);
+    }
+    else {
+        GimoLoadable *m2 = gimo_loader_load (loader, "demo-plugin");
+        g_assert (m2 != GIMO_LOADABLE (module));
+        g_object_unref (m2);
+    }
+
     g_assert (GIMO_IS_DLMODULE (module));
     plugin = gimo_module_resolve (module,
                                   "test_plugin_new",
@@ -61,6 +77,14 @@ int main (int argc, char *argv[])
     g_object_unref (module);
 
 #ifdef HAVE_INTROSPECTION
+    if (!cached) {
+        gimo_loader_remove_paths (loader, TEST_MODULE_PATH);
+        g_assert (gimo_loader_dup_paths (loader) == NULL);
+        g_assert (!gimo_loader_load (loader, "pymodule-1.0"));
+        g_object_unref (loader);
+        return;
+    }
+
     /* Python module */
     g_assert (!gimo_loader_load (loader, "demo-plugin.py"));
     module = GIMO_MODULE (gimo_loader_load (loader, "pymodule-1.0"));
@@ -108,5 +132,15 @@ int main (int argc, char *argv[])
 #endif /* HAVE_INTROSPECTION */
 
     g_object_unref (loader);
+}
+
+int main (int argc, char *argv[])
+{
+    g_type_init ();
+    g_thread_init (NULL);
+
+    test_module_common (FALSE);
+    test_module_common (TRUE);
+
     return 0;
 }
