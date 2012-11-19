@@ -63,8 +63,7 @@ static guint context_signals[LAST_SIGNAL] = { 0 };
 
 static void _gimo_context_plugin_destroy (gpointer p)
 {
-    GimoPlugin *plugin = p;
-    _gimo_plugin_uninstall (plugin);
+    _gimo_plugin_uninstall (p);
     g_object_unref (p);
 }
 
@@ -261,9 +260,25 @@ static void gimo_context_finalize (GObject *gobject)
 {
     GimoContext *self = GIMO_CONTEXT (gobject);
     GimoContextPrivate *priv = self->priv;
+    GimoLoader *loader;
+    GPtrArray *modules;
+    guint i;
 
+    loader = gimo_context_resolve_extpoint (self,
+                                            "org.gimo.core.loader.module",
+                                            GIMO_TYPE_LOADER);
     g_tree_unref (priv->plugins);
     g_mutex_clear (&priv->mutex);
+
+    modules = gimo_loader_query_cached (loader);
+    if (modules) {
+        for (i = 0; i < modules->len; ++i)
+            gimo_loadable_unload (g_ptr_array_index (modules, i));
+
+        g_ptr_array_unref (modules);
+    }
+
+    g_object_unref (loader);
 
     G_OBJECT_CLASS (gimo_context_parent_class)->finalize (gobject);
 }
@@ -685,34 +700,19 @@ done:
     return gimo_safe_cast (object, type);
 }
 
-void gimo_context_destroy (GimoContext *self)
+void gimo_context_stop_all (GimoContext *self)
 {
-    GPtrArray* array;
-    GimoLoader *loader;
-    guint i;
+    GPtrArray* plugins;
 
-    array = gimo_context_query_plugins (self);
+    plugins = gimo_context_query_plugins (self);
+    if (plugins) {
+        guint i;
 
-    if (array) {
-        for (i = 0; i < array->len; ++i)
-            gimo_plugin_stop (g_ptr_array_index (array, i));
+        for (i = 0; i < plugins->len; ++i)
+            gimo_plugin_stop (g_ptr_array_index (plugins, i));
 
-        g_ptr_array_unref (array);
+        g_ptr_array_unref (plugins);
     }
-
-    loader = gimo_context_resolve_extpoint (self,
-                                            "org.gimo.core.loader.module",
-                                            GIMO_TYPE_LOADER);
-
-    array = gimo_loader_query_cached (loader);
-    if (array) {
-        for (i = 0; i < array->len; ++i)
-            gimo_loadable_unload (g_ptr_array_index (array, i));
-
-        g_ptr_array_unref (array);
-    }
-
-    g_object_unref (loader);
 }
 
 void _gimo_context_plugin_state_changed (GimoContext *self,

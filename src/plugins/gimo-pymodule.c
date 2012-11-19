@@ -109,6 +109,7 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
     GimoPymodulePrivate *priv = self->priv;
     PyObject *gobject_module = NULL;
     PyObject *func = NULL;
+    PyObject *args = NULL;
     PyObject *arg0 = NULL;
     PyObject *value = NULL;
     GObject *object = NULL;
@@ -132,9 +133,12 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
     }
 
     gobject_module = pygobject_init (0, 0, 0);
+    args = PyTuple_New (1);
     arg0 = pygobject_new (param);
-    value = PyObject_CallFunctionObjArgs (func, arg0, NULL);
+    PyTuple_SetItem (args, 0, arg0);
+    value = PyObject_CallObject (func, args);
     Py_DECREF (arg0);
+    Py_DECREF (args);
 
     if (!has_return)
         goto done;

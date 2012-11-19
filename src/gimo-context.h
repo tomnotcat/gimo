@@ -84,7 +84,7 @@ gpointer gimo_context_resolve_extpoint (GimoContext *self,
                                         const gchar *extpt_id,
                                         GType type);
 
-void gimo_context_destroy (GimoContext *self);
+void gimo_context_stop_all (GimoContext *self);
 
 G_END_DECLS
 
