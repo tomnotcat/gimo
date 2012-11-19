@@ -17,6 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include "gimo-binding.h"
 #include "gimo-plugin.h"
 
 #define TEST_TYPE_PLUGIN (test_plugin_get_type())
@@ -63,4 +64,33 @@ static void test_plugin_class_init (TestPluginClass *klass)
 GimoPlugin* test_plugin_new (void)
 {
     return g_object_new (TEST_TYPE_PLUGIN, NULL);
+}
+
+static gboolean _demo_plugin_start (GimoPlugin *p)
+{
+    GimoContext *c = gimo_plugin_query_context (p);
+    gimo_bind_string (G_OBJECT (c), "dl_start", "dl_start");
+    g_object_unref (c);
+    return TRUE;
+}
+
+static gboolean _demo_plugin_stop (GimoPlugin *p)
+{
+    GimoContext *c = gimo_plugin_query_context (p);
+    gimo_bind_string (G_OBJECT (c), "dl_stop", "dl_stop");
+    g_object_unref (c);
+    return TRUE;
+}
+
+void demo_plugin (GimoPlugin *plugin)
+{
+    g_signal_connect (plugin,
+                      "start",
+                      G_CALLBACK (_demo_plugin_start),
+                      NULL);
+
+    g_signal_connect (plugin,
+                      "stop",
+                      G_CALLBACK (_demo_plugin_stop),
+                      NULL);
 }

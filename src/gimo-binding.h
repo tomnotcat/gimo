@@ -17,35 +17,37 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __GIMO_TYPES_H__
-#define __GIMO_TYPES_H__
+#ifndef __GIMO_BINDING_H__
+#define __GIMO_BINDING_H__
 
-#include "gimo-enums.h"
+#include "gimo-types.h"
 
 G_BEGIN_DECLS
 
-typedef struct _GimoContext GimoContext;
-typedef struct _GimoPlugin GimoPlugin;
-typedef struct _GimoRequire GimoRequire;
-typedef struct _GimoExtPoint GimoExtPoint;
-typedef struct _GimoExtension GimoExtension;
-typedef struct _GimoExtConfig GimoExtConfig;
-typedef struct _GimoModule GimoModule;
-typedef struct _GimoLoader GimoLoader;
-typedef struct _GimoFactory GimoFactory;
-typedef struct _GimoLoadable GimoLoadable;
-typedef struct _GimoArchive GimoArchive;
-typedef struct _GPtrArray GimoObjectArray;
+void gimo_bind_object (GObject *object,
+                       const gchar *key,
+                       GObject *data);
 
-GType gimo_object_array_get_type (void) G_GNUC_CONST;
-#define GIMO_TYPE_OBJECT_ARRAY (gimo_object_array_get_type ())
+void gimo_bind_string (GObject *object,
+                       const gchar *key,
+                       const gchar *data);
 
-#define GIMO_REGISTER_TYPE(type) \
-    G_STMT_START { \
-        GType _type = type; \
-        (void) _type; \
-    } G_STMT_END
+void gimo_binding_lock (GObject *object);
+
+void gimo_binding_unlock (GObject *object);
+
+GObject* gimo_lookup_object (GObject *object,
+                             const gchar *key);
+
+const gchar* gimo_lookup_string (GObject *object,
+                                 const gchar *key);
+
+GObject* gimo_query_object (GObject *object,
+                            const gchar *key);
+
+gchar* gimo_query_string (GObject *object,
+                          const gchar *key);
 
 G_END_DECLS
 
-#endif /* __GIMO_TYPES_H__ */
+#endif /* __GIMO_BINDING_H__ */

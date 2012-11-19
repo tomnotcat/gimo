@@ -22,7 +22,7 @@
 #include "gimo-error.h"
 #include "gimo-factory.h"
 #include "gimo-loader.h"
-#include "gimo-runtime.h"
+#include "gimo-plugin.h"
 
 /* Redefined in Python.h */
 #undef  _POSIX_C_SOURCE
@@ -49,7 +49,6 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
     GimoPymodulePrivate *priv = self->priv;
     gchar *path;
     gchar *suffix;
-    PyObject *name = NULL;
 
     if (priv->module)
         gimo_set_error_return_val (GIMO_ERROR_CONFLICT, FALSE);
@@ -59,11 +58,7 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
     if (suffix)
         *suffix = '\0';
 
-    name = PyString_FromString (path);
-    if (NULL == name)
-        goto fail;
-
-    priv->module = PyImport_Import (name);
+    priv->module = PyImport_ImportModule (path);
     if (NULL == priv->module) {
         gimo_set_error_full (GIMO_ERROR_LOAD,
                              "Import python module error: %s",
@@ -72,9 +67,6 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
     }
 
 fail:
-    if (name)
-        Py_DECREF (name);
-
     if (priv->module)
         priv->name = path;
     else
@@ -110,11 +102,14 @@ static const gchar* _gimo_pymodule_get_name (GimoModule *module)
 
 static GObject* _gimo_pymodule_resolve (GimoModule *module,
                                         const gchar *symbol,
-                                        GObject *param)
+                                        GObject *param,
+                                        gboolean has_return)
 {
     GimoPymodule *self = GIMO_PYMODULE (module);
     GimoPymodulePrivate *priv = self->priv;
+    PyObject *gobject_module = NULL;
     PyObject *func = NULL;
+    PyObject *arg0 = NULL;
     PyObject *value = NULL;
     GObject *object = NULL;
 
@@ -126,34 +121,42 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
         gimo_set_error_full (GIMO_ERROR_NO_SYMBOL,
                              "Can't get python attribute: %s: %s",
                              priv->name, symbol);
-        goto fail;
+        goto done;
     }
 
     if (!PyCallable_Check (func)) {
         gimo_set_error_full (GIMO_ERROR_INVALID_SYMBOL,
                              "Attribute not callable: %s: %s",
                              priv->name, symbol);
-        goto fail;
+        goto done;
     }
 
-    value = PyObject_CallObject (func, NULL);
+    gobject_module = pygobject_init (0, 0, 0);
+    arg0 = pygobject_new (param);
+    value = PyObject_CallFunctionObjArgs (func, arg0, NULL);
+    Py_DECREF (arg0);
+
+    if (!has_return)
+        goto done;
+
     if (NULL == value) {
         gimo_set_error_full (GIMO_ERROR_INVALID_RETURN,
                              "Function return NULL: %s: %s",
                              priv->name, symbol);
-        goto fail;
+        goto done;
     }
 
     object = pygobject_get (value);
     if (object)
         g_object_ref (object);
 
-fail:
-    if (func)
-        Py_DECREF (func);
+done:
+    Py_XDECREF (func);
+    Py_XDECREF (value);
+    Py_XDECREF (gobject_module);
 
-    if (value)
-        Py_DECREF (value);
+    if (PyErr_Occurred ())
+        PyErr_Print ();
 
     return object;
 }
@@ -161,6 +164,7 @@ fail:
 static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
 {
     iface->load = (GimoLoadableLoadFunc) _gimo_pymodule_open;
+    iface->unload = (GimoLoadableUnloadFunc) _gimo_pymodule_close;
 }
 
 static void gimo_module_interface_init (GimoModuleInterface *iface)
@@ -200,8 +204,9 @@ static void gimo_pymodule_finalize (GObject *gobject)
 
     klass = GIMO_PYMODULE_GET_CLASS (gobject);
 
-    if (g_atomic_int_add (&klass->instance_count, -1) == 1)
+    if (g_atomic_int_add (&klass->instance_count, -1) == 1) {
         Py_Finalize ();
+    }
 
     G_OBJECT_CLASS (gimo_pymodule_parent_class)->finalize (gobject);
 }
@@ -222,7 +227,7 @@ GimoPymodule* gimo_pymodule_new (void)
     return g_object_new (GIMO_TYPE_PYMODULE, NULL);
 }
 
-static gboolean _gimo_pymodule_runtime_start (GimoRuntime *self)
+static gboolean _gimo_pymodule_plugin_start (GimoPlugin *self)
 {
     GimoContext *context = NULL;
     GimoLoader *loader = NULL;
@@ -230,7 +235,7 @@ static gboolean _gimo_pymodule_runtime_start (GimoRuntime *self)
     gboolean result = FALSE;
 
     do {
-        context = gimo_runtime_query_context (self);
+        context = gimo_plugin_query_context (self);
         if (NULL == context)
             break;
 
@@ -257,8 +262,10 @@ static gboolean _gimo_pymodule_runtime_start (GimoRuntime *self)
     return result;
 }
 
-GIMO_DEFINE_RUNTIME_DEFAULT_SYMBOL (
-    g_signal_connect (runtime,
+void gimo_pymodule_plugin (GimoPlugin *plugin)
+{
+    g_signal_connect (plugin,
                       "start",
-                      G_CALLBACK (_gimo_pymodule_runtime_start),
-                      NULL))
+                      G_CALLBACK (_gimo_pymodule_plugin_start),
+                      NULL);
+}

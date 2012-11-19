@@ -18,17 +18,18 @@ def _plugin_state_changed (context, plugin, old_state, new_state):
 context = Gimo.Context ()
 context.connect ("state-changed", _plugin_state_changed)
 
-plugin = Gimo.Plugin (id="test.plugin")
+plugin = Gimo.Plugin (id="test.plugin", path="sub")
 assert (not context.query_plugin ("test.plugin"))
-assert (context.install_plugin (plugin))
+assert (context.install_plugin ("/root", plugin))
 assert (context.query_plugin ("test.plugin") == plugin)
+assert (plugin.get_path () == "/root/sub")
 
 assert (Gimo.PluginState.UNINSTALLED == g_old_state)
 assert (Gimo.PluginState.INSTALLED == g_new_state)
 assert (1 == g_state_count)
 
 plugin = Gimo.Plugin (id="test.plugin")
-assert (not context.install_plugin (plugin))
+assert (not context.install_plugin (None, plugin))
 assert (Gimo.get_error () == Gimo.Errors.CONFLICT)
 
 extpts = [Gimo.ExtPoint (id="extpt1"),
@@ -40,11 +41,12 @@ plugin = Gimo.Plugin.new ("test.plugin2",
                           None,
                           None,
                           None,
+                          None,
                           extpts,
                           None)
 
 assert (plugin.query_context () == None)
-assert (context.install_plugin (plugin))
+assert (context.install_plugin (None, plugin))
 assert (Gimo.PluginState.UNINSTALLED == g_old_state)
 assert (Gimo.PluginState.INSTALLED == g_new_state)
 assert (2 == g_state_count)

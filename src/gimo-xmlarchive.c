@@ -22,7 +22,7 @@
 #include "gimo-error.h"
 #include "gimo-factory.h"
 #include "gimo-loader.h"
-#include "gimo-runtime.h"
+#include "gimo-plugin.h"
 #include "gimo-utils.h"
 #include <ctype.h>
 #include <expat.h>
@@ -707,7 +707,7 @@ GimoXmlArchive* gimo_xmlarchive_new (void)
     return g_object_new (GIMO_TYPE_XMLARCHIVE, NULL);
 }
 
-static gboolean _gimo_xmlarchive_runtime_start (GimoRuntime *self)
+static gboolean _gimo_xmlarchive_plugin_start (GimoPlugin *self)
 {
     GimoContext *context = NULL;
     GimoLoader *loader = NULL;
@@ -715,7 +715,7 @@ static gboolean _gimo_xmlarchive_runtime_start (GimoRuntime *self)
     gboolean result = FALSE;
 
     do {
-        context = gimo_runtime_query_context (self);
+        context = gimo_plugin_query_context (self);
         if (NULL == context)
             break;
 
@@ -742,9 +742,10 @@ static gboolean _gimo_xmlarchive_runtime_start (GimoRuntime *self)
     return result;
 }
 
-GIMO_DEFINE_RUNTIME_SYMBOL (
-    gimo_xmlarchive_plugin_new,
-    g_signal_connect (runtime,
+void gimo_xmlarchive_plugin (GimoPlugin *plugin)
+{
+    g_signal_connect (plugin,
                       "start",
-                      G_CALLBACK (_gimo_xmlarchive_runtime_start),
-                      NULL))
+                      G_CALLBACK (_gimo_xmlarchive_plugin_start),
+                      NULL);
+}

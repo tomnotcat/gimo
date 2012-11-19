@@ -81,6 +81,8 @@ typedef enum {
                      GIMO_LIST_ITEM)
 } GimoErrors;
 
+void gimo_trace_error (gboolean trace);
+
 void gimo_set_error (gint code);
 
 void gimo_set_error_string (gint code, const gchar *string);

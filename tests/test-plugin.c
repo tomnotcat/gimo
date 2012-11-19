@@ -28,6 +28,7 @@ struct _PluginInfo {
     const gchar *name;
     const gchar *version;
     const gchar *provider;
+    const gchar *path;
     const gchar *module;
     const gchar *symbol;
     GPtrArray *requires;
@@ -62,6 +63,7 @@ static void _test_plugin_info (const struct _PluginInfo *p)
                               p->name,
                               p->version,
                               p->provider,
+                              p->path,
                               p->module,
                               p->symbol,
                               p->requires,
@@ -71,6 +73,7 @@ static void _test_plugin_info (const struct _PluginInfo *p)
     g_assert (!strcmp (gimo_plugin_get_name (plugin), p->name));
     g_assert (!strcmp (gimo_plugin_get_version (plugin), p->version));
     g_assert (!strcmp (gimo_plugin_get_provider (plugin), p->provider));
+    g_assert (!strcmp (gimo_plugin_get_path (plugin), p->path));
     g_assert (!strcmp (gimo_plugin_get_module (plugin), p->module));
     g_assert (!strcmp (gimo_plugin_get_symbol (plugin), p->symbol));
     g_assert (_ptr_array_equal (p->requires,
@@ -89,6 +92,7 @@ int main (int argc, char *argv[])
                                "hello",
                                "1.0",
                                "tom",
+                               ".",
                                "mymodule",
                                "myplugin_new",
                                NULL,

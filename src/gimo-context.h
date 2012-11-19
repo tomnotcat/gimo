@@ -58,6 +58,7 @@ GType gimo_context_get_type (void) G_GNUC_CONST;
 GimoContext* gimo_context_new (void);
 
 gboolean gimo_context_install_plugin (GimoContext *self,
+                                      const gchar *path,
                                       GimoPlugin *plugin);
 
 void gimo_context_uninstall_plugin (GimoContext *self,
@@ -82,6 +83,8 @@ GPtrArray* gimo_context_query_extensions (GimoContext *self,
 gpointer gimo_context_resolve_extpoint (GimoContext *self,
                                         const gchar *extpt_id,
                                         GType type);
+
+void gimo_context_destroy (GimoContext *self);
 
 G_END_DECLS
 

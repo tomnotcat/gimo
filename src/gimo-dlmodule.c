@@ -62,6 +62,10 @@ static gboolean _gimo_dlmodule_close (GimoModule *module)
     if (NULL == priv->module)
         return TRUE;
 
+    /* NOTE: Don't close module, otherwise valgrind will
+     *       report memory leak. */
+    return FALSE;
+
     if (!g_module_close (priv->module)) {
         gimo_set_error_full (GIMO_ERROR_UNLOAD,
                              "Dlmodule: close module error: %s",
@@ -86,7 +90,8 @@ static const gchar* _gimo_dlmodule_get_name (GimoModule *module)
 
 static GObject* _gimo_dlmodule_resolve (GimoModule *module,
                                         const gchar *symbol,
-                                        GObject *param)
+                                        GObject *param,
+                                        gboolean has_return)
 {
     GimoDlmodule *self = GIMO_DLMODULE (module);
     GimoDlmodulePrivate *priv = self->priv;
@@ -112,6 +117,7 @@ static GObject* _gimo_dlmodule_resolve (GimoModule *module,
 static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
 {
     iface->load = (GimoLoadableLoadFunc) _gimo_dlmodule_open;
+    iface->unload = (GimoLoadableUnloadFunc) _gimo_dlmodule_close;
 }
 
 static void gimo_module_interface_init (GimoModuleInterface *iface)
@@ -136,10 +142,7 @@ static void gimo_dlmodule_init (GimoDlmodule *self)
 
 static void gimo_dlmodule_finalize (GObject *gobject)
 {
-    /* NOTE: Don't close module, otherwise valgrind will
-     *       report memory leak. */
-    if (0)
-        _gimo_dlmodule_close (GIMO_MODULE (gobject));
+    _gimo_dlmodule_close (GIMO_MODULE (gobject));
 
     G_OBJECT_CLASS (gimo_dlmodule_parent_class)->finalize (gobject);
 }

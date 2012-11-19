@@ -21,10 +21,16 @@
 #include "gimo-error.h"
 #include "gimo-intl.h"
 
+static gboolean trace_error;
 static gint error_code;
 static gchar *error_message;
 
 G_LOCK_DEFINE_STATIC (error_lock);
+
+void gimo_trace_error (gboolean trace)
+{
+    trace_error = trace;
+}
 
 void gimo_set_error (gint code)
 {
@@ -49,8 +55,14 @@ void gimo_set_error_full (gint code, const gchar *format, ...)
         g_free (error_message);
         error_message = g_strdup_vprintf (format, ap);
 
+        if (trace_error)
+            g_warning ("GimoError: %d: %s", error_code, error_message);
+
         G_UNLOCK (error_lock);
         va_end (ap);
+    }
+    else if (trace_error) {
+        g_warning ("GimoError: %d", error_code);
     }
 }
 

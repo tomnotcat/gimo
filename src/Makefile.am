@@ -7,22 +7,21 @@ libgimo_1_0_la_LDFLAGS = -version-info ${LT_VERSION_INFO} \
 libgimo_1_0_la_SOURCES_COMMON = gimo-types.h gimo-types.c \
 	gimo-enums.h gimo-enums.c gimo-error.h gimo-error.c \
 	gimo-context.h gimo-context.c gimo-plugin.h gimo-plugin.c \
-	gimo-require.h gimo-require.c gimo-runtime.h gimo-runtime.c \
-	gimo-extpoint.h gimo-extpoint.c gimo-extension.h gimo-extension.c \
-	gimo-loader.h gimo-loader.c gimo-factory.h gimo-factory.c \
-	gimo-loadable.h gimo-loadable.c gimo-module.h gimo-module.c \
-	gimo-dlmodule.h gimo-dlmodule.c gimo-archive.h gimo-archive.c \
-	gimo-xmlarchive.h gimo-xmlarchive.c gimo-marshal.h gimo-marshal.c \
-	gimo-utils.h gimo-utils.c gimo-extconfig.h gimo-extconfig.c
+	gimo-require.h gimo-require.c gimo-extpoint.h gimo-extpoint.c \
+	gimo-extension.h gimo-extension.c gimo-loader.h gimo-loader.c \
+	gimo-factory.h gimo-factory.c gimo-loadable.h gimo-loadable.c \
+	gimo-module.h gimo-module.c gimo-dlmodule.h gimo-dlmodule.c \
+	gimo-archive.h gimo-archive.c gimo-xmlarchive.h gimo-xmlarchive.c \
+	gimo-marshal.h gimo-marshal.c gimo-utils.h gimo-utils.c \
+	gimo-extconfig.h gimo-extconfig.c gimo-binding.h gimo-binding.c
 libgimo_1_0_la_SOURCES = ${libgimo_1_0_la_SOURCES_COMMON} gimo-intl.h
 
 gimoincludedir=$(includedir)/gimo-1.0
 gimoinclude_HEADERS = gimo-types.h gimo-enums.h gimo-error.h \
-	gimo-context.h gimo-plugin.h gimo-require.h gimo-runtime.h \
-	gimo-extpoint.h gimo-extension.h gimo-loader.h gimo-factory.h \
-	gimo-loadable.h gimo-module.h gimo-dlmodule.h gimo-archive.h \
-	gimo-xmlarchive.h gimo-marshal.h gimo-utils.h gimo-extconfig.h \
-	gimo.h
+	gimo-context.h gimo-plugin.h gimo-require.h gimo-extpoint.h \
+	gimo-extension.h gimo-loader.h gimo-factory.h gimo-loadable.h \
+	gimo-module.h gimo-dlmodule.h gimo-archive.h gimo-xmlarchive.h \
+	gimo-marshal.h gimo-utils.h gimo-extconfig.h gimo-binding.h gimo.h
 
 CLEANFILES =
 

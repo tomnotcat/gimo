@@ -140,11 +140,25 @@
 }
 
 {
-    gjs_gtype_create_gtype_wrapper
+     gjs_gtype_create_gtype_wrapper
+     Memcheck:Leak
+     ...
+     fun:g_realloc
+     fun:g_realloc_n
+     fun:g_type_set_qdata
+     fun:gjs_gtype_create_gtype_wrapper
+}
+
+{
+    libmozjs
     Memcheck:Leak
     ...
-    fun:g_realloc
-    fun:g_realloc_n
-    fun:g_type_set_qdata
-    fun:gjs_gtype_create_gtype_wrapper
+    obj:*libmozjs185.so*
+}
+
+{
+    gjs
+    Memcheck:Leak
+    ...
+    obj:*libgjs.so*
 }

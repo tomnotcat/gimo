@@ -65,6 +65,7 @@ const gchar* gimo_module_get_name (GimoModule *self)
  * @self: a #GimoModule
  * @symbol: the constructor symbol
  * @param: (allow-none): the parameter for constructor
+ * @has_return: whether the symbol has return value
  *
  * Resolve the symbol as an object constructor and create an object.
  *
@@ -74,9 +75,13 @@ const gchar* gimo_module_get_name (GimoModule *self)
  */
 GObject* gimo_module_resolve (GimoModule *self,
                               const gchar *symbol,
-                              GObject *param)
+                              GObject *param,
+                              gboolean has_return)
 {
     g_return_val_if_fail (GIMO_IS_MODULE (self), NULL);
 
-    return GIMO_MODULE_GET_IFACE (self)->resolve (self, symbol, param);
+    return GIMO_MODULE_GET_IFACE (self)->resolve (self,
+                                                  symbol,
+                                                  param,
+                                                  has_return);
 }

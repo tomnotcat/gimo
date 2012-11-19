@@ -46,6 +46,8 @@ struct _GimoPlugin {
 
 struct _GimoPluginClass {
     GObjectClass parent_class;
+    gboolean (*start) (GimoPlugin *self);
+    gboolean (*stop) (GimoPlugin *self);
 };
 
 GType gimo_plugin_get_type (void) G_GNUC_CONST;
@@ -54,6 +56,7 @@ GimoPlugin* gimo_plugin_new (const gchar *id,
                              const gchar *name,
                              const gchar *version,
                              const gchar *provider,
+                             const gchar *path,
                              const gchar *module,
                              const gchar *symbol,
                              GPtrArray *requires,
@@ -68,7 +71,7 @@ const gchar* gimo_plugin_get_version (GimoPlugin *self);
 
 const gchar* gimo_plugin_get_provider (GimoPlugin *self);
 
-const gchar* gimo_plugin_get_uri (GimoPlugin *self);
+const gchar* gimo_plugin_get_path (GimoPlugin *self);
 
 const gchar* gimo_plugin_get_module (GimoPlugin *self);
 
@@ -90,13 +93,17 @@ GimoPluginState gimo_plugin_get_state (GimoPlugin *self);
 
 GimoContext* gimo_plugin_query_context (GimoPlugin *self);
 
+gboolean gimo_plugin_define (GimoPlugin *self,
+                             const gchar *symbol,
+                             GObject *object);
+
+GObject* gimo_plugin_resolve (GimoPlugin *self,
+                              const gchar *symbol);
+
 gboolean gimo_plugin_start (GimoPlugin *self,
                             GimoLoader *loader);
 
 gboolean gimo_plugin_stop (GimoPlugin *self);
-
-GObject* gimo_plugin_resolve (GimoPlugin *self,
-                              const gchar *symbol);
 
 G_END_DECLS
 

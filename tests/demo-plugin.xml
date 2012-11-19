@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archive version="1.0">
+  <object class="GimoPlugin">
+    <id>org.gimo.test.plugin0</id>
+    <name>demo plugin1</name>
+    <version>0.1</version>
+    <provider>tomnotcat</provider>
+    <module>demo-plugin</module>
+    <symbol>demo_plugin</symbol>
+  </object>
+</archive>

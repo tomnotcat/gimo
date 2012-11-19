@@ -25,6 +25,7 @@ plugin = Gimo.Plugin.new ("test.plugin",
                           "myname",
                           "1.0",
                           "tomnotcat",
+                          ".",
                           "mymodule",
                           "mysymbol",
                           requires,
@@ -34,6 +35,7 @@ assert (plugin.get_id () == "test.plugin")
 assert (plugin.get_name () == "myname")
 assert (plugin.get_version () == "1.0")
 assert (plugin.get_provider () == "tomnotcat")
+assert (plugin.get_path () == ".")
 assert (plugin.get_module () == "mymodule")
 assert (len (plugin.get_requires ()) == len (requires))
 assert (len (plugin.get_extpoints ()) == len (extpoints))

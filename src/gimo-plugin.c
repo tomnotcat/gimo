@@ -23,15 +23,16 @@
  */
 
 #include "gimo-plugin.h"
+#include "gimo-binding.h"
 #include "gimo-context.h"
 #include "gimo-error.h"
 #include "gimo-extension.h"
 #include "gimo-extpoint.h"
 #include "gimo-loader.h"
+#include "gimo-marshal.h"
 #include "gimo-module.h"
 #include "gimo-plugin.h"
 #include "gimo-require.h"
-#include "gimo-runtime.h"
 #include "gimo-utils.h"
 #include <stdlib.h>
 
@@ -49,11 +50,6 @@ extern gint _gimo_extension_sort_by_id (gconstpointer a,
 extern gint _gimo_extension_search_by_id (gconstpointer a,
                                           gconstpointer b);
 
-extern void _gimo_runtime_setup (GimoRuntime *self,
-                                 GimoPlugin *plugin);
-extern void _gimo_runtime_teardown (GimoRuntime *self,
-                                    GimoPlugin *plugin);
-
 extern void _gimo_context_plugin_state_changed (GimoContext *self,
                                                 GimoPlugin *plugin,
                                                 GimoPluginState old_state,
@@ -62,17 +58,23 @@ extern void _gimo_context_plugin_state_changed (GimoContext *self,
 G_DEFINE_TYPE (GimoPlugin, gimo_plugin, G_TYPE_OBJECT)
 
 enum {
+    SIG_START,
+    SIG_STOP,
+    LAST_SIGNAL
+};
+
+enum {
     PROP_0,
     PROP_ID,
     PROP_NAME,
     PROP_VERSION,
     PROP_PROVIDER,
+    PROP_PATH,
     PROP_MODULE,
     PROP_SYMBOL,
     PROP_REQUIRES,
     PROP_EXTPOINTS,
-    PROP_EXTENSIONS,
-    PROP_RUNTIME
+    PROP_EXTENSIONS
 };
 
 struct _GimoPluginPrivate {
@@ -81,85 +83,101 @@ struct _GimoPluginPrivate {
     gchar *name;
     gchar *version;
     gchar *provider;
+    gchar *path;
     gchar *module;
     gchar *symbol;
     GPtrArray *requires;
     GPtrArray *extpoints;
     GPtrArray *extensions;
-    GimoModule *runtime_module;
-    GimoRuntime *runtime;
+    GimoModule *runtime;
     GimoPluginState state;
 };
 
 G_LOCK_DEFINE_STATIC (plugin_lock);
 
-static GimoRuntime* _gimo_plugin_load_runtime (GimoPlugin *self,
-                                               GimoContext *context,
-                                               GimoLoader *loader)
+static guint plugin_signals[LAST_SIGNAL] = { 0 };
+
+static gboolean _gimo_plugin_load_module (GimoPlugin *self,
+                                          GimoContext *context,
+                                          GimoLoader *loader)
 {
     GimoPluginPrivate *priv = self->priv;
-    const gchar *symbol;
+    GimoModule *module = NULL;
+    GimoLoadable *loadable = NULL;
 
-    if (NULL == priv->runtime_module) {
-        GimoModule *module;
-
-        if (loader) {
-            g_object_ref (loader);
-        }
-        else {
-            loader = gimo_context_resolve_extpoint (context,
-                                                    "org.gimo.core.loader.module",
-                                                    GIMO_TYPE_LOADER);
-            if (NULL == loader)
-                return NULL;
-        }
-
-        module = gimo_safe_cast (gimo_loader_load (loader, priv->module),
-                                 GIMO_TYPE_MODULE);
-        if (NULL == module) {
-            g_object_unref (loader);
-            return NULL;
-        }
-
-        G_LOCK (plugin_lock);
-
-        if (NULL == priv->runtime_module)
-            priv->runtime_module = module;
-        else
-            g_object_unref (module);
-
-        G_UNLOCK (plugin_lock);
-
-        g_object_unref (loader);
+    if (loader) {
+        g_object_ref (loader);
+    }
+    else {
+        loader = gimo_context_resolve_extpoint (context,
+                                                "org.gimo.core.loader.module",
+                                                GIMO_TYPE_LOADER);
+        if (NULL == loader)
+            return FALSE;
     }
 
-    symbol = priv->symbol;
+    if (priv->path) {
+        gchar *full_path;
 
-    if (NULL == symbol)
-        symbol = GIMO_RUNTIME_DEFAULT_SYMBOL_NAME;
+        full_path = g_build_filename (priv->path, priv->module, NULL);
+        loadable = gimo_loader_load (loader, full_path);
+        g_free (full_path);
+    }
 
-    return gimo_safe_cast (gimo_module_resolve (priv->runtime_module,
-                                                symbol,
-                                                G_OBJECT (self)),
-                           GIMO_TYPE_RUNTIME);
+    if (NULL == loadable)
+        loadable = gimo_loader_load (loader, priv->module);
+
+    g_object_unref (loader);
+
+    if (NULL == loadable)
+        return FALSE;
+
+    module = GIMO_MODULE (loadable);
+    if (NULL == module) {
+        g_object_unref (loadable);
+
+        gimo_set_error (GIMO_ERROR_INVALID_TYPE);
+        return FALSE;
+    }
+
+    G_LOCK (plugin_lock);
+
+    if (priv->runtime) {
+        G_UNLOCK (plugin_lock);
+        g_object_unref (module);
+        return TRUE;
+    }
+
+    priv->runtime = module;
+
+    G_UNLOCK (plugin_lock);
+
+    if (priv->symbol) {
+        gimo_module_resolve (priv->runtime,
+                             priv->symbol,
+                             G_OBJECT (self),
+                             FALSE);
+    }
+
+    return TRUE;
 }
 
-static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self,
-                                                GimoLoader *loader,
-                                                gboolean load)
+static GimoModule* _gimo_plugin_query_module (GimoPlugin *self,
+                                              GimoLoader *loader,
+                                              gboolean load)
 {
     GimoPluginPrivate *priv = self->priv;
     GimoContext *context;
-    GimoRuntime *runtime;
+    GimoModule *module;
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
 
     G_LOCK (plugin_lock);
 
     if (priv->runtime) {
-        runtime = g_object_ref (priv->runtime);
+        module = g_object_ref (priv->runtime);
         G_UNLOCK (plugin_lock);
-        return runtime;
+        return module;
     }
 
     G_UNLOCK (plugin_lock);
@@ -171,23 +189,20 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self,
     if (NULL == context)
         gimo_set_error_return_val (GIMO_ERROR_NO_OBJECT, NULL);
 
-    runtime = _gimo_plugin_load_runtime (self, context, loader);
-    if (NULL == runtime) {
+    if (!_gimo_plugin_load_module (self, context, loader)) {
         g_object_unref (context);
         gimo_set_error_return_val (GIMO_ERROR_LOAD, NULL);
     }
 
     G_LOCK (plugin_lock);
 
-    if (priv->runtime) {
-        g_object_unref (runtime);
-        runtime = g_object_ref (priv->runtime);
+    if (!priv->runtime) {
         G_UNLOCK (plugin_lock);
         g_object_unref (context);
-        return runtime;
+        return NULL;
     }
 
-    priv->runtime = g_object_ref (runtime);
+    module = g_object_ref (priv->runtime);
     priv->state = GIMO_PLUGIN_RESOLVED;
 
     G_UNLOCK (plugin_lock);
@@ -195,7 +210,7 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self,
     if (priv->requires) {
         GimoRequire *r;
         GimoPlugin *p;
-        GimoRuntime *rt;
+        GimoModule *m;
         const gchar *id;
         guint i;
 
@@ -207,20 +222,20 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self,
             if (NULL == p)
                 break;
 
-            rt = _gimo_plugin_query_runtime (p, loader, load);
+            m = _gimo_plugin_query_module (p, loader, load);
             g_object_unref (p);
 
-            if (NULL == rt)
+            if (NULL == m)
                 break;
 
-            g_object_unref (rt);
+            g_object_unref (m);
         }
 
         if (i < priv->requires->len) {
             G_LOCK (plugin_lock);
 
-            g_object_unref (runtime);
-            runtime = NULL;
+            g_object_unref (module);
+            module = NULL;
 
             g_object_unref (priv->runtime);
             priv->runtime = NULL;
@@ -231,9 +246,7 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self,
         }
     }
 
-    if (runtime) {
-        _gimo_runtime_setup (runtime, self);
-
+    if (module) {
         _gimo_context_plugin_state_changed (context,
                                             self,
                                             GIMO_PLUGIN_INSTALLED,
@@ -242,7 +255,28 @@ static GimoRuntime* _gimo_plugin_query_runtime (GimoPlugin *self,
 
     g_object_unref (context);
 
-    return runtime;
+    return module;
+}
+
+static gboolean _gimo_plugin_emit_signal (GimoPlugin *self,
+                                          guint signal_id)
+{
+    GValue param = { 0, };
+    GValue return_val = { 0, };
+    gboolean result;
+
+    g_value_init (&param, G_TYPE_OBJECT);
+    g_value_init (&return_val, G_TYPE_BOOLEAN);
+
+    g_value_set_object (&param, self);
+    g_value_set_boolean (&return_val, TRUE);
+    g_signal_emitv (&param, signal_id, 0, &return_val);
+
+    result = g_value_get_boolean (&return_val);
+
+    g_value_unset (&param);
+    g_value_unset (&return_val);
+    return result;
 }
 
 static void gimo_plugin_init (GimoPlugin *self)
@@ -259,12 +293,12 @@ static void gimo_plugin_init (GimoPlugin *self)
     priv->name = NULL;
     priv->version = NULL;
     priv->provider = NULL;
+    priv->path = NULL;
     priv->module = NULL;
     priv->symbol = NULL;
     priv->requires = NULL;
     priv->extpoints = NULL;
     priv->extensions = NULL;
-    priv->runtime_module = NULL;
     priv->runtime = NULL;
     priv->state = GIMO_PLUGIN_UNINSTALLED;
 }
@@ -274,14 +308,7 @@ static void gimo_plugin_finalize (GObject *gobject)
     GimoPlugin *self = GIMO_PLUGIN (gobject);
     GimoPluginPrivate *priv = self->priv;
 
-    g_assert (!priv->context);
-
-    g_free (priv->id);
-    g_free (priv->name);
-    g_free (priv->version);
-    g_free (priv->provider);
-    g_free (priv->module);
-    g_free (priv->symbol);
+    g_assert (!priv->context && !priv->runtime);
 
     if (priv->requires)
         g_ptr_array_unref (priv->requires);
@@ -300,13 +327,13 @@ static void gimo_plugin_finalize (GObject *gobject)
         g_ptr_array_unref (priv->extensions);
     }
 
-    if (priv->runtime) {
-        _gimo_runtime_teardown (priv->runtime, self);
-        g_object_unref (priv->runtime);
-    }
-
-    if (priv->runtime_module)
-        g_object_unref (priv->runtime_module);
+    g_free (priv->id);
+    g_free (priv->name);
+    g_free (priv->version);
+    g_free (priv->provider);
+    g_free (priv->path);
+    g_free (priv->module);
+    g_free (priv->symbol);
 
     G_OBJECT_CLASS (gimo_plugin_parent_class)->finalize (gobject);
 }
@@ -334,6 +361,10 @@ static void gimo_plugin_set_property (GObject *object,
 
     case PROP_PROVIDER:
         priv->provider = g_value_dup_string (value);
+        break;
+
+    case PROP_PATH:
+        priv->path = g_value_dup_string (value);
         break;
 
     case PROP_MODULE:
@@ -380,13 +411,6 @@ static void gimo_plugin_set_property (GObject *object,
         }
         break;
 
-    case PROP_RUNTIME:
-        priv->runtime = g_value_dup_object (value);
-
-        if (priv->runtime)
-            _gimo_runtime_setup (priv->runtime, self);
-        break;
-
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -418,6 +442,10 @@ static void gimo_plugin_get_property (GObject *object,
         g_value_set_string (value, priv->provider);
         break;
 
+    case PROP_PATH:
+        g_value_set_string (value, priv->path);
+        break;
+
     case PROP_MODULE:
         g_value_set_string (value, priv->module);
         break;
@@ -438,10 +466,6 @@ static void gimo_plugin_get_property (GObject *object,
         g_value_set_boxed (value, priv->extensions);
         break;
 
-    case PROP_RUNTIME:
-        g_value_set_object (value, priv->runtime);
-        break;
-
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -459,10 +483,31 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
     gobject_class->set_property = gimo_plugin_set_property;
     gobject_class->get_property = gimo_plugin_get_property;
 
+    klass->start = NULL;
+    klass->stop = NULL;
+
+    plugin_signals[SIG_START] =
+            g_signal_new ("start",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_LAST,
+                          G_STRUCT_OFFSET (GimoPluginClass, start),
+                          NULL, NULL,
+                          _gimo_marshal_BOOLEAN__VOID,
+                          G_TYPE_BOOLEAN, 0);
+
+    plugin_signals[SIG_STOP] =
+            g_signal_new ("stop",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_LAST,
+                          G_STRUCT_OFFSET (GimoPluginClass, stop),
+                          NULL, NULL,
+                          _gimo_marshal_BOOLEAN__VOID,
+                          G_TYPE_BOOLEAN, 0);
+
     g_object_class_install_property (
         gobject_class, PROP_ID,
         g_param_spec_string ("id",
-                             "Unique identifier",
+                             "Unique Identifier",
                              "The unique identifier of the plugin",
                              NULL,
                              G_PARAM_READABLE |
@@ -484,7 +529,7 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
     g_object_class_install_property (
         gobject_class, PROP_VERSION,
         g_param_spec_string ("version",
-                             "Plugin version",
+                             "Plugin Version",
                              "The version of the plugin",
                              NULL,
                              G_PARAM_READABLE |
@@ -504,9 +549,20 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
                              G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property (
+        gobject_class, PROP_PATH,
+        g_param_spec_string ("path",
+                             "Module Path",
+                             "The runtime module path",
+                             NULL,
+                             G_PARAM_READABLE |
+                             G_PARAM_WRITABLE |
+                             G_PARAM_CONSTRUCT_ONLY |
+                             G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property (
         gobject_class, PROP_MODULE,
         g_param_spec_string ("module",
-                             "Module name",
+                             "Module Name",
                              "The runtime module name",
                              NULL,
                              G_PARAM_READABLE |
@@ -557,17 +613,6 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
                             G_PARAM_WRITABLE |
                             G_PARAM_CONSTRUCT_ONLY |
                             G_PARAM_STATIC_STRINGS));
-
-    g_object_class_install_property (
-        gobject_class, PROP_RUNTIME,
-        g_param_spec_object ("runtime",
-                             "Runtime object",
-                             "The runtime object of this plugin",
-                             GIMO_TYPE_RUNTIME,
-                             G_PARAM_READABLE |
-                             G_PARAM_WRITABLE |
-                             G_PARAM_CONSTRUCT_ONLY |
-                             G_PARAM_STATIC_STRINGS));
 }
 
 /**
@@ -576,6 +621,7 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
  * @name: (allow-none): the display name
  * @version: (allow-none): the release version
  * @provider: (allow-none): the provider name
+ * @path: (allow-none): the runtime module path
  * @module: (allow-none): the runtime module name
  * @symbol: (allow-none): the runtime symbol name
  * @requires: (allow-none) (element-type Gimo.Require) (transfer none):
@@ -591,6 +637,7 @@ GimoPlugin* gimo_plugin_new (const gchar *id,
                              const gchar *name,
                              const gchar *version,
                              const gchar *provider,
+                             const gchar *path,
                              const gchar *module,
                              const gchar *symbol,
                              GPtrArray *requires,
@@ -602,6 +649,7 @@ GimoPlugin* gimo_plugin_new (const gchar *id,
                          "name", name,
                          "version", version,
                          "provider", provider,
+                         "path", path,
                          "module", module,
                          "symbol", symbol,
                          "requires", requires,
@@ -636,6 +684,13 @@ const gchar* gimo_plugin_get_provider (GimoPlugin *self)
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
 
     return self->priv->provider;
+}
+
+const gchar* gimo_plugin_get_path (GimoPlugin *self)
+{
+    g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
+
+    return self->priv->path;
 }
 
 const gchar* gimo_plugin_get_module (GimoPlugin *self)
@@ -796,41 +851,17 @@ GimoContext* gimo_plugin_query_context (GimoPlugin *self)
     return ctx;
 }
 
-gboolean gimo_plugin_start (GimoPlugin *self,
-                            GimoLoader *loader)
+gboolean gimo_plugin_define (GimoPlugin *self,
+                             const gchar *symbol,
+                             GObject *object)
 {
-    GimoRuntime *runtime;
-    gboolean result;
+    g_assert (G_OBJECT (self) != object);
 
-    g_return_val_if_fail (GIMO_IS_PLUGIN (self), FALSE);
-
-    runtime = _gimo_plugin_query_runtime (self, loader, TRUE);
-    if (NULL == runtime)
+    if (gimo_lookup_object (G_OBJECT (self), symbol))
         return FALSE;
 
-    result = gimo_runtime_start (runtime);
-
-    g_object_unref (runtime);
-
-    return result;
-}
-
-gboolean gimo_plugin_stop (GimoPlugin *self)
-{
-    GimoRuntime *runtime;
-    gboolean result;
-
-    g_return_val_if_fail (GIMO_IS_PLUGIN (self), FALSE);
-
-    runtime = _gimo_plugin_query_runtime (self, NULL, FALSE);
-    if (NULL == runtime)
-        return FALSE;
-
-    result = gimo_runtime_stop (runtime);
-
-    g_object_unref (runtime);
-
-    return result;
+    gimo_bind_object (G_OBJECT (self), symbol, object);
+    return TRUE;
 }
 
 /**
@@ -845,32 +876,118 @@ gboolean gimo_plugin_stop (GimoPlugin *self)
 GObject* gimo_plugin_resolve (GimoPlugin *self,
                               const gchar *symbol)
 {
-    GimoRuntime *runtime;
+    GimoModule *module;
     GObject *object = NULL;
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
 
-    runtime = _gimo_plugin_query_runtime (self, NULL, TRUE);
-    if (NULL == runtime)
+    object = gimo_query_object (G_OBJECT (self), symbol);
+    if (object)
+        return object;
+
+    module = _gimo_plugin_query_module (self, NULL, TRUE);
+    if (NULL == module)
         return NULL;
 
-    object = gimo_runtime_resolve (runtime, symbol);
-
-    g_object_unref (runtime);
+    object = gimo_module_resolve (module,
+                                  symbol,
+                                  G_OBJECT (self),
+                                  TRUE);
+    g_object_unref (module);
 
     return object;
 }
 
+gboolean gimo_plugin_start (GimoPlugin *self,
+                            GimoLoader *loader)
+{
+    GimoPluginPrivate *priv;
+    GimoModule *module;
+    gboolean result;
+
+    g_return_val_if_fail (GIMO_IS_PLUGIN (self), FALSE);
+
+    priv = self->priv;
+
+    if (GIMO_PLUGIN_ACTIVE == priv->state)
+        return TRUE;
+
+    module = _gimo_plugin_query_module (self, loader, TRUE);
+    if (NULL == module)
+        return FALSE;
+
+    result = _gimo_plugin_emit_signal (self,
+                                       plugin_signals [SIG_START]);
+
+    g_object_unref (module);
+
+    if (result)
+        priv->state = GIMO_PLUGIN_ACTIVE;
+
+    return result;
+}
+
+gboolean gimo_plugin_stop (GimoPlugin *self)
+{
+    GimoPluginPrivate *priv;
+    GimoModule *module;
+    gboolean result;
+
+    g_return_val_if_fail (GIMO_IS_PLUGIN (self), FALSE);
+
+    priv = self->priv;
+
+    if (priv->state != GIMO_PLUGIN_ACTIVE &&
+        priv->state != GIMO_PLUGIN_STARTING)
+    {
+        return TRUE;
+    }
+
+    module = _gimo_plugin_query_module (self, NULL, FALSE);
+    if (NULL == module)
+        return FALSE;
+
+    result = _gimo_plugin_emit_signal (self,
+                                       plugin_signals [SIG_STOP]);
+
+    g_object_unref (module);
+
+    if (result)
+        priv->state = GIMO_PLUGIN_RESOLVED;
+
+    return result;
+}
+
 void _gimo_plugin_install (GimoPlugin *self,
-                           GimoContext *context)
+                           GimoContext *context,
+                           const gchar *cur_path)
 {
     GimoPluginPrivate *priv = self->priv;
 
     g_assert (NULL == priv->context);
 
     G_LOCK (plugin_lock);
+
     priv->context = context;
     priv->state = GIMO_PLUGIN_INSTALLED;
+
+    if (cur_path) {
+        gchar *full_path;
+
+        if (priv->path) {
+            full_path = g_build_path (G_DIR_SEPARATOR_S,
+                                      cur_path,
+                                      priv->path,
+                                      NULL);
+            g_free (priv->path);
+        }
+        else {
+            full_path = g_strdup (cur_path);
+        }
+
+        priv->path = full_path;
+    }
+
     G_UNLOCK (plugin_lock);
 }
 
@@ -879,7 +996,14 @@ void _gimo_plugin_uninstall (GimoPlugin *self)
     GimoPluginPrivate *priv = self->priv;
 
     G_LOCK (plugin_lock);
+
+    if (priv->runtime) {
+        g_object_unref (priv->runtime);
+        priv->runtime = NULL;
+    }
+
     priv->context = NULL;
     priv->state = GIMO_PLUGIN_UNINSTALLED;
+
     G_UNLOCK (plugin_lock);
 }

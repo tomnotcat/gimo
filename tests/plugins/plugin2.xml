@@ -2,18 +2,13 @@
 <archive version="1.0">
   <object class="GimoPlugin">
     <id>org.gimo.test.plugin2</id>
-    <requires class="GimoRequire">
-      <require plugin="org.gimo.test.plugin1"
-               version="1.0" optional="TRUE"/>
-    </requires>
-    <extensions class="GimoExtension">
-      <extension id="ext1" name="extension 1"
-                 point="org.gimo.test.plugin1.extpt1">
-        <configs class="GimoExtConfig">
-          <config name="config1" value="value1"/>
-          <config name="config2" value="value2"/>
-        </configs>
-      </extension>
-    </extensions>
+    <name>test plugin2</name>
+    <version>0.1</version>
+    <provider>tomnotcat</provider>
+    <module>plugin2.py</module>
+    <symbol>symbol1</symbol>
+    <extpoints class="GimoExtPoint">
+      <extpoint id="extpt1" name="extension point 1"/>
+    </extpoints>
   </object>
 </archive>

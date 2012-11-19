@@ -22,9 +22,10 @@
 #include "gimo-error.h"
 #include "gimo-factory.h"
 #include "gimo-loader.h"
-#include "gimo-runtime.h"
+#include "gimo-plugin.h"
 
 #include <gi/object.h>
+#include <gi/value.h>
 #include <gjs/gjs.h>
 #include <gjs/gjs-module.h>
 
@@ -100,13 +101,16 @@ static const gchar* _gimo_jsmodule_get_name (GimoModule *module)
 
 static GObject* _gimo_jsmodule_resolve (GimoModule *module,
                                         const gchar *symbol,
-                                        GObject *param)
+                                        GObject *param,
+                                        gboolean has_return)
 {
     GimoJsmodule *self = GIMO_JSMODULE (module);
     GimoJsmodulePrivate *priv = self->priv;
     JSContext *js_ctx = NULL;
     jsval function;
+    jsval arg;
     jsval rval;
+    GValue garg = G_VALUE_INIT;
     JSObject *object = NULL;
     JSObject *global = NULL;
     GObject *result = NULL;
@@ -125,14 +129,42 @@ static GObject* _gimo_jsmodule_resolve (GimoModule *module,
         return NULL;
     }
 
+    g_value_init (&garg, G_TYPE_OBJECT);
+    g_value_set_object (&garg, param);
+    gjs_value_from_g_value (js_ctx, &arg, &garg);
+
+    JS_BeginRequest (js_ctx);
+
+    if (JS_IsExceptionPending(js_ctx)) {
+        g_warning ("Exception was pending before invoking callback??? "
+                   "Not expected");
+
+        gjs_log_exception(js_ctx, NULL);
+    }
+
     if (!gjs_call_function_value (
-            js_ctx, global, function, 0, NULL, &rval))
+            js_ctx, global, function, 1, &arg, &rval))
     {
+        if (!gjs_log_exception (js_ctx, NULL))
+            g_warning ("Function invocation failed but no exception was set?");
+
+        JS_EndRequest (js_ctx);
+        g_value_unset (&garg);
+
         gimo_set_error_full (GIMO_ERROR_INVALID_SYMBOL,
                              "Call JS function failed: %s: %s",
                              priv->name, symbol);
         return NULL;
     }
+
+    if (gjs_log_exception (js_ctx, NULL))
+        g_warning ("Function invocation succeeded but an exception was set");
+
+    JS_EndRequest (js_ctx);
+    g_value_unset (&garg);
+
+    if (!has_return)
+        return NULL;
 
     if (JSVAL_VOID == rval) {
         gimo_set_error_full (GIMO_ERROR_INVALID_RETURN,
@@ -159,6 +191,7 @@ static GObject* _gimo_jsmodule_resolve (GimoModule *module,
 static void gimo_loadable_interface_init (GimoLoadableInterface *iface)
 {
     iface->load = (GimoLoadableLoadFunc) _gimo_jsmodule_open;
+    iface->unload = (GimoLoadableUnloadFunc) _gimo_jsmodule_close;
 }
 
 static void gimo_module_interface_init (GimoModuleInterface *iface)
@@ -204,7 +237,7 @@ GimoJsmodule* gimo_jsmodule_new (void)
     return g_object_new (GIMO_TYPE_JSMODULE, NULL);
 }
 
-static gboolean _gimo_jsmodule_runtime_start (GimoRuntime *self)
+static gboolean _gimo_jsmodule_plugin_start (GimoPlugin *self)
 {
     GimoContext *context = NULL;
     GimoLoader *loader = NULL;
@@ -212,7 +245,7 @@ static gboolean _gimo_jsmodule_runtime_start (GimoRuntime *self)
     gboolean result = FALSE;
 
     do {
-        context = gimo_runtime_query_context (self);
+        context = gimo_plugin_query_context (self);
         if (NULL == context)
             break;
 
@@ -239,8 +272,10 @@ static gboolean _gimo_jsmodule_runtime_start (GimoRuntime *self)
     return result;
 }
 
-GIMO_DEFINE_RUNTIME_DEFAULT_SYMBOL (
-    g_signal_connect (runtime,
+void gimo_jsmodule_plugin (GimoPlugin *plugin)
+{
+    g_signal_connect (plugin,
                       "start",
-                      G_CALLBACK (_gimo_jsmodule_runtime_start),
-                      NULL))
+                      G_CALLBACK (_gimo_jsmodule_plugin_start),
+                      NULL);
+}

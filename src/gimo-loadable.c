@@ -45,3 +45,17 @@ gboolean gimo_loadable_load (GimoLoadable *self,
 
     return GIMO_LOADABLE_GET_IFACE (self)->load (self, file_name);
 }
+
+gboolean gimo_loadable_unload (GimoLoadable *self)
+{
+    GimoLoadableInterface *iface;
+
+    g_return_val_if_fail (GIMO_IS_LOADABLE (self), FALSE);
+
+    iface = GIMO_LOADABLE_GET_IFACE (self);
+
+    if (iface->unload)
+        return iface->unload (self);
+
+    return FALSE;
+}

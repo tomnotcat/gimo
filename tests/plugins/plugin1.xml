@@ -5,7 +5,7 @@
     <name>test plugin1</name>
     <version>0.1</version>
     <provider>tomnotcat</provider>
-    <module>plugin1</module>
+    <module>plugin1.js</module>
     <symbol>symbol1</symbol>
     <extpoints class="GimoExtPoint">
       <extpoint id="extpt1" name="extension point 1"/>

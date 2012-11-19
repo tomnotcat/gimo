@@ -36,17 +36,21 @@ typedef struct _GimoLoadableInterface GimoLoadableInterface;
 
 typedef gboolean (*GimoLoadableLoadFunc) (GimoLoadable *self,
                                           const gchar *file_name);
+typedef gboolean (*GimoLoadableUnloadFunc) (GimoLoadable *self);
 
 struct _GimoLoadableInterface {
     GTypeInterface base_iface;
     gboolean (*load) (GimoLoadable *self,
                       const gchar *file_name);
+    gboolean (*unload) (GimoLoadable *self);
 };
 
 GType gimo_loadable_get_type (void) G_GNUC_CONST;
 
 gboolean gimo_loadable_load (GimoLoadable *self,
                              const gchar *file_name);
+
+gboolean gimo_loadable_unload (GimoLoadable *self);
 
 G_END_DECLS
 

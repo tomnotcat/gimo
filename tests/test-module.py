@@ -20,7 +20,7 @@ factory = Gimo.Factory.new (dlmodule_new, "hello")
 assert (loader.register (None, factory))
 module = loader.load ("demo-plugin")
 assert (module)
-plugin = module.resolve ("test_plugin_new", None)
+plugin = module.resolve ("test_plugin_new", None, True)
 assert (plugin)
 
 # Python module

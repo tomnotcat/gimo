@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "config.h"
+#include "gimo-binding.h"
 #include "gimo-context.h"
 #include "gimo-error.h"
 #include "gimo-extpoint.h"
@@ -68,10 +69,10 @@ static void _test_context_common (void)
     extpt = gimo_ext_point_new ("extpt1", "extptname1");
     g_ptr_array_add (array, extpt);
     plugin = gimo_plugin_new ("test.plugin1", NULL, NULL, NULL,
-                              NULL, NULL, NULL, array, NULL);
+                              NULL, NULL, NULL, NULL, array, NULL);
     g_ptr_array_unref (array);
     g_assert (!gimo_context_query_plugin (context, "test.plugin1"));
-    g_assert (gimo_context_install_plugin (context, plugin));
+    g_assert (gimo_context_install_plugin (context, NULL, plugin));
     g_assert (gimo_context_query_plugin (context, "test.plugin1") == plugin);
     g_object_unref (plugin);
     g_object_unref (plugin);
@@ -80,13 +81,13 @@ static void _test_context_common (void)
     g_assert (1 == param.count);
 
     plugin = gimo_plugin_new ("test.plugin1", NULL, NULL, NULL,
-                              NULL, NULL, NULL, NULL, NULL);
-    g_assert (!gimo_context_install_plugin (context, plugin));
+                              NULL, NULL, NULL, NULL, NULL, NULL);
+    g_assert (!gimo_context_install_plugin (context, NULL, plugin));
     g_assert (gimo_get_error () == GIMO_ERROR_CONFLICT);
     g_object_unref (plugin);
     plugin = gimo_plugin_new ("test.plugin2", NULL, NULL, NULL,
-                              NULL, NULL, NULL, NULL, NULL);
-    g_assert (gimo_context_install_plugin (context, plugin));
+                              NULL, NULL, NULL, NULL, NULL, NULL);
+    g_assert (gimo_context_install_plugin (context, NULL, plugin));
     g_assert (GIMO_PLUGIN_UNINSTALLED == param.old_state);
     g_assert (GIMO_PLUGIN_INSTALLED == param.new_state);
     g_assert (2 == param.count);
@@ -119,52 +120,116 @@ static void _test_context_common (void)
     g_assert (3 == param.count);
 }
 
-static void _test_context_load_plugin (void)
+static void _test_context_dlplugin (void)
 {
     GimoContext *context;
-    GimoLoader *loader;
 
     context = gimo_context_new ();
     g_assert (gimo_context_load_plugin (context,
-                                        "plugins/plugin1.xml",
+                                        "demo-plugin.xml",
                                         NULL,
                                         FALSE) == 1);
     g_object_unref (context);
+
+    context = gimo_context_new ();
+
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_start"));
+
+    g_assert (gimo_context_load_plugin (context,
+                                        "demo-plugin.xml",
+                                        NULL,
+                                        TRUE) == 1);
+
+    g_assert (gimo_lookup_string (G_OBJECT (context), "dl_start"));
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_stop"));
+
+    g_assert (gimo_context_load_plugin (context,
+                                        "demo-plugin.xml",
+                                        NULL,
+                                        FALSE) == 0);
+    gimo_context_destroy (context);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "dl_stop"));
+    g_object_unref (context);
+}
+
+static void _test_context_jsplugin (void)
+{
+    GimoContext *context;
 
     context = gimo_context_new ();
     g_assert (gimo_context_load_plugin (context,
                                         "plugins",
                                         NULL,
                                         FALSE) == 2);
+    g_object_unref (context);
 
-    loader = gimo_context_resolve_extpoint (context,
-                                            "org.gimo.core.loader.module",
-                                            GIMO_TYPE_LOADER);
-    g_assert (loader);
-
-    g_assert (!gimo_loader_load (loader, "demo-plugin.py"));
-    g_assert (!gimo_loader_load (loader, "demo-plugin.js"));
+    context = gimo_context_new ();
 
 #ifdef HAVE_INTROSPECTION
-    {
-        GimoLoadable *module;
+    g_assert (gimo_context_load_plugin (context,
+                                        TEST_MODULE_PATH "/jsmodule-1.0.xml",
+                                        NULL,
+                                        TRUE) == 1);
 
-        g_assert (gimo_context_load_plugin (context,
-                                            TEST_MODULE_PATH,
-                                            NULL,
-                                            TRUE) == 2);
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "js_start"));
 
-        module = gimo_loader_load (loader, "demo-plugin.py");
-        g_assert (module);
-        g_object_unref (module);
+    g_assert (gimo_context_load_plugin (context,
+                                        "plugins/plugin1.xml",
+                                        NULL,
+                                        TRUE) == 1);
 
-        module = gimo_loader_load (loader, "demo-plugin.js");
-        g_assert (module);
-        g_object_unref (module);
-    }
-#endif /* HAVE_INTROSPECTION */
+    g_assert (gimo_lookup_string (G_OBJECT (context), "js_start"));
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "js_stop"));
 
-    g_object_unref (loader);
+#else  /* !HAVE_INTROSPECTION */
+    g_assert (gimo_context_load_plugin (context,
+                                        "plugins/plugin1.xml",
+                                        NULL,
+                                        FALSE) == 1);
+#endif /* !HAVE_INTROSPECTION */
+
+    gimo_context_destroy (context);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "js_stop"));
+    g_object_unref (context);
+}
+
+static void _test_context_pyplugin (void)
+{
+#ifdef HAVE_INTROSPECTION
+    GimoContext *context;
+
+    context = gimo_context_new ();
+
+    g_setenv ("PYTHONPATH", ".:plugins", 1);
+
+    g_assert (gimo_context_load_plugin (context,
+                                        TEST_MODULE_PATH "/pymodule-1.0.xml",
+                                        NULL,
+                                        TRUE) == 1);
+
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "py_start"));
+
+    g_assert (gimo_context_load_plugin (context,
+                                        "plugins/plugin2.xml",
+                                        NULL,
+                                        TRUE) == 1);
+
+    g_assert (gimo_lookup_string (G_OBJECT (context), "py_start"));
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "py_stop"));
+
+#else  /* !HAVE_INTROSPECTION */
+    g_assert (gimo_context_load_plugin (context,
+                                        "plugins/plugin2.xml",
+                                        NULL,
+                                        FALSE) == 1);
+#endif /* !HAVE_INTROSPECTION */
+
+    g_assert (gimo_context_load_plugin (context,
+                                        "plugins",
+                                        NULL,
+                                        FALSE) == 1);
+    gimo_context_destroy (context);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "py_stop"));
     g_object_unref (context);
 }
 
@@ -174,7 +239,9 @@ int main (int argc, char *argv[])
     g_thread_init (NULL);
 
     _test_context_common ();
-    _test_context_load_plugin ();
+    _test_context_dlplugin ();
+    _test_context_jsplugin ();
+    _test_context_pyplugin ();
 
     return 0;
 }
