@@ -22,6 +22,8 @@
 #include "gimo-factory.h"
 #include "gimo-loader.h"
 #include "gimo-plugin.h"
+#undef  _POSIX_C_SOURCE
+#include </usr/include/python2.7/Python.h>
 
 static void test_module_common (gboolean cached)
 {

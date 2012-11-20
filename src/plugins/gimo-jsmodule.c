@@ -23,15 +23,28 @@
 #include "gimo-factory.h"
 #include "gimo-loader.h"
 #include "gimo-plugin.h"
+#include "gimo-utils.h"
 
 #include <gi/object.h>
 #include <gi/value.h>
 #include <gjs/gjs.h>
 #include <gjs/gjs-module.h>
 
+enum {
+    PROP_0,
+    PROP_CONTEXT
+};
+
 struct _GimoJsmodulePrivate {
-    GjsContext *context;
+    GimoJsmoduleContext *context;
+    GjsContext *gjsctx;
     gchar *name;
+};
+
+struct _GimoJsmoduleContext {
+    GjsContext *gjsctx;
+    gint ref_count;
+    gint gjs_ref_count;
 };
 
 static void gimo_loadable_interface_init (GimoLoadableInterface *iface);
@@ -43,6 +56,49 @@ G_DEFINE_TYPE_WITH_CODE (GimoJsmodule, gimo_jsmodule, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (GIMO_TYPE_MODULE,
                                                 gimo_module_interface_init))
 
+static GimoJsmoduleContext* _gimo_jsmodule_context_new (void)
+{
+    GimoJsmoduleContext *self;
+
+    self = g_malloc (sizeof *self);
+    self->gjsctx = NULL;
+    self->ref_count = 1;
+    self->gjs_ref_count = 0;
+
+    return self;
+}
+
+static void _gimo_jsmodule_context_ref (GimoJsmoduleContext *self)
+{
+    g_atomic_int_add (&self->ref_count, 1);
+}
+
+static void _gimo_jsmodule_context_unref (gpointer p)
+{
+    GimoJsmoduleContext *self = p;
+
+    if (g_atomic_int_add (&self->ref_count, -1) == 1) {
+        g_assert (0 == self->gjs_ref_count);
+        g_free (self);
+    }
+}
+
+static GjsContext* _gimo_jsmodule_context_acquire (GimoJsmoduleContext *self)
+{
+    if (g_atomic_int_add (&self->gjs_ref_count, 1) == 0)
+        self->gjsctx = gjs_context_new ();
+    else
+        g_object_ref (self->gjsctx);
+
+    return self->gjsctx;
+}
+
+static void _gimo_jsmodule_context_release (GimoJsmoduleContext *self)
+{
+    g_object_unref (self->gjsctx);
+    g_atomic_int_add (&self->gjs_ref_count, -1);
+}
+
 static gboolean _gimo_jsmodule_open (GimoModule *module,
                                      const gchar *file_name)
 {
@@ -51,11 +107,11 @@ static gboolean _gimo_jsmodule_open (GimoModule *module,
     GError *error = NULL;
     int status = 0;
 
-    if (priv->context)
+    if (priv->gjsctx)
         gimo_set_error_return_val (GIMO_ERROR_CONFLICT, FALSE);
 
-    priv->context = gjs_context_new ();
-    if (!gjs_context_eval_file (priv->context,
+    priv->gjsctx = _gimo_jsmodule_context_acquire (priv->context);
+    if (!gjs_context_eval_file (priv->gjsctx,
                                 file_name,
                                 &status,
                                 &error))
@@ -64,14 +120,14 @@ static gboolean _gimo_jsmodule_open (GimoModule *module,
                              "Eval JS failed: %s: %s",
                              file_name, error->message);
         g_error_free (error);
-        g_object_unref (priv->context);
-        priv->context = NULL;
+        _gimo_jsmodule_context_release (priv->context);
+        priv->gjsctx = NULL;
     }
 
-    if (priv->context)
+    if (priv->gjsctx)
         priv->name = g_strdup (file_name);
 
-    return (priv->context != NULL);
+    return (priv->gjsctx != NULL);
 }
 
 static gboolean _gimo_jsmodule_close (GimoModule *module)
@@ -79,9 +135,9 @@ static gboolean _gimo_jsmodule_close (GimoModule *module)
     GimoJsmodule *self = GIMO_JSMODULE (module);
     GimoJsmodulePrivate *priv = self->priv;
 
-    if (priv->context) {
-        g_object_unref (priv->context);
-        priv->context = NULL;
+    if (priv->gjsctx) {
+        _gimo_jsmodule_context_release (priv->context);
+        priv->gjsctx = NULL;
     }
 
     if (priv->name) {
@@ -115,10 +171,10 @@ static GObject* _gimo_jsmodule_resolve (GimoModule *module,
     JSObject *global = NULL;
     GObject *result = NULL;
 
-    if (!priv->context)
+    if (!priv->gjsctx)
         return NULL;
 
-    js_ctx = gjs_context_get_native_context (priv->context);
+    js_ctx = gjs_context_get_native_context (priv->gjsctx);
     global = JS_GetGlobalObject (js_ctx);
 
     JS_GetProperty (js_ctx, global, symbol, &function);
@@ -211,15 +267,42 @@ static void gimo_jsmodule_init (GimoJsmodule *self)
                                               GimoJsmodulePrivate);
     priv = self->priv;
 
-    priv->context = NULL;
     priv->name = NULL;
 }
 
 static void gimo_jsmodule_finalize (GObject *gobject)
 {
+    GimoJsmodule *self = GIMO_JSMODULE (gobject);
+    GimoJsmodulePrivate *priv = self->priv;
+
     _gimo_jsmodule_close (GIMO_MODULE (gobject));
+    _gimo_jsmodule_context_unref (priv->context);
 
     G_OBJECT_CLASS (gimo_jsmodule_parent_class)->finalize (gobject);
+}
+
+static void gimo_jsmodule_set_property (GObject *object,
+                                        guint prop_id,
+                                        const GValue *value,
+                                        GParamSpec *pspec)
+{
+    GimoJsmodule *self = GIMO_JSMODULE (object);
+    GimoJsmodulePrivate *priv = self->priv;
+
+    switch (prop_id) {
+    case PROP_CONTEXT:
+        priv->context = g_value_get_pointer (value);
+
+        if (priv->context)
+            _gimo_jsmodule_context_ref (priv->context);
+        else
+            priv->context = _gimo_jsmodule_context_new ();
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
 }
 
 static void gimo_jsmodule_class_init (GimoJsmoduleClass *klass)
@@ -227,36 +310,63 @@ static void gimo_jsmodule_class_init (GimoJsmoduleClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
     gobject_class->finalize = gimo_jsmodule_finalize;
+    gobject_class->set_property = gimo_jsmodule_set_property;
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoJsmodulePrivate));
+
+    g_object_class_install_property (
+        gobject_class, PROP_CONTEXT,
+        g_param_spec_pointer ("context",
+                              "GJS context",
+                              "The GJS context",
+                              G_PARAM_WRITABLE |
+                              G_PARAM_CONSTRUCT_ONLY |
+                              G_PARAM_STATIC_STRINGS));
 }
 
-GimoJsmodule* gimo_jsmodule_new (void)
+GimoJsmodule* gimo_jsmodule_new (GimoJsmoduleContext *context)
 {
-    return g_object_new (GIMO_TYPE_JSMODULE, NULL);
+    return g_object_new (GIMO_TYPE_JSMODULE,
+                         "context", context, NULL);
 }
 
 static gboolean _gimo_jsmodule_plugin_start (GimoPlugin *self)
 {
+    static GQuark gjsctx_quark;
     GimoContext *context = NULL;
     GimoLoader *loader = NULL;
     GimoFactory *factory = NULL;
+    GimoJsmoduleContext *gjsctx = NULL;
     gboolean result = FALSE;
+
+    if (!gjsctx_quark)
+        gjsctx_quark = g_quark_from_static_string ("gimo_jsmodule_context");
 
     do {
         context = gimo_plugin_query_context (self);
         if (NULL == context)
             break;
 
-        loader = gimo_context_resolve_extpoint (context,
-                                                "org.gimo.core.loader.module",
-                                                GIMO_TYPE_LOADER);
+        loader = gimo_safe_cast (
+            gimo_context_resolve_extpoint (
+                context, "org.gimo.core.loader.module"),
+            GIMO_TYPE_LOADER);
+
         if (NULL == loader)
             break;
 
-        factory = gimo_factory_new ((GimoFactoryFunc) gimo_jsmodule_new,
-                                    NULL);
+        gjsctx = g_object_get_qdata (G_OBJECT (context), gjsctx_quark);
+        if (!gjsctx) {
+            gjsctx = _gimo_jsmodule_context_new ();
+
+            g_object_set_qdata_full (G_OBJECT (context),
+                                     gjsctx_quark,
+                                     gjsctx,
+                                     _gimo_jsmodule_context_unref);
+        }
+
+        factory = gimo_factory_new ((GimoFactoryFunc) gimo_jsmodule_new, gjsctx);
         result = gimo_loader_register (loader, "js", factory);
     } while (0);
 

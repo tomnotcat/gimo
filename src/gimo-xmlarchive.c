@@ -719,9 +719,11 @@ static gboolean _gimo_xmlarchive_plugin_start (GimoPlugin *self)
         if (NULL == context)
             break;
 
-        loader = gimo_context_resolve_extpoint (context,
-                                                "org.gimo.core.loader.archive",
-                                                GIMO_TYPE_LOADER);
+        loader = gimo_safe_cast (
+            gimo_context_resolve_extpoint (
+                context, "org.gimo.core.loader.archive"),
+            GIMO_TYPE_LOADER);
+
         if (NULL == loader)
             break;
 

@@ -38,6 +38,7 @@ G_BEGIN_DECLS
     (G_TYPE_INSTANCE_GET_CLASS((obj), GIMO_TYPE_JSMODULE, GimoJsmoduleClass))
 
 typedef struct _GimoJsmodule GimoJsmodule;
+typedef struct _GimoJsmoduleContext GimoJsmoduleContext;
 typedef struct _GimoJsmodulePrivate GimoJsmodulePrivate;
 typedef struct _GimoJsmoduleClass GimoJsmoduleClass;
 
@@ -52,7 +53,7 @@ struct _GimoJsmoduleClass {
 
 GType gimo_jsmodule_get_type (void) G_GNUC_CONST;
 
-GimoJsmodule* gimo_jsmodule_new (void);
+GimoJsmodule* gimo_jsmodule_new (GimoJsmoduleContext *context);
 
 G_END_DECLS
 

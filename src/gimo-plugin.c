@@ -109,9 +109,11 @@ static gboolean _gimo_plugin_load_module (GimoPlugin *self,
         g_object_ref (loader);
     }
     else {
-        loader = gimo_context_resolve_extpoint (context,
-                                                "org.gimo.core.loader.module",
-                                                GIMO_TYPE_LOADER);
+        loader = gimo_safe_cast (
+            gimo_context_resolve_extpoint (
+                context, "org.gimo.core.loader.module"),
+            GIMO_TYPE_LOADER);
+
         if (NULL == loader)
             return FALSE;
     }

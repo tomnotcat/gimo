@@ -260,13 +260,12 @@ static void gimo_context_finalize (GObject *gobject)
 {
     GimoContext *self = GIMO_CONTEXT (gobject);
     GimoContextPrivate *priv = self->priv;
-    GimoLoader *loader;
+    GObject *loader;
 
     /* Hold a reference to the module loader, so it will
      * be destroyed after all other plugins. */
     loader = gimo_context_resolve_extpoint (self,
-                                            "org.gimo.core.loader.module",
-                                            GIMO_TYPE_LOADER);
+                                            "org.gimo.core.loader.module");
     g_tree_unref (priv->plugins);
     g_mutex_clear (&priv->mutex);
     g_object_unref (loader);
@@ -400,15 +399,19 @@ guint gimo_context_load_plugin (GimoContext *self,
     if (!g_file_test (file_path, G_FILE_TEST_EXISTS))
         gimo_set_error_return_val (GIMO_ERROR_NO_FILE, FALSE);
 
-    aloader = gimo_context_resolve_extpoint (self,
-                                             "org.gimo.core.loader.archive",
-                                             GIMO_TYPE_LOADER);
+    aloader = gimo_safe_cast (
+        gimo_context_resolve_extpoint (
+            self, "org.gimo.core.loader.archive"),
+        GIMO_TYPE_LOADER);
+
     if (NULL == aloader)
         goto done;
 
-    mloader = gimo_context_resolve_extpoint (self,
-                                             "org.gimo.core.loader.module",
-                                             GIMO_TYPE_LOADER);
+    mloader = gimo_safe_cast (
+        gimo_context_resolve_extpoint (
+            self, "org.gimo.core.loader.module"),
+        GIMO_TYPE_LOADER);
+
     if (NULL == mloader)
         goto done;
 
@@ -653,17 +656,15 @@ GPtrArray* gimo_context_query_extensions (GimoContext *self,
  * gimo_context_resolve_extpoint:
  * @self: a #GimoContext
  * @extpt_id: the extension point ID
- * @type: the object type
  *
  * Resolve an extension point.
  *
- * Returns: (type GObject.Object) (allow-none) (transfer full):
+ * Returns: (allow-none) (transfer full):
  *          A #GObject if successful, %NULL on error. Free the
  *          returned object with g_object_unref().
  */
-gpointer gimo_context_resolve_extpoint (GimoContext *self,
-                                        const gchar *extpt_id,
-                                        GType type)
+GObject* gimo_context_resolve_extpoint (GimoContext *self,
+                                        const gchar *extpt_id)
 {
     GimoExtPoint *extpt = NULL;
     GimoPlugin *plugin = NULL;
@@ -688,7 +689,7 @@ done:
     if (plugin)
         g_object_unref (plugin);
 
-    return gimo_safe_cast (object, type);
+    return object;
 }
 
 void gimo_context_destroy (GimoContext *self)
@@ -705,9 +706,11 @@ void gimo_context_destroy (GimoContext *self)
         g_ptr_array_unref (array);
     }
 
-    loader = gimo_context_resolve_extpoint (self,
-                                            "org.gimo.core.loader.module",
-                                            GIMO_TYPE_LOADER);
+    loader = gimo_safe_cast (
+        gimo_context_resolve_extpoint (
+            self, "org.gimo.core.loader.module"),
+        GIMO_TYPE_LOADER);
+
     array = gimo_loader_query_cached (loader);
 
     if (array) {

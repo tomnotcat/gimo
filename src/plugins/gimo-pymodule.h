@@ -38,6 +38,7 @@ G_BEGIN_DECLS
     (G_TYPE_INSTANCE_GET_CLASS((obj), GIMO_TYPE_PYMODULE, GimoPymoduleClass))
 
 typedef struct _GimoPymodule GimoPymodule;
+typedef struct _GimoPymoduleState GimoPymoduleState;
 typedef struct _GimoPymodulePrivate GimoPymodulePrivate;
 typedef struct _GimoPymoduleClass GimoPymoduleClass;
 
@@ -52,7 +53,7 @@ struct _GimoPymoduleClass {
 
 GType gimo_pymodule_get_type (void) G_GNUC_CONST;
 
-GimoPymodule* gimo_pymodule_new (void);
+GimoPymodule* gimo_pymodule_new (GimoPymoduleState *state);
 
 G_END_DECLS
 

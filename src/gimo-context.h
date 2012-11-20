@@ -80,9 +80,8 @@ GimoExtPoint* gimo_context_query_extpoint (GimoContext *self,
 GPtrArray* gimo_context_query_extensions (GimoContext *self,
                                           const gchar *extpt_id);
 
-gpointer gimo_context_resolve_extpoint (GimoContext *self,
-                                        const gchar *extpt_id,
-                                        GType type);
+GObject* gimo_context_resolve_extpoint (GimoContext *self,
+                                        const gchar *extpt_id);
 
 void gimo_context_destroy (GimoContext *self);
 
