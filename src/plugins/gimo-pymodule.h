@@ -48,7 +48,6 @@ struct _GimoPymodule {
 
 struct _GimoPymoduleClass {
     GObjectClass parent_class;
-    gint instance_count;
 };
 
 GType gimo_pymodule_get_type (void) G_GNUC_CONST;

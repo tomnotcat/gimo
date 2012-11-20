@@ -147,7 +147,7 @@ static void _test_context_dlplugin (void)
                                         "demo-plugin.xml",
                                         NULL,
                                         FALSE) == 0);
-    gimo_context_stop_all (context);
+    gimo_context_destroy (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "dl_stop"));
     g_object_unref (context);
 }
@@ -188,7 +188,7 @@ static void _test_context_jsplugin (void)
                                         FALSE) == 1);
 #endif /* !HAVE_INTROSPECTION */
 
-    gimo_context_stop_all (context);
+    gimo_context_destroy (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "js_stop"));
     g_object_unref (context);
 }
@@ -199,8 +199,6 @@ static void _test_context_pyplugin (void)
     GimoContext *context;
 
     context = gimo_context_new ();
-
-    g_setenv ("PYTHONPATH", ".:plugins", 1);
 
     g_assert (gimo_context_load_plugin (context,
                                         TEST_MODULE_PATH "/pymodule-1.0.xml",
@@ -228,7 +226,7 @@ static void _test_context_pyplugin (void)
                                         "plugins",
                                         NULL,
                                         FALSE) == 1);
-    gimo_context_stop_all (context);
+    gimo_context_destroy (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "py_stop"));
     g_object_unref (context);
 }

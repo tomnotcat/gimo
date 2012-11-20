@@ -148,17 +148,3 @@
      fun:g_type_set_qdata
      fun:gjs_gtype_create_gtype_wrapper
 }
-
-{
-    libmozjs
-    Memcheck:Leak
-    ...
-    obj:*libmozjs185.so*
-}
-
-{
-    gjs
-    Memcheck:Leak
-    ...
-    obj:*libgjs.so*
-}

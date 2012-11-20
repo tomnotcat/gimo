@@ -48,29 +48,53 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
     GimoPymodule *self = GIMO_PYMODULE (module);
     GimoPymodulePrivate *priv = self->priv;
     gchar *path;
+    gchar *name;
+    gchar *split;
     gchar *suffix;
 
     if (priv->module)
         gimo_set_error_return_val (GIMO_ERROR_CONFLICT, FALSE);
 
     path = g_strdup (file_name);
+    name = path;
+
     suffix = strrchr (path, '.');
     if (suffix)
         *suffix = '\0';
 
-    priv->module = PyImport_ImportModule (path);
+    split = strchr (path, '/');
+#ifdef G_OS_WIN32
+    if (NULL== split)
+        split = strchr (name, '\\');
+#endif
+
+    if (split) {
+        gchar *code;
+
+        *split = '\0';
+        name = split + 1;
+
+        code = g_strdup_printf ("import sys; sys.path.append (\"%s\")", path);
+        PyRun_SimpleString (code);
+        g_free (code);
+    }
+
+    priv->module = PyImport_ImportModule (name);
     if (NULL == priv->module) {
         gimo_set_error_full (GIMO_ERROR_LOAD,
                              "Import python module error: %s",
-                             path);
+                             name);
         goto fail;
     }
 
 fail:
+    if (split)
+        PyRun_SimpleString ("sys.path.pop ()");
+
     if (priv->module)
-        priv->name = path;
-    else
-        g_free (path);
+        priv->name = g_strdup (file_name);
+
+    g_free (path);
 
     return (priv->module != NULL);
 }
@@ -105,9 +129,9 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
                                         GObject *param,
                                         gboolean has_return)
 {
+    static PyObject *gobject_module = NULL;
     GimoPymodule *self = GIMO_PYMODULE (module);
     GimoPymodulePrivate *priv = self->priv;
-    PyObject *gobject_module = NULL;
     PyObject *func = NULL;
     PyObject *args = NULL;
     PyObject *arg0 = NULL;
@@ -132,7 +156,7 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
         goto done;
     }
 
-    gobject_module = pygobject_init (0, 0, 0);
+    gobject_module = pygobject_init (3, 0, 0);
     args = PyTuple_New (1);
     arg0 = pygobject_new (param);
     PyTuple_SetItem (args, 0, arg0);
@@ -182,7 +206,6 @@ static void gimo_module_interface_init (GimoModuleInterface *iface)
 static void gimo_pymodule_init (GimoPymodule *self)
 {
     GimoPymodulePrivate *priv;
-    GimoPymoduleClass *klass;
 
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               GIMO_TYPE_PYMODULE,
@@ -191,26 +214,11 @@ static void gimo_pymodule_init (GimoPymodule *self)
 
     priv->module = NULL;
     priv->name = NULL;
-
-    klass = GIMO_PYMODULE_GET_CLASS (self);
-
-    if (g_atomic_int_add (&klass->instance_count, 1) == 0) {
-        g_setenv ("PYTHONPATH", ".", 0);
-        Py_Initialize ();
-    }
 }
 
 static void gimo_pymodule_finalize (GObject *gobject)
 {
-    GimoPymoduleClass *klass;
-
     _gimo_pymodule_close (GIMO_MODULE (gobject));
-
-    klass = GIMO_PYMODULE_GET_CLASS (gobject);
-
-    if (g_atomic_int_add (&klass->instance_count, -1) == 1) {
-        Py_Finalize ();
-    }
 
     G_OBJECT_CLASS (gimo_pymodule_parent_class)->finalize (gobject);
 }
@@ -223,7 +231,8 @@ static void gimo_pymodule_class_init (GimoPymoduleClass *klass)
 
     g_type_class_add_private (gobject_class,
                               sizeof (GimoPymodulePrivate));
-    klass->instance_count = 0;
+
+    Py_Initialize ();
 }
 
 GimoPymodule* gimo_pymodule_new (void)
