@@ -94,6 +94,13 @@ void gimo_bind_object (GObject *object,
     G_LOCK (binding_lock);
 
     if (data) {
+        if (object == data) {
+            G_UNLOCK (binding_lock);
+
+            g_warning ("Can't binding object to itself");
+            return;
+        }
+
         d = g_malloc (sizeof *d);
         d->data = g_object_ref (data);
         d->is_object = TRUE;

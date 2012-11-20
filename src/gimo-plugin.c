@@ -855,8 +855,6 @@ gboolean gimo_plugin_define (GimoPlugin *self,
                              const gchar *symbol,
                              GObject *object)
 {
-    g_assert (G_OBJECT (self) != object);
-
     if (gimo_lookup_object (G_OBJECT (self), symbol))
         return FALSE;
 

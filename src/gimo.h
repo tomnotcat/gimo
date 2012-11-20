@@ -26,7 +26,6 @@
 #include <gimo-context.h>
 #include <gimo-plugin.h>
 #include <gimo-require.h>
-#include <gimo-runtime.h>
 #include <gimo-extpoint.h>
 #include <gimo-extension.h>
 #include <gimo-loader.h>
