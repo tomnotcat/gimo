@@ -64,9 +64,13 @@ const gchar* gimo_extension_get_name (GimoExtension *self);
 const gchar* gimo_extension_get_extpoint_id (GimoExtension *self);
 
 GimoExtConfig* gimo_extension_get_config (GimoExtension *self,
-                                          const gchar *name);
+                                          const gchar *name_space);
 
-GPtrArray* gimo_extension_get_configs (GimoExtension *self);
+const gchar* gimo_extension_get_config_value (GimoExtension *self,
+                                              const gchar *name_space);
+
+GPtrArray* gimo_extension_get_configs (GimoExtension *self,
+                                       const gchar *name_space);
 
 GimoPlugin* gimo_extension_query_plugin (GimoExtension *self);
 

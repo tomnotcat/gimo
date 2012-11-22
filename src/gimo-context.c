@@ -35,7 +35,6 @@
 #include "gimo-plugin.h"
 #include "gimo-require.h"
 #include "gimo-utils.h"
-#include <string.h>
 
 extern void _gimo_plugin_install (GimoPlugin *self,
                                   GimoContext *context,
@@ -141,27 +140,22 @@ static gboolean _gimo_context_query_extensions (gpointer key,
     struct _QueryExtension *param = data;
     GPtrArray *exts;
     GimoExtension *ext;
+    guint i;
 
-    exts = gimo_plugin_get_extensions (plugin);
-    if (exts) {
-        guint i;
+    exts = gimo_plugin_query_extensions (plugin,
+                                         param->extpt_id);
+    if (NULL == exts)
+        return FALSE;
 
-        for (i = 0; i < exts->len; ++i) {
-            ext = g_ptr_array_index (exts, i);
-            if (strcmp (gimo_extension_get_extpoint_id (ext),
-                        param->extpt_id) == 0)
-            {
-                if (NULL == param->array) {
-                    param->array = g_ptr_array_new_with_free_func (
-                        g_object_unref);
-                }
+    if (NULL == param->array)
+        param->array = g_ptr_array_new_with_free_func (g_object_unref);
 
-                g_ptr_array_add (param->array,
-                                 g_object_ref (ext));
-            }
-        }
+    for (i = 0; i < exts->len; ++i) {
+        ext = g_ptr_array_index (exts, i);
+        g_ptr_array_add (param->array, g_object_ref (ext));
     }
 
+    g_ptr_array_unref (exts);
     return FALSE;
 }
 

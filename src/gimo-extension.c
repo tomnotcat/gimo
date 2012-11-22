@@ -217,6 +217,15 @@ static void gimo_extension_class_init (GimoExtensionClass *klass)
                             G_PARAM_STATIC_STRINGS));
 }
 
+/**
+ * gimo_extension_new:
+ * @id: the local extension ID
+ * @name: (allow-none): the display name
+ * @point: the extension point ID
+ * @configs: (allow-none): the configurations
+ *
+ * Create a extension descriptor with the provided parameters.
+ */
 GimoExtension* gimo_extension_new (const gchar *id,
                                    const gchar *name,
                                    const gchar *point,
@@ -261,16 +270,20 @@ const gchar* gimo_extension_get_extpoint_id (GimoExtension *self)
 /**
  * gimo_extension_get_config:
  * @self: a #GimoExtension
- * @name: the configuration name
+ * @name_space: the configuration namespace
  *
  * Get a configuration with the specified name.
  *
  * Returns: (allow-none) (transfer none): a #GimoExtConfig
  */
 GimoExtConfig* gimo_extension_get_config (GimoExtension *self,
-                                          const gchar *name)
+                                          const gchar *name_space)
 {
     GimoExtensionPrivate *priv;
+    gchar *full = NULL;
+    gchar *next;
+    const gchar *name;
+    GimoExtConfig *temp;
     GimoExtConfig **result;
 
     g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
@@ -280,29 +293,71 @@ GimoExtConfig* gimo_extension_get_config (GimoExtension *self,
     if (NULL == priv->configs)
         return NULL;
 
+    next = strchr (name_space, '.');
+    if (next) {
+        full = g_strdup (name_space);
+        name = full;
+        next = full + (next - name_space);
+        *next = '\0';
+        ++next;
+    }
+    else {
+        name = name_space;
+    }
+
     result = bsearch (name,
                       priv->configs->pdata,
                       priv->configs->len,
                       sizeof (gpointer),
                       _gimo_ext_config_search_by_name);
 
+    if (result && next) {
+        temp = gimo_ext_config_get_config (*result, next);
+        result = &temp;
+    }
+
+    g_free (full);
     return result ? *result : NULL;
+}
+
+const gchar* gimo_extension_get_config_value (GimoExtension *self,
+                                              const gchar *name_space)
+{
+    GimoExtConfig *config;
+
+    config = gimo_extension_get_config (self, name_space);
+
+    return config ? gimo_ext_config_get_value (config) : NULL;
 }
 
 /**
  * gimo_extension_get_configs:
  * @self: a #GimoExtension
+ * @name_space: (allow-none): the configurations namespace
  *
  * Get the configurations of the extension.
  *
  * Returns: (element-type Gimo.ExtConfig) (transfer none):
  *          the configurations list.
  */
-GPtrArray* gimo_extension_get_configs (GimoExtension *self)
+GPtrArray* gimo_extension_get_configs (GimoExtension *self,
+                                       const gchar *name_space)
 {
+    GimoExtensionPrivate *priv;
+    GimoExtConfig *config;
+
     g_return_val_if_fail (GIMO_IS_EXTENSION (self), NULL);
 
-    return self->priv->configs;
+    priv = self->priv;
+
+    if (NULL == name_space)
+        return priv->configs;
+
+    config = gimo_extension_get_config (self, name_space);
+    if (NULL == config)
+        return NULL;
+
+    return gimo_ext_config_get_configs (config);
 }
 
 /**

@@ -17,6 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include "gimo-extconfig.h"
 #include "gimo-extension.h"
 #include "gimo-extpoint.h"
 #include "gimo-plugin.h"
@@ -101,6 +102,8 @@ int main (int argc, char *argv[])
     GimoRequire *req;
     GimoExtPoint *extpt;
     GimoExtension *ext;
+    GimoExtConfig *cfg;
+    GPtrArray *cfgs;
 
     g_type_init ();
     g_thread_init (NULL);
@@ -147,7 +150,42 @@ int main (int argc, char *argv[])
     /* extensions */
     info.extensions = g_ptr_array_new_with_free_func (g_object_unref);
 
-    ext = gimo_extension_new ("ext1", "name2", "extp2", NULL);
+    cfgs = g_ptr_array_new_with_free_func (g_object_unref);
+    cfg = gimo_ext_config_new ("sub1", "subval1", NULL);
+    g_ptr_array_add (cfgs, cfg);
+    cfg = gimo_ext_config_new ("sub2", "subval2", NULL);
+    g_ptr_array_add (cfgs, cfg);
+    cfg = gimo_ext_config_new ("cfg1", "cfgval1", cfgs);
+    g_ptr_array_unref (cfgs);
+    cfgs = g_ptr_array_new_with_free_func (g_object_unref);
+    g_ptr_array_add (cfgs, cfg);
+    cfg = gimo_ext_config_new ("cfg2", "cfgval2", NULL);
+    g_ptr_array_add (cfgs, cfg);
+
+    ext = gimo_extension_new ("ext1", "name2", "extp2", cfgs);
+    g_ptr_array_unref (cfgs);
+
+    g_assert (gimo_extension_get_config (ext, "cfg1"));
+    g_assert (gimo_extension_get_config (ext, "cfg1.sub1"));
+    g_assert (gimo_extension_get_config (ext, "cfg1.sub2"));
+    g_assert (gimo_extension_get_config (ext, "cfg2"));
+    g_assert (!gimo_extension_get_config (ext, "cfg2.sub1"));
+    g_assert (!gimo_extension_get_config (ext, "cfg3"));
+    cfgs = gimo_extension_get_configs (ext, NULL);
+    g_assert (cfgs && 2 == cfgs->len);
+    cfgs = gimo_extension_get_configs (ext, "cfg1");
+    g_assert (cfgs && 2 == cfgs->len);
+    g_assert (!gimo_extension_get_configs (ext, "cfg2"));
+    g_assert (!strcmp (gimo_extension_get_config_value (ext, "cfg1"),
+                       "cfgval1"));
+    g_assert (!strcmp (gimo_extension_get_config_value (ext, "cfg2"),
+                       "cfgval2"));
+    g_assert (!strcmp (gimo_extension_get_config_value (ext, "cfg1.sub1"),
+                       "subval1"));
+    g_assert (!strcmp (gimo_extension_get_config_value (ext, "cfg1.sub2"),
+                       "subval2"));
+    g_assert (!gimo_extension_get_config_value (ext, "cfg3"));
+
     g_ptr_array_add (info.extensions, ext);
     g_assert (!strcmp (gimo_extension_get_local_id (ext), "ext1"));
     g_assert (!strcmp (gimo_extension_get_name (ext), "name2"));

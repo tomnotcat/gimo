@@ -51,11 +51,17 @@ struct _GimoExtConfigClass {
 GType gimo_ext_config_get_type (void) G_GNUC_CONST;
 
 GimoExtConfig* gimo_ext_config_new (const gchar *name,
-                                    const gchar *value);
+                                    const gchar *value,
+                                    GPtrArray *configs);
 
 const gchar* gimo_ext_config_get_name (GimoExtConfig *self);
 
 const gchar* gimo_ext_config_get_value (GimoExtConfig *self);
+
+GimoExtConfig* gimo_ext_config_get_config (GimoExtConfig *self,
+                                           const gchar *name_space);
+
+GPtrArray* gimo_ext_config_get_configs (GimoExtConfig *self);
 
 G_END_DECLS
 

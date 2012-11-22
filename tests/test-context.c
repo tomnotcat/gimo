@@ -123,6 +123,7 @@ static void _test_context_common (void)
 static void _test_context_dlplugin (void)
 {
     GimoContext *context;
+    GPtrArray *exts;
 
     context = gimo_context_new ();
     g_assert (gimo_context_load_plugin (context,
@@ -139,6 +140,18 @@ static void _test_context_dlplugin (void)
                                         "demo-plugin.xml",
                                         NULL,
                                         TRUE) == 1);
+
+    exts = gimo_context_query_extensions (context,
+                                          "org.oren.test.extension1");
+    g_assert (exts && 2 == exts->len);
+    g_ptr_array_unref (exts);
+    exts = gimo_context_query_extensions (context,
+                                          "org.oren.test.extension2");
+    g_assert (exts && 1 == exts->len);
+    g_ptr_array_unref (exts);
+    exts = gimo_context_query_extensions (context,
+                                          "org.oren.test.extension3");
+    g_assert (!exts);
 
     g_assert (gimo_lookup_string (G_OBJECT (context), "dl_start"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_stop"));

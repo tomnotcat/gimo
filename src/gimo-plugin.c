@@ -35,6 +35,7 @@
 #include "gimo-require.h"
 #include "gimo-utils.h"
 #include <stdlib.h>
+#include <string.h>
 
 extern void _gimo_ext_point_setup (gpointer data, gpointer user_data);
 extern void _gimo_ext_point_teardown (gpointer data, gpointer user_data);
@@ -633,7 +634,7 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
  * @extensions: (allow-none) (element-type Gimo.Extension) (transfer none):
  *              the extensions
  *
- * Create a plugin descriptor of the provided parameters.
+ * Create a plugin descriptor with the provided parameters.
  */
 GimoPlugin* gimo_plugin_new (const gchar *id,
                              const gchar *name,
@@ -819,11 +820,44 @@ GPtrArray* gimo_plugin_get_extensions (GimoPlugin *self)
     return self->priv->extensions;
 }
 
-GimoPluginState gimo_plugin_get_state (GimoPlugin *self)
+/**
+ * gimo_plugin_query_extensions:
+ * @self: a #GimoPlugin
+ * @extpt_id: the extension point ID
+ *
+ * Query the specified extensions in this plugin.
+ *
+ * Returns: (element-type Gimo.Extension) (transfer container):
+ *          An #GPtrArray of extensions if successful, %NULL on error.
+ *          Free the returned array with g_ptr_array_unref().
+ */
+GPtrArray* gimo_plugin_query_extensions (GimoPlugin *self,
+                                         const gchar *extpt_id)
 {
-    g_return_val_if_fail (GIMO_IS_PLUGIN (self), GIMO_PLUGIN_UNINSTALLED);
+    GimoPluginPrivate *priv;
+    GimoExtension *ext;
+    GPtrArray *result = NULL;
+    guint i;
 
-    return self->priv->state;
+    g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
+
+    priv = self->priv;
+
+    if (NULL == priv->extensions)
+        return NULL;
+
+    for (i = 0; i < priv->extensions->len; ++i) {
+        ext = g_ptr_array_index (priv->extensions, i);
+
+        if (!strcmp (gimo_extension_get_extpoint_id (ext), extpt_id)) {
+            if (NULL == result)
+                result = g_ptr_array_new_with_free_func (g_object_unref);
+
+            g_ptr_array_add (result, g_object_ref (ext));
+        }
+    }
+
+    return result;
 }
 
 /**
@@ -851,6 +885,13 @@ GimoContext* gimo_plugin_query_context (GimoPlugin *self)
     G_UNLOCK (plugin_lock);
 
     return ctx;
+}
+
+GimoPluginState gimo_plugin_get_state (GimoPlugin *self)
+{
+    g_return_val_if_fail (GIMO_IS_PLUGIN (self), GIMO_PLUGIN_UNINSTALLED);
+
+    return self->priv->state;
 }
 
 gboolean gimo_plugin_define (GimoPlugin *self,

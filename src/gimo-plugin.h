@@ -89,9 +89,12 @@ GPtrArray* gimo_plugin_get_extpoints (GimoPlugin *self);
 
 GPtrArray* gimo_plugin_get_extensions (GimoPlugin *self);
 
-GimoPluginState gimo_plugin_get_state (GimoPlugin *self);
+GPtrArray* gimo_plugin_query_extensions (GimoPlugin *self,
+                                         const gchar *extpt_id);
 
 GimoContext* gimo_plugin_query_context (GimoPlugin *self);
+
+GimoPluginState gimo_plugin_get_state (GimoPlugin *self);
 
 gboolean gimo_plugin_define (GimoPlugin *self,
                              const gchar *symbol,

@@ -49,7 +49,7 @@ ext = info.get_extension ("ext1");
 assert (ext);
 assert (ext.get_name () == "extension 1")
 assert (ext.get_extpoint_id () == "org.gimo.test.plugin1.extpt1")
-assert (len (ext.get_configs ()) == 2)
+assert (len (ext.get_configs (None)) == 2)
 assert (ext.get_config ("config1").get_value () == "value1")
 assert (ext.get_config ("config2").get_value () == "value2")
 
