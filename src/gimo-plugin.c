@@ -990,7 +990,6 @@ gboolean gimo_plugin_stop (GimoPlugin *self)
 
     result = _gimo_plugin_emit_signal (self,
                                        plugin_signals [SIG_STOP]);
-
     g_object_unref (module);
 
     if (result)

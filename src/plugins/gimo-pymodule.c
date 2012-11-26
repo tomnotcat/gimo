@@ -123,6 +123,10 @@ static void _gimo_pymodule_state_unref (gpointer p)
                 main_thread_state = NULL;
                 Py_Finalize ();
             }
+
+            PyEval_AcquireLock ();
+            PyThreadState_Clear (main_thread_state);
+            PyEval_ReleaseLock ();
         }
     }
 }
@@ -262,13 +266,13 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
     arg0 = pygobject_new (param);
     PyTuple_SetItem (args, 0, arg0);
     value = PyObject_CallObject (func, args);
-    Py_DECREF (arg0);
-    Py_DECREF (args);
+    Py_XDECREF (arg0);
+    Py_XDECREF (args);
 
     if (!has_return)
         goto done;
 
-    if (NULL == value) {
+    if (NULL == value || value == Py_None) {
         gimo_set_error_full (GIMO_ERROR_INVALID_RETURN,
                              "Function return NULL: %s: %s",
                              priv->name, symbol);
@@ -281,7 +285,10 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
 
 done:
     Py_XDECREF (func);
-    Py_XDECREF (value);
+
+    if (value && value != Py_None)
+        Py_DECREF (value);
+
     Py_XDECREF (gobject_module);
 
     if (PyErr_Occurred ())
