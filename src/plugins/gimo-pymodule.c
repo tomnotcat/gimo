@@ -152,10 +152,10 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
     if (suffix)
         *suffix = '\0';
 
-    split = strchr (path, '/');
+    split = strrchr (path, '/');
 #ifdef G_OS_WIN32
     if (NULL== split)
-        split = strchr (name, '\\');
+        split = strrchr (name, '\\');
 #endif
 
     PyEval_AcquireLock ();

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os
+import os, sys
 from gi.repository import Gimo
 
 # Common
@@ -18,7 +18,7 @@ assert (len (ar.query_objects ()) == 0)
 
 # Xml read
 archive = Gimo.XmlArchive ()
-assert (archive.read ("demo-archive2.xml"))
+assert (archive.read (sys.path[0] + "/demo-archive2.xml"))
 
 info = archive.query_object ("plugin1")
 assert (info)

@@ -22,8 +22,6 @@
 #include "gimo-factory.h"
 #include "gimo-loader.h"
 #include "gimo-plugin.h"
-#undef  _POSIX_C_SOURCE
-#include </usr/include/python2.7/Python.h>
 
 static void test_module_common (gboolean cached)
 {
@@ -51,21 +49,21 @@ static void test_module_common (gboolean cached)
     g_ptr_array_unref (paths);
 
     /* Dynamic library */
-    g_assert (!gimo_loader_load (loader, "demo-plugin"));
+    g_assert (!gimo_loader_load (loader, "demo-plugin.so"));
     factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
     g_assert (gimo_loader_register (loader,
                                     NULL,
                                     factory));
     g_object_unref (factory);
-    module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin"));
+    module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin.so"));
 
     if (cached) {
-        g_assert (gimo_loader_load (loader, "demo-plugin") ==
+        g_assert (gimo_loader_load (loader, "demo-plugin.so") ==
                   GIMO_LOADABLE (module));
         g_object_unref (module);
     }
     else {
-        GimoLoadable *m2 = gimo_loader_load (loader, "demo-plugin");
+        GimoLoadable *m2 = gimo_loader_load (loader, "demo-plugin.so");
         g_assert (m2 != GIMO_LOADABLE (module));
         g_object_unref (m2);
     }
@@ -83,14 +81,14 @@ static void test_module_common (gboolean cached)
     if (!cached) {
         gimo_loader_remove_paths (loader, g_getenv ("GIMO_PLUGIN_PATH"));
         g_assert (gimo_loader_dup_paths (loader) == NULL);
-        g_assert (!gimo_loader_load (loader, "pymodule-1.0"));
+        g_assert (!gimo_loader_load (loader, "pymodule-1.0.so"));
         g_object_unref (loader);
         return;
     }
 
     /* Python module */
     g_assert (!gimo_loader_load (loader, "demo-plugin.py"));
-    module = GIMO_MODULE (gimo_loader_load (loader, "pymodule-1.0"));
+    module = GIMO_MODULE (gimo_loader_load (loader, "pymodule-1.0.so"));
     g_assert (module);
     gmodule = _gimo_dlmodule_get_gmodule (GIMO_DLMODULE (module));
     g_assert (gmodule);
@@ -113,7 +111,7 @@ static void test_module_common (gboolean cached)
 
     /* JavaScript module */
     g_assert (!gimo_loader_load (loader, "demo-plugin.js"));
-    module = GIMO_MODULE (gimo_loader_load (loader, "jsmodule-1.0"));
+    module = GIMO_MODULE (gimo_loader_load (loader, "jsmodule-1.0.so"));
     g_assert (module);
     gmodule = _gimo_dlmodule_get_gmodule (GIMO_DLMODULE (module));
     g_assert (gmodule);

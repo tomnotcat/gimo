@@ -18,20 +18,20 @@ assert (paths[3] + ":" +
         paths[0] == os.getenv ("GIMO_PLUGIN_PATH"))
 
 # Dynamic library
-assert (loader.load ("demo-plugin") == None)
+assert (loader.load ("demo-plugin.so") == None)
 factory = Gimo.Factory.new (dlmodule_new, "hello")
 assert (loader.register (None, factory))
-module = loader.load ("demo-plugin")
+module = loader.load ("demo-plugin.so")
 assert (module)
 plugin = module.resolve ("test_plugin_new", None, True)
 assert (plugin)
 
 # Python module
 assert (loader.load ("demo-plugin.py") == None)
-module = loader.load ("pymodule-1.0");
+module = loader.load ("pymodule-1.0.so");
 assert (module)
 
 # JavaScript module
 assert (loader.load ("demo-plugin.js") == None)
-module = loader.load ("jsmodule-1.0");
+module = loader.load ("jsmodule-1.0.so");
 assert (module)

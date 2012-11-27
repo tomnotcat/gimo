@@ -19,6 +19,7 @@
  */
 #include "gimo-loader.h"
 #include "gimo-dlmodule.h"
+#include "gimo-error.h"
 #include "gimo-factory.h"
 #include "gimo-loadable.h"
 #include "gimo-utils.h"
@@ -126,6 +127,9 @@ static GimoLoadable* _gimo_loader_load_file (GPtrArray *loaders,
     GimoLoadable *object = NULL;
     struct _FactoryInfo *info;
     guint i;
+
+    if (file_name && !g_file_test (file_name, G_FILE_TEST_EXISTS))
+        gimo_set_error_return_val (GIMO_ERROR_NO_FILE, NULL);
 
     for (i = 0; i < loaders->len; ++i) {
         info = g_ptr_array_index (loaders, i);

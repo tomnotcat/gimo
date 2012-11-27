@@ -497,7 +497,8 @@ static void _test_archive_xml (void)
     GIMO_REGISTER_TYPE (TEST_TYPE_CONFIG);
 
     archive = GIMO_ARCHIVE (gimo_xmlarchive_new ());
-    g_assert (gimo_archive_read (archive, "demo-archive1.xml"));
+    g_assert (gimo_archive_read (archive,
+                                 TEST_TOP_SRCDIR "demo-archive1.xml"));
     config = TEST_CONFIG (gimo_archive_query_object (GIMO_ARCHIVE (archive),
                                                      "config1"));
     g_assert (config);
