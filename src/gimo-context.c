@@ -50,6 +50,7 @@ enum {
 
 struct _GimoContextPrivate {
     GTree *plugins;
+    gchar **paths;
     GMutex mutex;
 };
 
@@ -171,18 +172,28 @@ static void gimo_context_init (GimoContext *self)
     priv->plugins = g_tree_new_full (_gimo_gtree_string_compare,
                                      NULL, NULL,
                                      _gimo_context_plugin_destroy);
+    priv->paths = NULL;
     g_mutex_init (&priv->mutex);
 }
 
 static void gimo_context_constructed (GObject *gobject)
 {
     GimoContext *self = GIMO_CONTEXT (gobject);
+    GimoContextPrivate *priv = self->priv;
     GimoPlugin *plugin;
     GimoLoader *loader;
     GimoFactory *factory;
     GimoExtPoint *extpt;
     GimoExtension *ext;
     GPtrArray *array;
+    const gchar *plugin_path;
+
+    plugin_path = g_getenv ("GIMO_PLUGIN_PATH");
+    if (plugin_path) {
+        priv->paths = g_strsplit (plugin_path,
+                                  G_SEARCHPATH_SEPARATOR_S,
+                                  0);
+    }
 
     /* org.gimo.core.loader */
     array = g_ptr_array_new_with_free_func (g_object_unref);
@@ -203,14 +214,14 @@ static void gimo_context_constructed (GObject *gobject)
 
     /* Archive loader. */
     loader = gimo_loader_new ();
-    gimo_loader_add_paths (loader, g_getenv ("GIMO_ARCHIVE_PATH"));
+    gimo_loader_add_paths (loader, plugin_path);
 
     gimo_plugin_define (plugin, "archive", G_OBJECT (loader));
     g_object_unref (loader);
 
     /* Module loader. */
     loader = gimo_loader_new_cached ();
-    gimo_loader_add_paths (loader, g_getenv ("GIMO_MODULE_PATH"));
+    gimo_loader_add_paths (loader, plugin_path);
 
     factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
 
@@ -261,6 +272,7 @@ static void gimo_context_finalize (GObject *gobject)
     loader = gimo_context_resolve_extpoint (self,
                                             "org.gimo.core.loader.module");
     g_tree_unref (priv->plugins);
+    g_strfreev (priv->paths);
     g_mutex_clear (&priv->mutex);
     g_object_unref (loader);
 
@@ -386,12 +398,37 @@ guint gimo_context_load_plugin (GimoContext *self,
                                 GCancellable *cancellable,
                                 gboolean start)
 {
+    GimoContextPrivate *priv;
     guint result = 0;
     GimoLoader *aloader = NULL;
     GimoLoader *mloader = NULL;
+    gchar *real_path = (gchar *) file_path;
 
-    if (!g_file_test (file_path, G_FILE_TEST_EXISTS))
-        gimo_set_error_return_val (GIMO_ERROR_NO_FILE, FALSE);
+    g_return_val_if_fail (GIMO_IS_CONTEXT (self), 0);
+
+    priv = self->priv;
+
+    if (!g_file_test (file_path, G_FILE_TEST_EXISTS)) {
+        if (priv->paths && !g_path_is_absolute (file_path)) {
+            guint i = 0;
+
+            while (priv->paths[i]) {
+                real_path = g_build_filename (priv->paths[i],
+                                              file_path,
+                                              NULL);
+                if (g_file_test (real_path, G_FILE_TEST_EXISTS))
+                    break;
+
+                g_free (real_path);
+                ++i;
+            }
+        }
+    }
+
+    if (!g_file_test (real_path, G_FILE_TEST_EXISTS)) {
+        gimo_set_error (GIMO_ERROR_NO_FILE);
+        goto done;
+    }
 
     aloader = gimo_safe_cast (
         gimo_context_resolve_extpoint (
@@ -409,26 +446,26 @@ guint gimo_context_load_plugin (GimoContext *self,
     if (NULL == mloader)
         goto done;
 
-    if (g_file_test (file_path, G_FILE_TEST_IS_REGULAR)) {
-        gchar *dirname = g_path_get_dirname (file_path);
+    if (g_file_test (real_path, G_FILE_TEST_IS_REGULAR)) {
+        gchar *dirname = g_path_get_dirname (real_path);
 
         result += _gimo_context_load_plugin (self,
                                              aloader,
                                              mloader,
                                              dirname,
-                                             file_path,
+                                             real_path,
                                              start);
         g_free (dirname);
 
         goto done;
     }
 
-    if (g_file_test (file_path, G_FILE_TEST_IS_DIR)) {
+    if (g_file_test (real_path, G_FILE_TEST_IS_DIR)) {
         GFile *file;
         GFileEnumerator *enumerator;
         GError *error = NULL;
 
-        file = g_file_new_for_path (file_path);
+        file = g_file_new_for_path (real_path);
         enumerator = g_file_enumerate_children (file,
                                                 "standard::*",
                                                 G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
@@ -455,7 +492,7 @@ guint gimo_context_load_plugin (GimoContext *self,
                     result += _gimo_context_load_plugin (self,
                                                          aloader,
                                                          mloader,
-                                                         file_path,
+                                                         real_path,
                                                          child_path,
                                                          start);
                     g_free (child_path);
@@ -474,7 +511,7 @@ guint gimo_context_load_plugin (GimoContext *self,
         if (error) {
             gimo_set_error_full (GIMO_ERROR_INVALID_FILE,
                                  "GimoContext enumerate dir error: %s: %s",
-                                 file_path,
+                                 real_path,
                                  error ? error->message : NULL);
             g_clear_error (&error);
         }
@@ -489,6 +526,9 @@ done:
 
     if (mloader)
         g_object_unref (mloader);
+
+    if (real_path != file_path)
+        g_free (real_path);
 
     return result;
 }

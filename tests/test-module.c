@@ -44,10 +44,10 @@ static void test_module_common (gboolean cached)
         loader = gimo_loader_new ();
 
     g_assert (gimo_loader_dup_paths (loader) == NULL);
-    gimo_loader_add_paths (loader, TEST_MODULE_PATH);
+    gimo_loader_add_paths (loader, g_getenv ("GIMO_PLUGIN_PATH"));
     paths = gimo_loader_dup_paths (loader);
 
-    g_assert (paths && paths->len == 1);
+    g_assert (paths && paths->len == 4);
     g_ptr_array_unref (paths);
 
     /* Dynamic library */
@@ -81,7 +81,7 @@ static void test_module_common (gboolean cached)
 
 #ifdef HAVE_INTROSPECTION
     if (!cached) {
-        gimo_loader_remove_paths (loader, TEST_MODULE_PATH);
+        gimo_loader_remove_paths (loader, g_getenv ("GIMO_PLUGIN_PATH"));
         g_assert (gimo_loader_dup_paths (loader) == NULL);
         g_assert (!gimo_loader_load (loader, "pymodule-1.0"));
         g_object_unref (loader);

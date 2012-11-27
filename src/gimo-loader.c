@@ -258,6 +258,13 @@ GimoLoader* gimo_loader_new_cached (void)
     return g_object_new (GIMO_TYPE_LOADER, "cache", TRUE, NULL);
 }
 
+/**
+ * gimo_loader_add_paths:
+ * @self: a #GimoLoader
+ * @paths: (allow-none): path list, seperated by ':'
+ *
+ * Add file search paths to the loader.
+ */
 void gimo_loader_add_paths (GimoLoader *self,
                             const gchar *paths)
 {

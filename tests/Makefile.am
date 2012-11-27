@@ -3,8 +3,7 @@ all: all-am
 		$(TESTS_ENVIRONMENT) ${TEST}; \
 	fi
 
-AM_CPPFLAGS = ${STRICT_CFLAGS} ${GLIB_CFLAGS} ${GIMO_CFLAGS} \
-	-DTEST_MODULE_PATH="\"${top_builddir}/src/plugins\""
+AM_CPPFLAGS = ${STRICT_CFLAGS} ${GLIB_CFLAGS} ${GIMO_CFLAGS}
 AM_LDFLAGS = ${GLIB_LIBS} ${GIMO_LDFLAGS}
 
 DEMO_PLUGIN_LIBTOOL_FLAGS = \
@@ -48,7 +47,13 @@ if HAVE_INTROSPECTION
 	TESTS += ${check_SCRIPTS}
 endif
 
-EXTRA_DIST = ${check_SCRIPTS}
+EXTRA_DIST = ${check_SCRIPTS} \
+	demo-plugin.py demo-plugin.js demo-plugin.xml \
+	demo-archive1.xml demo-archive2.xml \
+	plugins/plugin1.js \
+	plugins/plugin2.py \
+	plugins/plugin1.xml \
+	plugins/plugin2.xml
 
 test:
 	$(TESTS_ENVIRONMENT) ${TEST}

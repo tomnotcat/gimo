@@ -13,3 +13,5 @@ pymodule_1_0_la_LDFLAGS = ${AM_LDFLAGS} ${PYGOBJECT_LIBS}
 jsmodule_1_0_la_SOURCES = gimo-jsmodule.h gimo-jsmodule.c
 jsmodule_1_0_la_CFLAGS = ${AM_CPPFLAGS} ${GJS_CFLAGS}
 jsmodule_1_0_la_LDFLAGS = ${AM_LDFLAGS} ${GJS_LIBS}
+
+EXTRA_DIST = pymodule-1.0.xml jsmodule-1.0.xml

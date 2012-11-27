@@ -245,7 +245,7 @@ GimoExtConfig* gimo_ext_config_get_config (GimoExtConfig *self,
     gchar *next;
     const gchar *name;
     GPtrArray *configs;
-    GimoExtConfig **result;
+    GimoExtConfig **result = NULL;
 
     g_return_val_if_fail (GIMO_IS_EXTCONFIG (self), NULL);
 
