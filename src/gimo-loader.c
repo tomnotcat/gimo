@@ -503,7 +503,7 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
 
     result = _gimo_loader_load_file (arr, suffix, file_name);
 
-    if (NULL == result &&
+    if (NULL == result && file_name &&
         !g_path_is_absolute (file_name) &&
         g_queue_get_length (priv->paths) > 0)
     {

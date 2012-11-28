@@ -1,0 +1,136 @@
+EXPORTS
+	gimo_archive_get_type
+	gimo_archive_new
+	gimo_archive_read
+	gimo_archive_save
+	gimo_archive_add_object
+	gimo_archive_remove_object
+	gimo_archive_query_object
+	gimo_archive_query_objects
+
+	gimo_bind_object
+	gimo_bind_string
+	gimo_binding_lock
+	gimo_binding_unlock
+	gimo_lookup_object
+	gimo_lookup_string
+	gimo_query_object
+	gimo_query_string
+
+	gimo_context_get_type
+	gimo_context_new
+	gimo_context_install_plugin
+	gimo_context_uninstall_plugin
+	gimo_context_load_plugin
+	gimo_context_query_plugin
+	gimo_context_query_plugins
+	gimo_context_query_extpoint
+	gimo_context_query_extensions
+	gimo_context_resolve_extpoint
+	gimo_context_destroy
+
+	gimo_dlmodule_get_type
+	gimo_dlmodule_new
+	_gimo_dlmodule_get_gmodule
+
+	gimo_plugin_state_get_type
+
+	gimo_trace_error
+	gimo_set_error
+	gimo_set_error_string
+	gimo_set_error_full
+	gimo_get_error
+	gimo_dup_error_string
+	gimo_clear_error
+	gimo_error_to_string
+
+	gimo_ext_config_get_type
+	gimo_ext_config_new
+	gimo_ext_config_get_name
+	gimo_ext_config_get_value
+	gimo_ext_config_get_config
+	gimo_ext_config_get_configs
+
+	gimo_extension_get_type
+	gimo_extension_new
+	gimo_extension_get_local_id
+	gimo_extension_get_id
+	gimo_extension_get_name
+	gimo_extension_get_extpoint_id
+	gimo_extension_get_config
+	gimo_extension_get_config_value
+	gimo_extension_get_configs
+	gimo_extension_query_plugin
+
+	gimo_ext_point_get_type
+	gimo_ext_point_new
+	gimo_ext_point_get_local_id
+	gimo_ext_point_get_id
+	gimo_ext_point_get_name
+	gimo_ext_point_query_plugin
+
+	gimo_factory_get_type
+	gimo_factory_new
+	gimo_factory_make
+
+	gimo_loadable_get_type
+	gimo_loadable_load
+	gimo_loadable_unload
+
+	gimo_loader_get_type
+	gimo_loader_new
+	gimo_loader_new_cached
+	gimo_loader_add_paths
+	gimo_loader_remove_paths
+	gimo_loader_dup_paths
+	gimo_loader_register
+	gimo_loader_unregister
+	gimo_loader_load
+	gimo_loader_query_cached
+
+	gimo_module_get_type
+	gimo_module_open
+	gimo_module_close
+	gimo_module_get_name
+	gimo_module_resolve
+
+	gimo_plugin_get_type
+	gimo_plugin_new
+	gimo_plugin_get_id
+	gimo_plugin_get_name
+	gimo_plugin_get_version
+	gimo_plugin_get_provider
+	gimo_plugin_get_path
+	gimo_plugin_get_module
+	gimo_plugin_get_symbol
+	gimo_plugin_get_extpoint
+	gimo_plugin_get_extension
+	gimo_plugin_get_requires
+	gimo_plugin_get_extpoints
+	gimo_plugin_get_extensions
+	gimo_plugin_query_extensions
+	gimo_plugin_query_context
+	gimo_plugin_get_state
+	gimo_plugin_define
+	gimo_plugin_resolve
+	gimo_plugin_start
+	gimo_plugin_stop
+
+	gimo_require_get_type
+	gimo_require_new
+	gimo_require_get_plugin_id
+	gimo_require_get_version
+	gimo_require_is_optional
+
+	gimo_object_array_get_type
+
+	_gimo_parse_extension_id
+	_gimo_gtree_string_compare
+	_gimo_clone_object_array
+	gimo_safe_cast
+	_gimo_symbol_from_type_name
+	gimo_resolve_type_lazily
+
+	gimo_xmlarchive_get_type
+	gimo_xmlarchive_new
+	gimo_xmlarchive_plugin

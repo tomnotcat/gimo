@@ -45,14 +45,14 @@ static void test_module_common (gboolean cached)
     gimo_loader_add_paths (loader, g_getenv ("GIMO_PLUGIN_PATH"));
     paths = gimo_loader_dup_paths (loader);
 
-    g_assert (paths && paths->len == 4);
+    g_assert (paths && paths->len > 0);
     g_ptr_array_unref (paths);
 
     /* Dynamic library */
     g_assert (!gimo_loader_load (loader, "demo-plugin.so"));
     factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
     g_assert (gimo_loader_register (loader,
-                                    NULL,
+                                    "so",
                                     factory));
     g_object_unref (factory);
     module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin.so"));

@@ -2,12 +2,10 @@ from gi.repository import Gimo
 
 def plugin_start (plugin):
     context = plugin.query_context ()
-    loader = context.resolve_extpoint ("org.gimo.core.loader.module");
-    module = loader.load ("demo-plugin.py");
-
-    assert (module.resolve ("test_plugin_new", None, True) != None);
-
-    Gimo.bind_string (context, "py_start", "py_start");
+    loader = context.resolve_extpoint ("org.gimo.core.loader.module")
+    module = loader.load ("demo-plugin.py")
+    assert (module.resolve ("test_plugin_new", None, True) != None)
+    Gimo.bind_string (context, "py_start", "py_start")
     return True
 
 def plugin_stop (plugin):

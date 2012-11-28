@@ -5,7 +5,7 @@
     <name>demo plugin1</name>
     <version>0.1</version>
     <provider>tomnotcat</provider>
-    <module>demo-plugin</module>
+    <module>demo-plugin.so</module>
     <symbol>demo_plugin</symbol>
     <extensions class="GimoExtension">
       <extension id="test1" point="org.oren.test.extension1"/>

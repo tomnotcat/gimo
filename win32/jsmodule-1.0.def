@@ -1,0 +1,4 @@
+EXPORTS
+	gimo_jsmodule_get_type
+	gimo_jsmodule_new
+	gimo_jsmodule_plugin

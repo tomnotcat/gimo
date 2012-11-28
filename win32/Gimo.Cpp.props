@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<PropertyGroup>
+   <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(SolutionDir);..\..\glib-win32\include;..\..\glib-win32\include\glib-2.0;..\..\glib-win32\lib\glib-2.0\include;..\src;</IncludePath>
+   <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;..\..\glib-win32\lib;$(SolutionDir)$(Configuration);</LibraryPath>
+</PropertyGroup>
+</Project>

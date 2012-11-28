@@ -249,13 +249,13 @@ int main (int argc, char *argv[])
     g_type_init ();
     g_thread_init (NULL);
 
-    if (0) {
     _test_context_common ();
     _test_context_dlplugin ();
-    }
     _test_context_jsplugin ();
-    if (0)
+    if (0) {
+    /* FIXME: Win32 seems to have a deadlock. */ 
     _test_context_pyplugin ();
+    }
 
     return 0;
 }

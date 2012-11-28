@@ -1,0 +1,4 @@
+EXPORTS
+	gimo_pymodule_get_type
+	gimo_pymodule_new
+	gimo_pymodule_plugin

@@ -17,6 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include "config.h"
 #include "gimo-xmlarchive.h"
 #include "gimo-context.h"
 #include "gimo-error.h"
@@ -26,7 +27,6 @@
 #include "gimo-utils.h"
 #include <ctype.h>
 #include <expat.h>
-#include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -584,7 +584,7 @@ static gboolean _gimo_xmlarchive_read (GimoArchive *self,
     struct _ParseContext *context;
     gboolean error;
 
-    fp = g_fopen (file_name, "rb");
+    fp = fopen (file_name, "rb");
     if (NULL == fp)
         gimo_set_error_return_val (GIMO_ERROR_OPEN_FILE, FALSE);
 

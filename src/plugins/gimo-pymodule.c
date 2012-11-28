@@ -155,7 +155,7 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
     split = strrchr (path, '/');
 #ifdef G_OS_WIN32
     if (NULL== split)
-        split = strrchr (name, '\\');
+        split = strrchr (path, '\\');
 #endif
 
     PyEval_AcquireLock ();
@@ -168,6 +168,15 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
         *split = '\0';
         name = split + 1;
 
+#ifdef G_OS_WIN32
+        code = path;
+        while (*code) {
+            /* Python can only use '/' as path separator? */
+            if (*code == '\\')
+                *code = '/';
+            ++code;
+        }
+#endif
         code = g_strdup_printf ("import sys; sys.path.append (\"%s\")", path);
         PyRun_SimpleString (code);
         g_free (code);
@@ -186,6 +195,9 @@ static gboolean _gimo_pymodule_open (GimoModule *module,
 
 fail:
     PyRun_SimpleString ("sys.path.pop ()");
+
+    if (PyErr_Occurred ())
+        PyErr_Print ();
 
     PyThreadState_Swap (old_state);
     PyEval_ReleaseLock ();
