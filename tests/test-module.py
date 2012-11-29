@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os
+import os, platform
 from gi.repository import Gimo
 
 def dlmodule_new (user_data):
@@ -9,13 +9,15 @@ def dlmodule_new (user_data):
 
 loader = Gimo.Loader ()
 assert (len (loader.dup_paths ()) == 0)
-loader.add_paths (os.getenv ("GIMO_PLUGIN_PATH"))
-paths = loader.dup_paths ()
-assert (len (paths) == 4)
-assert (paths[3] + ":" +
-        paths[2] + ":" +
-        paths[1] + ":" +
-        paths[0] == os.getenv ("GIMO_PLUGIN_PATH"))
+
+if platform.system () == "Linux":
+    loader.add_paths (os.getenv ("TEST_PLUGIN_PATH"))
+    paths = loader.dup_paths ()
+    assert (len (paths) > 0)
+    assert (paths[3] + ":" +
+            paths[2] + ":" +
+            paths[1] + ":" +
+            paths[0] == os.getenv ("TEST_PLUGIN_PATH"))
 
 # Dynamic library
 assert (loader.load ("demo-plugin.so") == None)

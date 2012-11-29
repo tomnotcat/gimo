@@ -4,7 +4,8 @@ all: all-am
 	fi
 
 AM_CPPFLAGS = ${STRICT_CFLAGS} ${GLIB_CFLAGS} ${GIMO_CFLAGS} \
-	-DTEST_TOP_SRCDIR="\"${top_srcdir}/tests/\""
+	-DTEST_TOP_SRCDIR="\"${top_srcdir}/tests/\"" \
+	-DTEST_PLUGIN_PATH="\"${top_srcdir}/src/plugins:${top_srcdir}/tests:${top_builddir}/src/plugins/.libs:${top_builddir}/tests/.libs\""
 AM_LDFLAGS = ${GLIB_LIBS} ${GIMO_LDFLAGS}
 
 DEMO_PLUGIN_LIBTOOL_FLAGS = \

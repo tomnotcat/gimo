@@ -68,13 +68,6 @@ struct _PathInfo {
 static guint context_signals[LAST_SIGNAL] = { 0 };
 
 /* TODO: These _path_info_xxx duplicate with gimo-loader.c */
-static gint _path_info_compare (gconstpointer a,
-                                gconstpointer b)
-{
-    const struct _PathInfo *info = a;
-    return strcmp (info->path, b);
-}
-
 static void _path_info_ref (struct _PathInfo *info)
 {
     g_atomic_int_add (&info->ref_count, 1);
@@ -208,7 +201,6 @@ static void gimo_context_init (GimoContext *self)
 static void gimo_context_constructed (GObject *gobject)
 {
     GimoContext *self = GIMO_CONTEXT (gobject);
-    GimoContextPrivate *priv = self->priv;
     GimoPlugin *plugin;
     GimoLoader *loader;
     GimoFactory *factory;
