@@ -72,7 +72,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glib-2.0.lib;gobject-2.0.lib;gmodule-2.0.lib;gimod.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glib-2.0.lib;gobject-2.0.lib;gmodule-2.0.lib;gimo.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Python27\libs</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>pymodule-1.0.def</ModuleDefinitionFile>
       <ImportLibrary>
@@ -81,7 +81,8 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy ".\Debug\$(ProjectName).so"  "..\tests\$(ProjectName).so"</Command>
+      <Command>copy ".\Debug\$(ProjectName).so"  "..\tests\$(ProjectName).so"
+copy ".\Debug\$(ProjectName).so"  "..\..\glib-win32\lib\gimo-plugins-1.0\$(ProjectName).so"</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>
@@ -113,7 +114,8 @@
       <AdditionalLibraryDirectories>C:\Python27\libs</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy ".\Release\$(ProjectName).so"  "..\tests\$(ProjectName).so"</Command>
+      <Command>copy ".\Release\$(ProjectName).so"  "..\tests\$(ProjectName).so"
+copy ".\Release\$(ProjectName).so"  "..\..\glib-win32\lib\gimo-plugins-1.0\$(ProjectName).so"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

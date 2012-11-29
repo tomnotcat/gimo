@@ -59,6 +59,7 @@ static void _test_context_common (void)
     };
 
     context = gimo_context_new ();
+	gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
     g_signal_connect (context,
                       "state-changed",
@@ -126,6 +127,8 @@ static void _test_context_dlplugin (void)
     GPtrArray *exts;
 
     context = gimo_context_new ();
+	gimo_context_add_paths (context, TEST_PLUGIN_PATH);
+
     g_assert (gimo_context_load_plugin (context,
                                         "demo-plugin.xml",
                                         NULL,
@@ -133,6 +136,7 @@ static void _test_context_dlplugin (void)
     g_object_unref (context);
 
     context = gimo_context_new ();
+	gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
     g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_start"));
 
@@ -170,6 +174,7 @@ static void _test_context_jsplugin (void)
     GimoContext *context;
 
     context = gimo_context_new ();
+	gimo_context_add_paths (context, TEST_PLUGIN_PATH);
     g_assert (gimo_context_load_plugin (context,
                                         "plugins",
                                         NULL,
@@ -177,6 +182,7 @@ static void _test_context_jsplugin (void)
     g_object_unref (context);
 
     context = gimo_context_new ();
+	gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
 #ifdef HAVE_INTROSPECTION
     g_assert (gimo_context_load_plugin (context,
@@ -212,6 +218,7 @@ static void _test_context_pyplugin (void)
     GimoContext *context;
 
     context = gimo_context_new ();
+	gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
     g_assert (gimo_context_load_plugin (context,
                                         "pymodule-1.0.xml",
@@ -252,10 +259,11 @@ int main (int argc, char *argv[])
     _test_context_common ();
     _test_context_dlplugin ();
     _test_context_jsplugin ();
-    if (0) {
+
+#ifndef G_OS_WIN32
     /* FIXME: Win32 seems to have a deadlock. */ 
     _test_context_pyplugin ();
-    }
+#endif
 
     return 0;
 }

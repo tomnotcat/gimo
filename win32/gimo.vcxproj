@@ -43,7 +43,7 @@
     </IncludePath>
     <LibraryPath>
     </LibraryPath>
-    <TargetName>$(ProjectName)d</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -73,7 +73,34 @@
     </Link>
     <PostBuildEvent>
       <Command>copy ".\Debug\$(TargetName)$(TargetExt)"  "..\..\glib-win32\bin\$(TargetName)$(TargetExt)"
-copy ".\Debug\$(ProjectName)d.lib"  "..\..\glib-win32\lib\$(ProjectName)d.lib"</Command>
+copy ".\Debug\$(ProjectName).lib"  "..\..\glib-win32\lib\$(ProjectName).lib"
+del ".\Debug\Gimo-1.0.gir"
+del ".\Debug\Gimo-1.0.typelib"
+call python.exe generate-gi.py Debug gimo
+copy ".\Debug\Gimo-1.0.gir"  "..\..\glib-win32\share\gir-1.0\Gimo-1.0.gir"
+copy ".\Debug\Gimo-1.0.typelib"  "..\..\glib-win32\lib\girepository-1.0\Gimo-1.0.typelib"
+copy "..\src\gimo-types.h"  "..\..\glib-win32\include\gimo-1.0\gimo-types.h"
+copy "..\src\gimo-enums.h"  "..\..\glib-win32\include\gimo-1.0\gimo-enums.h"
+copy "..\src\gimo-error.h"  "..\..\glib-win32\include\gimo-1.0\gimo-error.h"
+copy "..\src\gimo-context.h"  "..\..\glib-win32\include\gimo-1.0\gimo-context.h"
+copy "..\src\gimo-plugin.h"  "..\..\glib-win32\include\gimo-1.0\gimo-plugin.h"
+copy "..\src\gimo-require.h"  "..\..\glib-win32\include\gimo-1.0\gimo-require.h"
+copy "..\src\gimo-extpoint.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extpoint.h"
+copy "..\src\gimo-extension.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extension.h"
+copy "..\src\gimo-loader.h"  "..\..\glib-win32\include\gimo-1.0\gimo-loader.h"
+copy "..\src\gimo-factory.h"  "..\..\glib-win32\include\gimo-1.0\gimo-factory.h"
+copy "..\src\gimo-loadable.h"  "..\..\glib-win32\include\gimo-1.0\gimo-loadable.h"
+copy "..\src\gimo-module.h"  "..\..\glib-win32\include\gimo-1.0\gimo-module.h"
+copy "..\src\gimo-dlmodule.h"  "..\..\glib-win32\include\gimo-1.0\gimo-dlmodule.h"
+copy "..\src\gimo-archive.h"  "..\..\glib-win32\include\gimo-1.0\gimo-archive.h"
+copy "..\src\gimo-xmlarchive.h"  "..\..\glib-win32\include\gimo-1.0\gimo-xmlarchive.h"
+copy "..\src\gimo-marshal.h"  "..\..\glib-win32\include\gimo-1.0\gimo-marshal.h"
+copy "..\src\gimo-utils.h"  "..\..\glib-win32\include\gimo-1.0\gimo-utils.h"
+copy "..\src\gimo-extconfig.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extconfig.h"
+copy "..\src\gimo-binding.h"  "..\..\glib-win32\include\gimo-1.0\gimo-binding.h"
+copy "..\src\gimo.h"  "..\..\glib-win32\include\gimo-1.0\gimo.h"
+copy "..\src\plugins\jsmodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\jsmodule-1.0.xml"
+copy "..\src\plugins\pymodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\pymodule-1.0.xml"</Command>
     </PostBuildEvent>
     <PreLinkEvent>
       <Command>
@@ -105,12 +132,33 @@ copy ".\Debug\$(ProjectName)d.lib"  "..\..\glib-win32\lib\$(ProjectName)d.lib"</
     <PostBuildEvent>
       <Command>copy ".\Release\$(TargetName)$(TargetExt)"  "..\..\glib-win32\bin\$(TargetName)$(TargetExt)"
 copy ".\Release\$(ProjectName).lib"  "..\..\glib-win32\lib\$(ProjectName).lib"
-copy "OrenClient.h"  "..\..\glib-win32\include\OrenClient.h"
 del ".\Release\Gimo-1.0.gir"
 del ".\Release\Gimo-1.0.typelib"
 call python.exe generate-gi.py Release gimo
 copy ".\Release\Gimo-1.0.gir"  "..\..\glib-win32\share\gir-1.0\Gimo-1.0.gir"
-copy ".\Release\Gimo-1.0.typelib"  "..\..\glib-win32\lib\girepository-1.0\Gimo-1.0.typelib"</Command>
+copy ".\Release\Gimo-1.0.typelib"  "..\..\glib-win32\lib\girepository-1.0\Gimo-1.0.typelib"
+copy "..\src\gimo-types.h"  "..\..\glib-win32\include\gimo-1.0\gimo-types.h"
+copy "..\src\gimo-enums.h"  "..\..\glib-win32\include\gimo-1.0\gimo-enums.h"
+copy "..\src\gimo-error.h"  "..\..\glib-win32\include\gimo-1.0\gimo-error.h"
+copy "..\src\gimo-context.h"  "..\..\glib-win32\include\gimo-1.0\gimo-context.h"
+copy "..\src\gimo-plugin.h"  "..\..\glib-win32\include\gimo-1.0\gimo-plugin.h"
+copy "..\src\gimo-require.h"  "..\..\glib-win32\include\gimo-1.0\gimo-require.h"
+copy "..\src\gimo-extpoint.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extpoint.h"
+copy "..\src\gimo-extension.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extension.h"
+copy "..\src\gimo-loader.h"  "..\..\glib-win32\include\gimo-1.0\gimo-loader.h"
+copy "..\src\gimo-factory.h"  "..\..\glib-win32\include\gimo-1.0\gimo-factory.h"
+copy "..\src\gimo-loadable.h"  "..\..\glib-win32\include\gimo-1.0\gimo-loadable.h"
+copy "..\src\gimo-module.h"  "..\..\glib-win32\include\gimo-1.0\gimo-module.h"
+copy "..\src\gimo-dlmodule.h"  "..\..\glib-win32\include\gimo-1.0\gimo-dlmodule.h"
+copy "..\src\gimo-archive.h"  "..\..\glib-win32\include\gimo-1.0\gimo-archive.h"
+copy "..\src\gimo-xmlarchive.h"  "..\..\glib-win32\include\gimo-1.0\gimo-xmlarchive.h"
+copy "..\src\gimo-marshal.h"  "..\..\glib-win32\include\gimo-1.0\gimo-marshal.h"
+copy "..\src\gimo-utils.h"  "..\..\glib-win32\include\gimo-1.0\gimo-utils.h"
+copy "..\src\gimo-extconfig.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extconfig.h"
+copy "..\src\gimo-binding.h"  "..\..\glib-win32\include\gimo-1.0\gimo-binding.h"
+copy "..\src\gimo.h"  "..\..\glib-win32\include\gimo-1.0\gimo.h"
+copy "..\src\plugins\jsmodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\jsmodule-1.0.xml"
+copy "..\src\plugins\pymodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\pymodule-1.0.xml"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

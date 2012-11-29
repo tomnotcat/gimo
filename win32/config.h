@@ -10,3 +10,5 @@
 #endif
 
 #define HAVE_INTROSPECTION 1
+
+#define TEST_PLUGIN_PATH "..\\src\\plugins;..\\tests"

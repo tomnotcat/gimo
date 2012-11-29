@@ -62,6 +62,7 @@ static void _factory_info_unref (gpointer p)
     }
 }
 
+/* TODO: These _path_info_xxx duplicate with gimo-context.c */
 static gint _path_info_compare (gconstpointer a,
                                 gconstpointer b)
 {
@@ -265,7 +266,7 @@ GimoLoader* gimo_loader_new_cached (void)
 /**
  * gimo_loader_add_paths:
  * @self: a #GimoLoader
- * @paths: (allow-none): path list, seperated by ':'
+ * @paths: (allow-none): path list
  *
  * Add file search paths to the loader.
  */

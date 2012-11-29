@@ -21,6 +21,7 @@ EXPORTS
 	gimo_context_new
 	gimo_context_install_plugin
 	gimo_context_uninstall_plugin
+	gimo_context_add_paths
 	gimo_context_load_plugin
 	gimo_context_query_plugin
 	gimo_context_query_plugins

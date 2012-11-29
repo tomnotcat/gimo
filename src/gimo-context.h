@@ -64,6 +64,9 @@ gboolean gimo_context_install_plugin (GimoContext *self,
 void gimo_context_uninstall_plugin (GimoContext *self,
                                     const gchar *plugin_id);
 
+void gimo_context_add_paths (GimoContext *self,
+                             const gchar *paths);
+
 guint gimo_context_load_plugin (GimoContext *self,
                                 const gchar *file_path,
                                 GCancellable *cancellable,
