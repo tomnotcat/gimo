@@ -42,9 +42,11 @@ int main (int argc, char *argv[])
 {
     static gchar **starts = NULL;
     static gchar **files = NULL;
+    static gint silent = 0;
 
     static GOptionEntry entries[] = {
         { "start", 's', 0, G_OPTION_ARG_STRING_ARRAY, &starts, "Startup plugins", NULL },
+        { "silent", 'l', 0, G_OPTION_ARG_INT, &silent, "Run silently", NULL },
         { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &files, NULL, "FILE" },
         { NULL }
     };
@@ -54,7 +56,7 @@ int main (int argc, char *argv[])
 
     GimoContext *context = NULL;
     GimoPlugin *plugin;
-	gchar *app_path;
+    gchar *app_path;
 
     g_type_init();
 
@@ -63,6 +65,9 @@ int main (int argc, char *argv[])
 #endif
 
     setlocale (LC_ALL, "");
+
+    if (!silent)
+        gimo_trace_error (TRUE);
 
     optctx = g_option_context_new ("gimo-launch");
     g_option_context_add_main_entries (optctx, entries, "");
@@ -114,6 +119,8 @@ int main (int argc, char *argv[])
             ++it;
         }
     }
+
+    gimo_context_run_plugins (context);
 
     g_object_unref (context);
 

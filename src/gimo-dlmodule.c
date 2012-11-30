@@ -90,8 +90,7 @@ static const gchar* _gimo_dlmodule_get_name (GimoModule *module)
 
 static GObject* _gimo_dlmodule_resolve (GimoModule *module,
                                         const gchar *symbol,
-                                        GObject *param,
-                                        gboolean has_return)
+                                        GObject *param)
 {
     GimoDlmodule *self = GIMO_DLMODULE (module);
     GimoDlmodulePrivate *priv = self->priv;

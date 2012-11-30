@@ -157,8 +157,7 @@ static const gchar* _gimo_jsmodule_get_name (GimoModule *module)
 
 static GObject* _gimo_jsmodule_resolve (GimoModule *module,
                                         const gchar *symbol,
-                                        GObject *param,
-                                        gboolean has_return)
+                                        GObject *param)
 {
     GimoJsmodule *self = GIMO_JSMODULE (module);
     GimoJsmodulePrivate *priv = self->priv;
@@ -218,9 +217,6 @@ static GObject* _gimo_jsmodule_resolve (GimoModule *module,
 
     JS_EndRequest (js_ctx);
     g_value_unset (&garg);
-
-    if (!has_return)
-        return NULL;
 
     if (JSVAL_VOID == rval) {
         gimo_set_error_full (GIMO_ERROR_INVALID_RETURN,
@@ -382,10 +378,12 @@ static gboolean _gimo_jsmodule_plugin_start (GimoPlugin *self)
     return result;
 }
 
-void gimo_jsmodule_plugin (GimoPlugin *plugin)
+GObject* gimo_jsmodule_plugin (GimoPlugin *plugin)
 {
     g_signal_connect (plugin,
                       "start",
                       G_CALLBACK (_gimo_jsmodule_plugin_start),
                       NULL);
+
+    return g_object_ref (plugin);
 }

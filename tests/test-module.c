@@ -71,8 +71,7 @@ static void test_module_common (gboolean cached)
     g_assert (GIMO_IS_DLMODULE (module));
     plugin = gimo_module_resolve (module,
                                   "test_plugin_new",
-                                  NULL,
-                                  TRUE);
+                                  NULL);
     g_assert (GIMO_IS_PLUGIN (plugin));
     g_object_unref (plugin);
     g_object_unref (module);
@@ -103,8 +102,7 @@ static void test_module_common (gboolean cached)
     g_assert (module);
     plugin = gimo_module_resolve (module,
                                   "test_plugin_new",
-                                  NULL,
-                                  TRUE);
+                                  NULL);
     g_assert (GIMO_IS_PLUGIN (plugin));
     g_object_unref (plugin);
     g_object_unref (module);
@@ -127,8 +125,7 @@ static void test_module_common (gboolean cached)
     g_assert (module);
     plugin = gimo_module_resolve (module,
                                   "test_plugin_new",
-                                  NULL,
-                                  TRUE);
+                                  NULL);
     g_assert (GIMO_IS_PLUGIN (plugin));
     g_object_unref (plugin);
     g_object_unref (module);

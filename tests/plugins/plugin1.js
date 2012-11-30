@@ -15,16 +15,23 @@ function plugin_start (plugin)
     return true;
 }
 
+function plugin_run (plugin)
+{
+    var context = plugin.query_context ();
+    Gimo.bind_string (context, "js_run", "js_run");
+}
+
 function plugin_stop (plugin)
 {
     var context = plugin.query_context ();
     Gimo.bind_string (context, "js_stop", "js_stop");
-    return true;
 }
 
 function symbol1 (plugin)
 {
     assert (plugin.get_id () == "org.gimo.test.plugin1");
     plugin.connect ("start", plugin_start);
+    plugin.connect ("run", plugin_run);
     plugin.connect ("stop", plugin_stop);
+    return plugin;
 }

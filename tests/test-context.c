@@ -127,7 +127,7 @@ static void _test_context_dlplugin (void)
     GPtrArray *exts;
 
     context = gimo_context_new ();
-	gimo_context_add_paths (context, TEST_PLUGIN_PATH);
+    gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
     g_assert (gimo_context_load_plugin (context,
                                         "demo-plugin.xml",
@@ -136,7 +136,7 @@ static void _test_context_dlplugin (void)
     g_object_unref (context);
 
     context = gimo_context_new ();
-	gimo_context_add_paths (context, TEST_PLUGIN_PATH);
+    gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
     g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_start"));
 
@@ -158,7 +158,11 @@ static void _test_context_dlplugin (void)
     g_assert (!exts);
 
     g_assert (gimo_lookup_string (G_OBJECT (context), "dl_start"));
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_run"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_stop"));
+
+    gimo_context_run_plugins (context);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "dl_run"));
 
     g_assert (gimo_context_load_plugin (context,
                                         "demo-plugin.xml",
@@ -198,7 +202,11 @@ static void _test_context_jsplugin (void)
                                         TRUE) == 1);
 
     g_assert (gimo_lookup_string (G_OBJECT (context), "js_start"));
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "js_run"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "js_stop"));
+
+    gimo_context_run_plugins (context);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "js_run"));
 
 #else  /* !HAVE_INTROSPECTION */
     g_assert (gimo_context_load_plugin (context,
@@ -233,7 +241,11 @@ static void _test_context_pyplugin (void)
                                         TRUE) == 1);
 
     g_assert (gimo_lookup_string (G_OBJECT (context), "py_start"));
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "py_run"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "py_stop"));
+
+    gimo_context_run_plugins (context);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "py_run"));
 
 #else  /* !HAVE_INTROSPECTION */
     g_assert (gimo_context_load_plugin (context,

@@ -129,8 +129,12 @@ static GimoLoadable* _gimo_loader_load_file (GPtrArray *loaders,
     struct _FactoryInfo *info;
     guint i;
 
-    if (file_name && !g_file_test (file_name, G_FILE_TEST_EXISTS))
-        gimo_set_error_return_val (GIMO_ERROR_NO_FILE, NULL);
+    if (file_name && !g_file_test (file_name, G_FILE_TEST_EXISTS)) {
+        gimo_set_error_full (GIMO_ERROR_NO_FILE,
+                             "GimoLoader file not exist: %s",
+                             file_name);
+        return NULL;
+    }
 
     for (i = 0; i < loaders->len; ++i) {
         info = g_ptr_array_index (loaders, i);
@@ -465,6 +469,23 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
 
     g_mutex_lock (&priv->mutex);
 
+    if (file_name) {
+        suffix = strrchr (file_name, '.');
+
+        if (suffix)
+            ++suffix;
+    }
+    else {
+        suffix = NULL;
+    }
+
+    if (!_gimo_loader_lookup (self, suffix) &&
+        !_gimo_loader_lookup (self, NULL))
+    {
+        g_mutex_unlock (&priv->mutex);
+        return NULL;
+    }
+
     if (priv->object_tree) {
         result = g_tree_lookup (priv->object_tree, file_name);
 
@@ -491,16 +512,6 @@ GimoLoadable* gimo_loader_load (GimoLoader *self,
     }
 
     g_mutex_unlock (&priv->mutex);
-
-    if (file_name) {
-        suffix = strrchr (file_name, '.');
-
-        if (suffix)
-            ++suffix;
-    }
-    else {
-        suffix = NULL;
-    }
 
     result = _gimo_loader_load_file (arr, suffix, file_name);
 

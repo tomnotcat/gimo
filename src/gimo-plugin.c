@@ -60,6 +60,7 @@ G_DEFINE_TYPE (GimoPlugin, gimo_plugin, G_TYPE_OBJECT)
 
 enum {
     SIG_START,
+    SIG_RUN,
     SIG_STOP,
     LAST_SIGNAL
 };
@@ -105,6 +106,7 @@ static gboolean _gimo_plugin_load_module (GimoPlugin *self,
     GimoPluginPrivate *priv = self->priv;
     GimoModule *module = NULL;
     GimoLoadable *loadable = NULL;
+    GObject *result;
 
     if (loader) {
         g_object_ref (loader);
@@ -119,7 +121,7 @@ static gboolean _gimo_plugin_load_module (GimoPlugin *self,
             return FALSE;
     }
 
-    if (priv->path) {
+    if (priv->path && priv->module) {
         gchar *full_path;
 
         full_path = g_build_filename (priv->path, priv->module, NULL);
@@ -156,10 +158,13 @@ static gboolean _gimo_plugin_load_module (GimoPlugin *self,
     G_UNLOCK (plugin_lock);
 
     if (priv->symbol) {
-        gimo_module_resolve (priv->runtime,
-                             priv->symbol,
-                             G_OBJECT (self),
-                             FALSE);
+        result = gimo_module_resolve (priv->runtime,
+                                      priv->symbol,
+                                      G_OBJECT (self));
+        if (result)
+            g_object_unref (result);
+        else
+            return FALSE;
     }
 
     return TRUE;
@@ -194,7 +199,12 @@ static GimoModule* _gimo_plugin_query_module (GimoPlugin *self,
 
     if (!_gimo_plugin_load_module (self, context, loader)) {
         g_object_unref (context);
-        gimo_set_error_return_val (GIMO_ERROR_LOAD, NULL);
+
+        gimo_set_error_full (GIMO_ERROR_LOAD,
+                             "GimoPlugin load module error: %s: %s",
+                             priv->module,
+                             priv->symbol);
+        return NULL;
     }
 
     G_LOCK (plugin_lock);
@@ -488,6 +498,7 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
 
     klass->start = NULL;
     klass->stop = NULL;
+    klass->run = NULL;
 
     plugin_signals[SIG_START] =
             g_signal_new ("start",
@@ -498,14 +509,23 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
                           _gimo_marshal_BOOLEAN__VOID,
                           G_TYPE_BOOLEAN, 0);
 
+    plugin_signals[SIG_RUN] =
+            g_signal_new ("run",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_LAST,
+                          G_STRUCT_OFFSET (GimoPluginClass, run),
+                          NULL, NULL,
+                          g_cclosure_marshal_VOID__VOID,
+                          G_TYPE_NONE, 0);
+
     plugin_signals[SIG_STOP] =
             g_signal_new ("stop",
                           G_OBJECT_CLASS_TYPE (gobject_class),
                           G_SIGNAL_RUN_LAST,
                           G_STRUCT_OFFSET (GimoPluginClass, stop),
                           NULL, NULL,
-                          _gimo_marshal_BOOLEAN__VOID,
-                          G_TYPE_BOOLEAN, 0);
+                          g_cclosure_marshal_VOID__VOID,
+                          G_TYPE_NONE, 0);
 
     g_object_class_install_property (
         gobject_class, PROP_ID,
@@ -932,8 +952,7 @@ GObject* gimo_plugin_resolve (GimoPlugin *self,
 
     object = gimo_module_resolve (module,
                                   symbol,
-                                  G_OBJECT (self),
-                                  TRUE);
+                                  G_OBJECT (self));
     g_object_unref (module);
 
     return object;
@@ -968,34 +987,41 @@ gboolean gimo_plugin_start (GimoPlugin *self,
     return result;
 }
 
-gboolean gimo_plugin_stop (GimoPlugin *self)
+void gimo_plugin_run (GimoPlugin *self)
+{
+    g_return_if_fail (GIMO_IS_PLUGIN (self));
+
+    g_signal_emit (self,
+                   plugin_signals[SIG_RUN],
+                   0);
+}
+
+void gimo_plugin_stop (GimoPlugin *self)
 {
     GimoPluginPrivate *priv;
     GimoModule *module;
-    gboolean result;
 
-    g_return_val_if_fail (GIMO_IS_PLUGIN (self), FALSE);
+    g_return_if_fail (GIMO_IS_PLUGIN (self));
 
     priv = self->priv;
 
     if (priv->state != GIMO_PLUGIN_ACTIVE &&
         priv->state != GIMO_PLUGIN_STARTING)
     {
-        return TRUE;
+        return;
     }
 
     module = _gimo_plugin_query_module (self, NULL, FALSE);
     if (NULL == module)
-        return FALSE;
+        return;
 
-    result = _gimo_plugin_emit_signal (self,
-                                       plugin_signals [SIG_STOP]);
+    g_signal_emit (self,
+                   plugin_signals[SIG_STOP],
+                   0);
+
     g_object_unref (module);
 
-    if (result)
-        priv->state = GIMO_PLUGIN_RESOLVED;
-
-    return result;
+    priv->state = GIMO_PLUGIN_RESOLVED;
 }
 
 void _gimo_plugin_install (GimoPlugin *self,

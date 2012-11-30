@@ -744,10 +744,12 @@ static gboolean _gimo_xmlarchive_plugin_start (GimoPlugin *self)
     return result;
 }
 
-void gimo_xmlarchive_plugin (GimoPlugin *plugin)
+GObject* gimo_xmlarchive_plugin (GimoPlugin *plugin)
 {
     g_signal_connect (plugin,
                       "start",
                       G_CALLBACK (_gimo_xmlarchive_plugin_start),
                       NULL);
+
+    return g_object_ref (plugin);
 }

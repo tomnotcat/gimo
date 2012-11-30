@@ -62,7 +62,9 @@ void gimo_set_error_full (gint code, const gchar *format, ...)
         va_end (ap);
     }
     else if (trace_error) {
-        g_warning ("GimoError: %d", error_code);
+        g_warning ("GimoError: %d: %s",
+                   error_code,
+                   gimo_error_to_string (error_code));
     }
 }
 

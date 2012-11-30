@@ -103,12 +103,8 @@ static guint _gimo_context_load_plugin (GimoContext *self,
 
     archive = gimo_safe_cast (gimo_loader_load (aloader, file_name),
                               GIMO_TYPE_ARCHIVE);
-    if (NULL == archive) {
-        gimo_set_error_full (GIMO_ERROR_LOAD,
-                             "GimoContext load archive error: %s",
-                             file_name);
+    if (NULL == archive)
         return FALSE;
-    }
 
     objects = gimo_archive_query_objects (archive);
     if (objects) {
@@ -444,7 +440,7 @@ void gimo_context_add_paths (GimoContext *self,
     if (NULL == mloader)
         goto done;
 
-	dirs = g_strsplit (paths, G_SEARCHPATH_SEPARATOR_S, 0);
+    dirs = g_strsplit (paths, G_SEARCHPATH_SEPARATOR_S, 0);
 
     g_mutex_lock (&priv->mutex);
     while (dirs[i]) {
@@ -453,13 +449,13 @@ void gimo_context_add_paths (GimoContext *self,
         info->ref_count = 1;
         g_queue_push_head (priv->paths, info);
         ++i;
-	}
+    }
 
     g_mutex_unlock (&priv->mutex);
     g_free (dirs);
 
-	gimo_loader_add_paths (aloader, paths);
-	gimo_loader_add_paths (mloader, paths);
+    gimo_loader_add_paths (aloader, paths);
+    gimo_loader_add_paths (mloader, paths);
 
 done:
     if (aloader)
@@ -485,10 +481,10 @@ guint gimo_context_load_plugin (GimoContext *self,
     priv = self->priv;
 
     if (!g_file_test (file_path, G_FILE_TEST_EXISTS)) {
-        if (g_queue_get_length (priv->paths) > 0 && 
-			!g_path_is_absolute (file_path)) 
-		{
-			GQueue *paths;
+        if (g_queue_get_length (priv->paths) > 0 &&
+            !g_path_is_absolute (file_path))
+        {
+            GQueue *paths;
             GList *it;
             struct _PathInfo *pi;
 
@@ -501,7 +497,7 @@ guint gimo_context_load_plugin (GimoContext *self,
 
             it = g_queue_peek_head_link (paths);
             while (it) {
-				pi = it->data;
+                pi = it->data;
                 full_path = g_build_filename (pi->path,
                                               file_path,
                                               NULL);
@@ -509,17 +505,19 @@ guint gimo_context_load_plugin (GimoContext *self,
                     break;
 
                 g_free (full_path);
-				full_path = NULL;
+                full_path = NULL;
 
                 it = it->next;
             }
 
-			g_queue_free_full (paths, _path_info_unref);
+            g_queue_free_full (paths, _path_info_unref);
         }
     }
 
     if (!full_path || !g_file_test (full_path, G_FILE_TEST_EXISTS)) {
-        gimo_set_error (GIMO_ERROR_NO_FILE);
+        gimo_set_error_full (GIMO_ERROR_NO_FILE,
+                             "GimoContext plugin not exist: %s",
+                             file_path);
         goto done;
     }
 
@@ -582,12 +580,15 @@ guint gimo_context_load_plugin (GimoContext *self,
 
                     child_path = g_file_get_path (child);
 
-                    result += _gimo_context_load_plugin (self,
-                                                         aloader,
-                                                         mloader,
-                                                         full_path,
-                                                         child_path,
-                                                         start);
+                    if (g_file_test (child_path, G_FILE_TEST_IS_REGULAR)) {
+                        result += _gimo_context_load_plugin (self,
+                                                             aloader,
+                                                             mloader,
+                                                             full_path,
+                                                             child_path,
+                                                             start);
+                    }
+
                     g_free (child_path);
                     g_object_unref (child);
                 }
@@ -817,6 +818,21 @@ done:
         g_object_unref (plugin);
 
     return object;
+}
+
+void gimo_context_run_plugins (GimoContext *self)
+{
+    GPtrArray *plugins;
+    guint i;
+
+    plugins = gimo_context_query_plugins (self);
+    if (NULL == plugins)
+        return;
+
+    for (i = 0; i < plugins->len; ++i)
+        gimo_plugin_run (g_ptr_array_index (plugins, i));
+
+    g_ptr_array_unref (plugins);
 }
 
 void gimo_context_destroy (GimoContext *self)

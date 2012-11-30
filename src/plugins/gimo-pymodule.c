@@ -241,8 +241,7 @@ static const gchar* _gimo_pymodule_get_name (GimoModule *module)
 
 static GObject* _gimo_pymodule_resolve (GimoModule *module,
                                         const gchar *symbol,
-                                        GObject *param,
-                                        gboolean has_return)
+                                        GObject *param)
 {
     static PyObject *gobject_module = NULL;
     GimoPymodule *self = GIMO_PYMODULE (module);
@@ -280,9 +279,6 @@ static GObject* _gimo_pymodule_resolve (GimoModule *module,
     value = PyObject_CallObject (func, args);
     Py_XDECREF (arg0);
     Py_XDECREF (args);
-
-    if (!has_return)
-        goto done;
 
     if (NULL == value || value == Py_None) {
         gimo_set_error_full (GIMO_ERROR_INVALID_RETURN,
@@ -450,10 +446,12 @@ static gboolean _gimo_pymodule_plugin_start (GimoPlugin *self)
     return result;
 }
 
-void gimo_pymodule_plugin (GimoPlugin *plugin)
+GObject* gimo_pymodule_plugin (GimoPlugin *plugin)
 {
     g_signal_connect (plugin,
                       "start",
                       G_CALLBACK (_gimo_pymodule_plugin_start),
                       NULL);
+
+    return g_object_ref (plugin);
 }

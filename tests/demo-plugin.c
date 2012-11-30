@@ -74,15 +74,21 @@ static gboolean _demo_plugin_start (GimoPlugin *p)
     return TRUE;
 }
 
-static gboolean _demo_plugin_stop (GimoPlugin *p)
+static void _demo_plugin_run (GimoPlugin *p)
+{
+    GimoContext *c = gimo_plugin_query_context (p);
+    gimo_bind_string (G_OBJECT (c), "dl_run", "dl_run");
+    g_object_unref (c);
+}
+
+static void _demo_plugin_stop (GimoPlugin *p)
 {
     GimoContext *c = gimo_plugin_query_context (p);
     gimo_bind_string (G_OBJECT (c), "dl_stop", "dl_stop");
     g_object_unref (c);
-    return TRUE;
 }
 
-void demo_plugin (GimoPlugin *plugin)
+GObject* demo_plugin (GimoPlugin *plugin)
 {
     g_signal_connect (plugin,
                       "start",
@@ -90,7 +96,14 @@ void demo_plugin (GimoPlugin *plugin)
                       NULL);
 
     g_signal_connect (plugin,
+                      "run",
+                      G_CALLBACK (_demo_plugin_run),
+                      NULL);
+
+    g_signal_connect (plugin,
                       "stop",
                       G_CALLBACK (_demo_plugin_stop),
                       NULL);
+
+    return g_object_ref (plugin);
 }
