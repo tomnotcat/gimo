@@ -54,6 +54,7 @@ int main (int argc, char *argv[])
 
     GimoContext *context = NULL;
     GimoPlugin *plugin;
+	gchar *app_path;
 
     g_type_init();
 
@@ -74,6 +75,9 @@ int main (int argc, char *argv[])
     g_option_context_free (optctx);
 
     context = gimo_context_new ();
+	app_path = g_path_get_dirname (argv[0]);
+	gimo_context_add_paths (context, app_path);
+	g_free (app_path);
 
     if (files) {
         gchar **it = files;

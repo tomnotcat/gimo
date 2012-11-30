@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pymodule-1.0", "pymodule-1.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jsmodule-1.0", "jsmodule-1.0.vcxproj", "{602D0E26-0404-416F-BFCE-6D85A0576551}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gimo-launch", "gimo-launch.vcxproj", "{6A41B80F-2D7D-4635-B15F-D62FD22FD128}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -55,6 +57,10 @@ Global
 		{602D0E26-0404-416F-BFCE-6D85A0576551}.Debug|Win32.Build.0 = Debug|Win32
 		{602D0E26-0404-416F-BFCE-6D85A0576551}.Release|Win32.ActiveCfg = Release|Win32
 		{602D0E26-0404-416F-BFCE-6D85A0576551}.Release|Win32.Build.0 = Release|Win32
+		{6A41B80F-2D7D-4635-B15F-D62FD22FD128}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6A41B80F-2D7D-4635-B15F-D62FD22FD128}.Debug|Win32.Build.0 = Debug|Win32
+		{6A41B80F-2D7D-4635-B15F-D62FD22FD128}.Release|Win32.ActiveCfg = Release|Win32
+		{6A41B80F-2D7D-4635-B15F-D62FD22FD128}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
