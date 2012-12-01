@@ -122,6 +122,7 @@ int main (int argc, char *argv[])
 
     gimo_context_run_plugins (context);
 
+    gimo_context_destroy (context);
     g_object_unref (context);
 
     if (files)

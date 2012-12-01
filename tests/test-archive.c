@@ -159,7 +159,7 @@ static void test_config_set_property (GObject *object,
 
     switch (prop_id) {
     case PROP_CHAR:
-        self->i8 = g_value_get_char (value);
+        self->i8 = g_value_get_schar (value);
         break;
 
     case PROP_UCHAR:
@@ -237,7 +237,7 @@ static void test_config_get_property (GObject *object,
 
     switch (prop_id) {
     case PROP_CHAR:
-        g_value_set_char (value, self->i8);
+        g_value_set_schar (value, self->i8);
         break;
 
     case PROP_UCHAR:
