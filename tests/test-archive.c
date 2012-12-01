@@ -552,7 +552,6 @@ static void _test_archive_xml (void)
 int main (int argc, char *argv[])
 {
     g_type_init ();
-    g_thread_init (NULL);
 
     _test_archive_common ();
     _test_archive_xml ();

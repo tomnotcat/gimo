@@ -67,7 +67,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PLUGIN_EXPORTS;XP_WIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\glib-win32\include\gjs-1.0;..\..\glib-win32\include\js-1.8.5;..\..\glib-win32\include\gobject-introspection-1.33.10</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\glib-win32\include\gjs-1.0;..\..\glib-win32\include\js-1.8.5;..\..\glib-win32\include\gobject-introspection-1.34.2</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -99,7 +99,7 @@ copy ".\Debug\$(ProjectName).so"  "..\..\glib-win32\lib\gimo-plugins-1.0\$(Proje
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PLUGIN_EXPORTS;XP_WIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\glib-win32\include\gjs-1.0;..\..\glib-win32\include\js-1.8.5;..\..\glib-win32\include\gobject-introspection-1.33.10</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\glib-win32\include\gjs-1.0;..\..\glib-win32\include\js-1.8.5;..\..\glib-win32\include\gobject-introspection-1.34.2</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -106,7 +106,6 @@ int main (int argc, char *argv[])
     GPtrArray *cfgs;
 
     g_type_init ();
-    g_thread_init (NULL);
 
     /* basic */
     _test_plugin_info (&info);

@@ -86,7 +86,7 @@ static void test_module_common (gboolean cached)
     }
 
     /* Python module */
-    g_assert (!gimo_loader_load (loader, "demo-plugin.py"));
+    g_assert (!gimo_loader_load (loader, TEST_TOP_SRCDIR "demo-plugin.py"));
     module = GIMO_MODULE (gimo_loader_load (loader, "pymodule-1.0.so"));
     g_assert (module);
     gmodule = _gimo_dlmodule_get_gmodule (GIMO_DLMODULE (module));
@@ -98,7 +98,7 @@ static void test_module_common (gboolean cached)
     g_assert (gimo_loader_register (loader, "py", factory));
     g_object_unref (factory);
     g_object_unref (module);
-    module = GIMO_MODULE (gimo_loader_load (loader, "demo-plugin.py"));
+    module = GIMO_MODULE (gimo_loader_load (loader, TEST_TOP_SRCDIR "demo-plugin.py"));
     g_assert (module);
     plugin = gimo_module_resolve (module,
                                   "test_plugin_new",
@@ -137,7 +137,6 @@ static void test_module_common (gboolean cached)
 int main (int argc, char *argv[])
 {
     g_type_init ();
-    g_thread_init (NULL);
 
     test_module_common (FALSE);
     test_module_common (TRUE);
