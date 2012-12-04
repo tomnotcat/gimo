@@ -34,6 +34,7 @@
 #include "gimo-marshal.h"
 #include "gimo-plugin.h"
 #include "gimo-require.h"
+#include "gimo-runnable.h"
 #include "gimo-utils.h"
 #include <string.h>
 
@@ -46,6 +47,8 @@ G_DEFINE_TYPE (GimoContext, gimo_context, G_TYPE_OBJECT)
 
 enum {
     SIG_STATECHANGED,
+    SIG_ASYNCRUN,
+    SIG_DESTROY,
     LAST_SIGNAL
 };
 
@@ -297,6 +300,8 @@ static void gimo_context_class_init (GimoContextClass *klass)
                               sizeof (GimoContextPrivate));
 
     klass->state_changed = NULL;
+    klass->async_run = NULL;
+    klass->destroy = NULL;
 
     context_signals[SIG_STATECHANGED] =
             g_signal_new ("state-changed",
@@ -309,6 +314,25 @@ static void gimo_context_class_init (GimoContextClass *klass)
                           GIMO_TYPE_PLUGIN,
                           GIMO_TYPE_PLUGIN_STATE,
                           GIMO_TYPE_PLUGIN_STATE);
+
+    context_signals[SIG_ASYNCRUN] =
+            g_signal_new ("async-run",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_FIRST,
+                          G_STRUCT_OFFSET (GimoContextClass, async_run),
+                          NULL, NULL,
+                          g_cclosure_marshal_VOID__OBJECT,
+                          G_TYPE_NONE, 1,
+                          GIMO_TYPE_RUNNABLE);
+
+    context_signals[SIG_DESTROY] =
+            g_signal_new ("destroy",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_FIRST,
+                          G_STRUCT_OFFSET (GimoContextClass, destroy),
+                          NULL, NULL,
+                          g_cclosure_marshal_VOID__VOID,
+                          G_TYPE_NONE, 0);
 }
 
 GimoContext* gimo_context_new (void)
@@ -830,9 +854,20 @@ void gimo_context_run_plugins (GimoContext *self)
         return;
 
     for (i = 0; i < plugins->len; ++i)
-        gimo_plugin_run (g_ptr_array_index (plugins, i));
+        gimo_runnable_run (g_ptr_array_index (plugins, i));
 
     g_ptr_array_unref (plugins);
+}
+
+void gimo_context_async_run (GimoContext *self,
+                             GimoRunnable *run)
+{
+    g_return_if_fail (GIMO_IS_CONTEXT (self));
+
+    g_signal_emit (self,
+                   context_signals[SIG_ASYNCRUN],
+                   0,
+                   run);
 }
 
 void gimo_context_destroy (GimoContext *self)
@@ -840,6 +875,10 @@ void gimo_context_destroy (GimoContext *self)
     GPtrArray *array;
     GimoLoader *loader;
     guint i;
+
+    g_signal_emit (self,
+                   context_signals[SIG_DESTROY],
+                   0);
 
     array = gimo_context_query_plugins (self);
     if (array) {

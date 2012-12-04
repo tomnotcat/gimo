@@ -19,6 +19,7 @@
  */
 #include "gimo-binding.h"
 #include "gimo-plugin.h"
+#include "gimo-signalbus.h"
 
 #define TEST_TYPE_PLUGIN (test_plugin_get_type())
 #define TEST_PLUGIN(obj) \
@@ -61,15 +62,35 @@ static void test_plugin_class_init (TestPluginClass *klass)
     gobject_class->finalize = test_plugin_finalize;
 }
 
-GimoPlugin* test_plugin_new (void)
+TestPlugin* test_plugin_new (void)
 {
     return g_object_new (TEST_TYPE_PLUGIN, NULL);
 }
 
+GIMO_SIGNALBUS_BEGIN (TestPlugin, test_plugin, 1)
+g_signal_new ("bus-signal",
+              G_OBJECT_CLASS_TYPE (gobject_class),
+              G_SIGNAL_RUN_FIRST,
+              GIMO_SIGNALBUS_CLASS_OFFSET,
+              NULL, NULL,
+              g_cclosure_marshal_VOID__VOID,
+              G_TYPE_NONE, 0);
+g_signal_new ("bus-signal",
+              G_OBJECT_CLASS_TYPE (gobject_class),
+              G_SIGNAL_RUN_FIRST,
+              GIMO_SIGNALBUS_CLASS_OFFSET,
+              NULL, NULL,
+              g_cclosure_marshal_VOID__VOID,
+              G_TYPE_NONE, 0);
+GIMO_SIGNALBUS_END
+
 static gboolean _demo_plugin_start (GimoPlugin *p)
 {
     GimoContext *c = gimo_plugin_query_context (p);
+    TestPlugin *t = test_plugin_new ();
     gimo_bind_string (G_OBJECT (c), "dl_start", "dl_start");
+    gimo_bind_object (G_OBJECT (c), "dl_object", G_OBJECT (t));
+    g_object_unref (t);
     g_object_unref (c);
     return TRUE;
 }

@@ -56,11 +56,10 @@ extern void _gimo_context_plugin_state_changed (GimoContext *self,
                                                 GimoPluginState old_state,
                                                 GimoPluginState new_state);
 
-G_DEFINE_TYPE (GimoPlugin, gimo_plugin, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GimoPlugin, gimo_plugin, GIMO_TYPE_RUNNABLE)
 
 enum {
     SIG_START,
-    SIG_RUN,
     SIG_STOP,
     LAST_SIGNAL
 };
@@ -498,7 +497,6 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
 
     klass->start = NULL;
     klass->stop = NULL;
-    klass->run = NULL;
 
     plugin_signals[SIG_START] =
             g_signal_new ("start",
@@ -508,15 +506,6 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
                           NULL, NULL,
                           _gimo_marshal_BOOLEAN__VOID,
                           G_TYPE_BOOLEAN, 0);
-
-    plugin_signals[SIG_RUN] =
-            g_signal_new ("run",
-                          G_OBJECT_CLASS_TYPE (gobject_class),
-                          G_SIGNAL_RUN_LAST,
-                          G_STRUCT_OFFSET (GimoPluginClass, run),
-                          NULL, NULL,
-                          g_cclosure_marshal_VOID__VOID,
-                          G_TYPE_NONE, 0);
 
     plugin_signals[SIG_STOP] =
             g_signal_new ("stop",
@@ -985,15 +974,6 @@ gboolean gimo_plugin_start (GimoPlugin *self,
         priv->state = GIMO_PLUGIN_ACTIVE;
 
     return result;
-}
-
-void gimo_plugin_run (GimoPlugin *self)
-{
-    g_return_if_fail (GIMO_IS_PLUGIN (self));
-
-    g_signal_emit (self,
-                   plugin_signals[SIG_RUN],
-                   0);
 }
 
 void gimo_plugin_stop (GimoPlugin *self)
