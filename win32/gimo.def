@@ -96,6 +96,12 @@ EXPORTS
 	gimo_module_get_name
 	gimo_module_resolve
 
+	gimo_runnable_get_type
+	gimo_runnable_new
+	gimo_runnable_run
+
+	gimo_signal_bus_get_type
+
 	gimo_plugin_get_type
 	gimo_plugin_new
 	gimo_plugin_get_id

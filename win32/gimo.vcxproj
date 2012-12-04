@@ -98,6 +98,8 @@ copy "..\src\gimo-marshal.h"  "..\..\glib-win32\include\gimo-1.0\gimo-marshal.h"
 copy "..\src\gimo-utils.h"  "..\..\glib-win32\include\gimo-1.0\gimo-utils.h"
 copy "..\src\gimo-extconfig.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extconfig.h"
 copy "..\src\gimo-binding.h"  "..\..\glib-win32\include\gimo-1.0\gimo-binding.h"
+copy "..\src\gimo-runnable.h"  "..\..\glib-win32\include\gimo-1.0\gimo-runnable.h"
+copy "..\src\gimo-signalbus.h"  "..\..\glib-win32\include\gimo-1.0\gimo-signalbus.h"
 copy "..\src\gimo.h"  "..\..\glib-win32\include\gimo-1.0\gimo.h"
 copy "..\src\plugins\jsmodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\jsmodule-1.0.xml"
 copy "..\src\plugins\pymodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\pymodule-1.0.xml"</Command>
@@ -156,6 +158,8 @@ copy "..\src\gimo-marshal.h"  "..\..\glib-win32\include\gimo-1.0\gimo-marshal.h"
 copy "..\src\gimo-utils.h"  "..\..\glib-win32\include\gimo-1.0\gimo-utils.h"
 copy "..\src\gimo-extconfig.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extconfig.h"
 copy "..\src\gimo-binding.h"  "..\..\glib-win32\include\gimo-1.0\gimo-binding.h"
+copy "..\src\gimo-runnable.h"  "..\..\glib-win32\include\gimo-1.0\gimo-runnable.h"
+copy "..\src\gimo-signalbus.h"  "..\..\glib-win32\include\gimo-1.0\gimo-signalbus.h"
 copy "..\src\gimo.h"  "..\..\glib-win32\include\gimo-1.0\gimo.h"
 copy "..\src\plugins\jsmodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\jsmodule-1.0.xml"
 copy "..\src\plugins\pymodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\pymodule-1.0.xml"</Command>
@@ -179,6 +183,8 @@ copy "..\src\plugins\pymodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\p
     <ClInclude Include="..\src\gimo-module.h" />
     <ClInclude Include="..\src\gimo-plugin.h" />
     <ClInclude Include="..\src\gimo-require.h" />
+    <ClInclude Include="..\src\gimo-runnable.h" />
+    <ClInclude Include="..\src\gimo-signalbus.h" />
     <ClInclude Include="..\src\gimo-types.h" />
     <ClInclude Include="..\src\gimo-utils.h" />
     <ClInclude Include="..\src\gimo-xmlarchive.h" />
@@ -209,6 +215,8 @@ copy "..\src\plugins\pymodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\p
     <ClCompile Include="..\src\gimo-module.c" />
     <ClCompile Include="..\src\gimo-plugin.c" />
     <ClCompile Include="..\src\gimo-require.c" />
+    <ClCompile Include="..\src\gimo-runnable.c" />
+    <ClCompile Include="..\src\gimo-signalbus.c" />
     <ClCompile Include="..\src\gimo-types.c" />
     <ClCompile Include="..\src\gimo-utils.c" />
     <ClCompile Include="..\src\gimo-xmlarchive.c" />
