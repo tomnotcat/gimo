@@ -36,15 +36,23 @@
 typedef struct _TestPlugin TestPlugin;
 typedef struct _TestPluginClass TestPluginClass;
 
+enum {
+    SIG_TESTBUS,
+    LAST_SIGNAL
+};
+
 struct _TestPlugin {
     GimoPlugin parent_instance;
 };
 
 struct _TestPluginClass {
     GimoPluginClass parent_class;
+    void (*test_bus) (TestPlugin *self);
 };
 
 G_DEFINE_TYPE (TestPlugin, test_plugin, GIMO_TYPE_PLUGIN)
+
+static guint test_signals[LAST_SIGNAL] = { 0 };
 
 static void test_plugin_init (TestPlugin *self)
 {
@@ -60,6 +68,17 @@ static void test_plugin_class_init (TestPluginClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
     gobject_class->finalize = test_plugin_finalize;
+
+    klass->test_bus = NULL;
+
+    test_signals[SIG_TESTBUS] =
+            g_signal_new ("test-bus",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_FIRST,
+                          G_STRUCT_OFFSET (TestPluginClass, test_bus),
+                          NULL, NULL,
+                          g_cclosure_marshal_VOID__VOID,
+                          G_TYPE_NONE, 0);
 }
 
 TestPlugin* test_plugin_new (void)
@@ -68,14 +87,7 @@ TestPlugin* test_plugin_new (void)
 }
 
 GIMO_SIGNALBUS_BEGIN (TestPlugin, test_plugin, 1)
-g_signal_new ("bus-signal",
-              G_OBJECT_CLASS_TYPE (gobject_class),
-              G_SIGNAL_RUN_FIRST,
-              GIMO_SIGNALBUS_CLASS_OFFSET,
-              NULL, NULL,
-              g_cclosure_marshal_VOID__VOID,
-              G_TYPE_NONE, 0);
-g_signal_new ("bus-signal",
+g_signal_new ("test-bus",
               G_OBJECT_CLASS_TYPE (gobject_class),
               G_SIGNAL_RUN_FIRST,
               GIMO_SIGNALBUS_CLASS_OFFSET,
@@ -84,12 +96,39 @@ g_signal_new ("bus-signal",
               G_TYPE_NONE, 0);
 GIMO_SIGNALBUS_END
 
+static void _test_plugin_test_run (GimoContext *context,
+                                   GimoRunnable *run)
+{
+    gimo_runnable_run (run);
+}
+
+static void _test_plugin_test_bus (GimoSignalBus *bus,
+                                   GimoContext *c)
+{
+    gimo_bind_string (G_OBJECT (c), "dl_bus", "dl_bus");
+}
+
 static gboolean _demo_plugin_start (GimoPlugin *p)
 {
     GimoContext *c = gimo_plugin_query_context (p);
     TestPlugin *t = test_plugin_new ();
+    GimoSignalBus *bus;
     gimo_bind_string (G_OBJECT (c), "dl_start", "dl_start");
     gimo_bind_object (G_OBJECT (c), "dl_object", G_OBJECT (t));
+    g_assert (!test_plugin_get_bus (t, NULL));
+    bus = test_plugin_get_bus (t, c);
+    g_assert (test_plugin_get_bus (t, NULL) == bus);
+    g_signal_connect (c,
+                      "async-run",
+                      G_CALLBACK (_test_plugin_test_run),
+                      NULL);
+    g_signal_connect (bus,
+                      "test-bus",
+                      G_CALLBACK (_test_plugin_test_bus),
+                      c);
+    g_signal_emit (t,
+                   test_signals[SIG_TESTBUS],
+                   0);
     g_object_unref (t);
     g_object_unref (c);
     return TRUE;

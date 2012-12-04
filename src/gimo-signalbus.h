@@ -20,7 +20,7 @@
 #ifndef __GIMO_SIGNALBUS_H__
 #define __GIMO_SIGNALBUS_H__
 
-#include "gimo-types.h"
+#include "gimo-runnable.h"
 
 G_BEGIN_DECLS
 
@@ -40,12 +40,12 @@ typedef struct _GimoSignalBusPrivate GimoSignalBusPrivate;
 typedef struct _GimoSignalBusClass GimoSignalBusClass;
 
 struct _GimoSignalBus {
-    GObject parent_instance;
+    GimoRunnable parent_instance;
     GimoSignalBusPrivate *priv;
 };
 
 struct _GimoSignalBusClass {
-    GObjectClass parent_class;
+    GimoRunnableClass parent_class;
 };
 
 GType gimo_signal_bus_get_type (void) G_GNUC_CONST;
@@ -58,7 +58,6 @@ GType gimo_signal_bus_get_type (void) G_GNUC_CONST;
         GimoSignalBusClass parent_class; \
         GCallback funcs[s_c]; \
     }; \
-    GType t_n##_bus_get_type (void) G_GNUC_CONST; \
     static void t_n##_bus_class_init (struct TN##BusClass *klass);  \
     GType t_n##_bus_get_type (void) {                               \
         static volatile gsize g_define_type_id__volatile = 0;       \
@@ -75,21 +74,40 @@ GType gimo_signal_bus_get_type (void) G_GNUC_CONST;
             g_once_init_leave (&g_define_type_id__volatile, g_define_type_id); \
         }                                                           \
         return g_define_type_id__volatile;                          \
-    } \
+    }                                                               \
+    GimoSignalBus* t_n##_get_bus (TN *self, GimoContext *context) { \
+        static GQuark bus_quark;                                    \
+        GimoSignalBus *result;                                      \
+        if (!bus_quark)                                             \
+            bus_quark = g_quark_from_static_string ("gimo_signalbus_bus"); \
+        result = g_object_get_qdata (G_OBJECT (self), bus_quark);   \
+        if (result)                                                 \
+            return result;                                          \
+        if (context) {                                              \
+            result = g_object_new (t_n##_bus_get_type (),           \
+                                   "context", context,              \
+                                   "object", self, NULL);           \
+            g_object_set_qdata_full (G_OBJECT (self),               \
+                                     bus_quark,                     \
+                                     result,                        \
+                                     g_object_unref);               \
+        }                                                           \
+        return result;                                              \
+    }                                                               \
     static void t_n##_bus_class_init (struct TN##BusClass *klass) { \
         GObjectClass *gobject_class = G_OBJECT_CLASS (klass);       \
-        guint i, count;                                             \
+        guint i, count = s_c;                                       \
         glong offset = G_STRUCT_OFFSET (struct TN##BusClass, funcs);\
         for (i = 0; i < s_c; ++i)                                   \
             klass->funcs[i] = NULL;                                 \
-        i = 0; count = s_c;                                         \
+        i = 0;                                                      \
         do {
 
 #define GIMO_SIGNALBUS_CLASS_OFFSET (offset + sizeof (GCallback) * i++)
 
-#define GIMO_SIGNALBUS_END \
-    } while (0);           \
-    g_assert (i == count); \
+#define GIMO_SIGNALBUS_END                      \
+    } while (0);                                \
+    g_assert (i == count);                      \
     }
 
 G_END_DECLS

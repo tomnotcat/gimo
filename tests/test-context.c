@@ -139,7 +139,8 @@ static void _test_context_dlplugin (void)
     gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
     g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_start"));
-    g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_object"));
+    g_assert (!gimo_lookup_object (G_OBJECT (context), "dl_object"));
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_bus"));
 
     g_assert (gimo_context_load_plugin (context,
                                         "demo-plugin.xml",
@@ -160,6 +161,7 @@ static void _test_context_dlplugin (void)
 
     g_assert (gimo_lookup_string (G_OBJECT (context), "dl_start"));
     g_assert (gimo_lookup_object (G_OBJECT (context), "dl_object"));
+    g_assert (gimo_lookup_string (G_OBJECT (context), "dl_bus"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_run"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_stop"));
 
