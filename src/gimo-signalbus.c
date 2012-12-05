@@ -25,6 +25,8 @@
 #include "gimo-signalbus.h"
 #include "gimo-context.h"
 
+#define GIMO_SIGNAL_BUS_CAPACITY 2048
+
 G_DEFINE_TYPE (GimoSignalBus, gimo_signal_bus, GIMO_TYPE_RUNNABLE)
 
 enum {
@@ -135,6 +137,11 @@ static void _gimo_signal_bus_marshal (GClosure *closure,
     GimoContext *context;
 
     g_assert (NULL == marshal_data && NULL == return_value);
+
+    if (g_async_queue_length (priv->signals) > GIMO_SIGNAL_BUS_CAPACITY) {
+        g_warning ("GimoSignalBus full");
+        return;
+    }
 
     context = _gimo_signal_bus_context (self);
     if (NULL == context)
@@ -271,7 +278,6 @@ static void _gimo_signal_bus_run (GimoRunnable *runnable)
     GimoSignalBus *self = GIMO_SIGNALBUS (runnable);
     GimoSignalBusPrivate *priv = self->priv;
     struct _GimoBusSignal *signal;
-    GValue value;
 
     while (g_async_queue_length (priv->signals) > 0) {
         signal = g_async_queue_pop (priv->signals);
@@ -279,7 +285,7 @@ static void _gimo_signal_bus_run (GimoRunnable *runnable)
         g_signal_emitv (signal->param_values,
                         signal->signal_id,
                         0,
-                        &value);
+                        NULL);
 
         _signal_bus_signal_destroy (signal);
     }

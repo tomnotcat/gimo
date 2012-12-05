@@ -880,7 +880,7 @@ GPtrArray* gimo_plugin_query_extensions (GimoPlugin *self,
 GimoContext* gimo_plugin_query_context (GimoPlugin *self)
 {
     GimoPluginPrivate *priv;
-    GimoContext *ctx = NULL;
+    GimoContext *context = NULL;
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
 
@@ -889,11 +889,11 @@ GimoContext* gimo_plugin_query_context (GimoPlugin *self)
     G_LOCK (plugin_lock);
 
     if (priv->context)
-        ctx = g_object_ref (priv->context);
+        context = g_object_ref (priv->context);
 
     G_UNLOCK (plugin_lock);
 
-    return ctx;
+    return context;
 }
 
 GimoPluginState gimo_plugin_get_state (GimoPlugin *self)

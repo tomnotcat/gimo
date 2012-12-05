@@ -654,6 +654,7 @@ done:
 /**
  * gimo_context_query_plugin:
  * @self: a #GimoContext
+ * @plugin_id: the plugin ID
  *
  * Query a plugin descriptor with the specified ID.
  *
