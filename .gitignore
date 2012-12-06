@@ -9,7 +9,6 @@
 *.libs
 *.png
 *.pyc
-*.user
 *.sdf
 *.suo
 *.aps

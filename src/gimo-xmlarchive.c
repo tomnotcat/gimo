@@ -582,9 +582,13 @@ static gboolean _gimo_xmlarchive_read (GimoArchive *self,
     int status;
     XML_Parser parser;
     struct _ParseContext *context;
+    gchar *local_name;
     gboolean error;
 
-    fp = fopen (file_name, "rb");
+    local_name = g_locale_from_utf8 (file_name, -1, NULL, NULL, NULL);
+    fp = fopen (local_name, "rb");
+    g_free (local_name);
+
     if (NULL == fp)
         gimo_set_error_return_val (GIMO_ERROR_OPEN_FILE, FALSE);
 
