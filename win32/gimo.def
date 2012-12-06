@@ -119,7 +119,8 @@ EXPORTS
 	gimo_plugin_query_extensions
 	gimo_plugin_query_context
 	gimo_plugin_get_state
-	gimo_plugin_define
+	gimo_plugin_define_object
+	gimo_plugin_define_string
 	gimo_plugin_resolve
 	gimo_plugin_start
 	gimo_plugin_stop

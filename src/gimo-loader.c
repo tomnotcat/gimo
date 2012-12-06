@@ -288,7 +288,7 @@ void gimo_loader_add_paths (GimoLoader *self,
         struct _PathInfo *info;
         guint i = 0;
 
-        dirs = g_strsplit (paths, G_SEARCHPATH_SEPARATOR_S, 0);
+        dirs = g_strsplit_set (paths, G_SEARCHPATH_SEPARATOR_S, 0);
 
         g_mutex_lock (&priv->mutex);
         while (dirs[i]) {
@@ -318,7 +318,7 @@ void gimo_loader_remove_paths (GimoLoader *self,
         GList *l;
         guint i = 0;
 
-        dirs = g_strsplit (paths, G_SEARCHPATH_SEPARATOR_S, 0);
+        dirs = g_strsplit_set (paths, G_SEARCHPATH_SEPARATOR_S, 0);
 
         g_mutex_lock (&priv->mutex);
         while (dirs[i]) {

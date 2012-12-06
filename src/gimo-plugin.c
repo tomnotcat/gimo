@@ -903,15 +903,38 @@ GimoPluginState gimo_plugin_get_state (GimoPlugin *self)
     return self->priv->state;
 }
 
-gboolean gimo_plugin_define (GimoPlugin *self,
-                             const gchar *symbol,
-                             GObject *object)
+/**
+ * gimo_plugin_define_object:
+ * @self: a #GimoPlugin
+ * @symbol: the symbol name
+ * @object: (allow-none): a #GObject
+ *
+ * Define an object to the plugin.
+ */
+void gimo_plugin_define_object (GimoPlugin *self,
+                                const gchar *symbol,
+                                GObject *object)
 {
-    if (gimo_lookup_object (G_OBJECT (self), symbol))
-        return FALSE;
+    g_return_if_fail (GIMO_IS_PLUGIN (self));
 
     gimo_bind_object (G_OBJECT (self), symbol, object);
-    return TRUE;
+}
+
+/**
+ * gimo_plugin_define_string:
+ * @self: a #GimoPlugin
+ * @symbol: the symbol name
+ * @string: (allow-none): the string value
+ *
+ * Define a string to the plugin.
+ */
+void gimo_plugin_define_string (GimoPlugin *self,
+                                const gchar *symbol,
+                                const gchar *string)
+{
+    g_return_if_fail (GIMO_IS_PLUGIN (self));
+
+    gimo_bind_string (G_OBJECT (self), symbol, string);
 }
 
 /**
@@ -926,10 +949,14 @@ gboolean gimo_plugin_define (GimoPlugin *self,
 GObject* gimo_plugin_resolve (GimoPlugin *self,
                               const gchar *symbol)
 {
+    GimoPluginPrivate *priv;
     GimoModule *module;
     GObject *object = NULL;
+    gchar *string = NULL;
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
+
+    priv = self->priv;
 
     object = gimo_query_object (G_OBJECT (self), symbol);
     if (object)
@@ -939,14 +966,33 @@ GObject* gimo_plugin_resolve (GimoPlugin *self,
     if (NULL == module)
         return NULL;
 
-    object = gimo_module_resolve (module,
-                                  symbol,
-                                  G_OBJECT (self));
+    string = gimo_query_string (G_OBJECT (self), symbol);
+    if (string) {
+        object = gimo_module_resolve (module,
+                                      string,
+                                      G_OBJECT (self));
+        g_free (string);
+    }
+    else {
+        object = gimo_module_resolve (module,
+                                      symbol,
+                                      G_OBJECT (self));
+    }
+
     g_object_unref (module);
 
     return object;
 }
 
+/**
+ * gimo_plugin_start:
+ * @self: a #GimoPlugin
+ * @loader: (allow-none): the module loader
+ *
+ * Start the plugin runtime.
+ *
+ * Returns: whether call success
+ */
 gboolean gimo_plugin_start (GimoPlugin *self,
                             GimoLoader *loader)
 {

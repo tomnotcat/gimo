@@ -227,7 +227,7 @@ static void gimo_context_constructed (GObject *gobject)
     /* Archive loader. */
     loader = gimo_loader_new ();
 
-    gimo_plugin_define (plugin, "archive", G_OBJECT (loader));
+    gimo_plugin_define_object (plugin, "archive", G_OBJECT (loader));
     g_object_unref (loader);
 
     /* Module loader. */
@@ -236,7 +236,7 @@ static void gimo_context_constructed (GObject *gobject)
     factory = gimo_factory_new ((GimoFactoryFunc) gimo_dlmodule_new, NULL);
 
     gimo_loader_register (loader, NULL, factory);
-    gimo_plugin_define (plugin, "module", G_OBJECT (loader));
+    gimo_plugin_define_object (plugin, "module", G_OBJECT (loader));
 
     g_object_unref (factory);
 
@@ -464,7 +464,7 @@ void gimo_context_add_paths (GimoContext *self,
     if (NULL == mloader)
         goto done;
 
-    dirs = g_strsplit (paths, G_SEARCHPATH_SEPARATOR_S, 0);
+    dirs = g_strsplit_set (paths, G_SEARCHPATH_SEPARATOR_S, 0);
 
     g_mutex_lock (&priv->mutex);
     while (dirs[i]) {
