@@ -39,6 +39,7 @@ struct _GimoSignalBusPrivate {
     GObject *object;
     GimoContext *context;
     GAsyncQueue *signals;
+    gsize capacity;
 };
 
 struct _GimoBusClosure {
@@ -138,7 +139,7 @@ static void _gimo_signal_bus_marshal (GClosure *closure,
 
     g_assert (NULL == marshal_data && NULL == return_value);
 
-    if (g_async_queue_length (priv->signals) > GIMO_SIGNAL_BUS_CAPACITY) {
+    if (g_async_queue_length (priv->signals) > priv->capacity) {
         g_warning ("GimoSignalBus full");
         return;
     }
@@ -170,6 +171,7 @@ static void gimo_signal_bus_init (GimoSignalBus *self)
     priv->context = NULL;
     priv->object = NULL;
     priv->signals = g_async_queue_new_full (_signal_bus_signal_destroy);
+    priv->capacity = GIMO_SIGNAL_BUS_CAPACITY;
 }
 
 static void gimo_signal_bus_finalize (GObject *gobject)
@@ -326,4 +328,12 @@ static void gimo_signal_bus_class_init (GimoSignalBusClass *klass)
                              G_PARAM_WRITABLE |
                              G_PARAM_CONSTRUCT_ONLY |
                              G_PARAM_STATIC_STRINGS));
+}
+
+void gimo_signal_bus_set_capacity (GimoSignalBus *self,
+                                   gsize size)
+{
+    g_return_if_fail (GIMO_IS_SIGNALBUS (self));
+
+    self->priv->capacity = size;
 }

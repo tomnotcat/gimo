@@ -949,14 +949,11 @@ void gimo_plugin_define_string (GimoPlugin *self,
 GObject* gimo_plugin_resolve (GimoPlugin *self,
                               const gchar *symbol)
 {
-    GimoPluginPrivate *priv;
     GimoModule *module;
     GObject *object = NULL;
     gchar *string = NULL;
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
-
-    priv = self->priv;
 
     object = gimo_query_object (G_OBJECT (self), symbol);
     if (object)
