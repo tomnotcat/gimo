@@ -121,6 +121,8 @@ EXPORTS
 	gimo_plugin_get_state
 	gimo_plugin_define_object
 	gimo_plugin_define_string
+	gimo_plugin_get_object
+	gimo_plugin_get_string
 	gimo_plugin_resolve
 	gimo_plugin_start
 	gimo_plugin_stop

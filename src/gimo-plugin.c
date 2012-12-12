@@ -938,6 +938,27 @@ void gimo_plugin_define_string (GimoPlugin *self,
 }
 
 /**
+ * gimo_plugin_get_object:
+ * @self: a #GimoPlugin
+ * @symbol: the symbol
+ *
+ * Get a previously defined object.
+ *
+ * Returns: (allow-none) (transfer full): a #GObject
+ */
+GObject* gimo_plugin_get_object (GimoPlugin *self,
+                                 const gchar *symbol)
+{
+    return gimo_query_object (G_OBJECT (self), symbol);
+}
+
+const gchar* gimo_plugin_get_string (GimoPlugin *self,
+                                     const gchar *symbol)
+{
+    return gimo_lookup_string (G_OBJECT (self), symbol);
+}
+
+/**
  * gimo_plugin_resolve:
  * @self: a #GimoPlugin
  * @symbol: the symbol name
