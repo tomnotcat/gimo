@@ -14,9 +14,9 @@ libgimo_1_0_la_SOURCES_COMMON = gimo-types.h gimo-types.c \
 	gimo-archive.h gimo-archive.c gimo-xmlarchive.h gimo-xmlarchive.c \
 	gimo-marshal.h gimo-marshal.c gimo-utils.h gimo-utils.c \
 	gimo-extconfig.h gimo-extconfig.c gimo-binding.h gimo-binding.c \
-	gimo-runnable.h gimo-runnable.c
+	gimo-runnable.h gimo-runnable.c gimo-signalbus.h gimo-signalbus.c
 libgimo_1_0_la_SOURCES = ${libgimo_1_0_la_SOURCES_COMMON} \
-	gimo-intl.h gimo-signalbus.h gimo-signalbus.c
+	gimo-intl.h
 
 gimoincludedir=$(includedir)/gimo-1.0
 gimoinclude_HEADERS = gimo-types.h gimo-enums.h gimo-error.h \
