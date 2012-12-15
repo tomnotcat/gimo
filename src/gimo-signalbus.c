@@ -139,7 +139,7 @@ static void _gimo_signal_bus_marshal (GClosure *closure,
 
     g_assert (NULL == marshal_data && NULL == return_value);
 
-    if (g_async_queue_length (priv->signals) > priv->capacity) {
+    if (g_async_queue_length (priv->signals) > (gint) priv->capacity) {
         g_warning ("GimoSignalBus full");
         return;
     }
