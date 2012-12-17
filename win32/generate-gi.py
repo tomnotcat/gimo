@@ -22,5 +22,5 @@ srcs = '''../../src/gimo-archive.h ../../src/gimo-archive.c ../../src/gimo-bindi
  ../../src/gimo-utils.c ../../src/gimo-utils.h ../../src/gimo-xmlarchive.c ../../src/gimo-xmlarchive.h'''
 
 os.system ("cd " + sys.argv[1] + " && python.exe \"" + scanner + "\" --add-include-path=. --warn-all --namespace=Gimo --nsversion=1.0 --no-libtool \
- --include=GObject-2.0   --library=" + sys.argv[2] + " -I../../src --output Gimo-1.0.gir " + srcs +
+ --include=GObject-2.0  --pkg-export=gimo-1.0 --library=" + sys.argv[2] + " -I../../src --output Gimo-1.0.gir " + srcs +
 " && g-ir-compiler --includedir=. Gimo-1.0.gir -o Gimo-1.0.typelib")

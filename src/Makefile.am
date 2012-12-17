@@ -43,6 +43,7 @@ Gimo_1_0_gir_INCLUDES = GLib-2.0 GObject-2.0 Gio-2.0
 Gimo_1_0_gir_CFLAGS = $(INCLUDES) -I${srcdir}
 Gimo_1_0_gir_LIBS = ./libgimo-1.0.la
 Gimo_1_0_gir_FILES = ${libgimo_1_0_la_SOURCES_COMMON}
+Gimo_1_0_gir_EXPORT_PACKAGES = gimo-1.0
 
 girdir = $(datadir)/gir-1.0
 gir_DATA = $(INTROSPECTION_GIRS)
