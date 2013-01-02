@@ -29,6 +29,8 @@ EXPORTS
 	gimo_context_query_extensions
 	gimo_context_resolve_extpoint
     gimo_context_run_plugins
+    gimo_context_async_run
+    gimo_context_call_gc
 	gimo_context_destroy
 
 	gimo_dlmodule_get_type

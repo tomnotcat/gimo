@@ -83,6 +83,18 @@ static void _gimo_jsmodule_context_unref (gpointer p)
     }
 }
 
+static void _gimo_jsmodule_context_gc (GimoContext *x,
+                                       gboolean maybe_gc,
+                                       GimoJsmoduleContext *c)
+{
+    if (maybe_gc) {
+        gjs_context_maybe_gc (c->gjsctx);
+    }
+    else {
+        gjs_context_gc (c->gjsctx);
+    }
+}
+
 static GjsContext* _gimo_jsmodule_context_acquire (GimoJsmoduleContext *self)
 {
     if (g_atomic_int_add (&self->gjs_ref_count, 1) == 0)
@@ -360,6 +372,10 @@ static gboolean _gimo_jsmodule_plugin_start (GimoPlugin *self)
                                      gjsctx_quark,
                                      gjsctx,
                                      _gimo_jsmodule_context_unref);
+            g_signal_connect (context,
+                              "call-gc",
+                              G_CALLBACK (_gimo_jsmodule_context_gc),
+                              gjsctx);
         }
 
         factory = gimo_factory_new ((GimoFactoryFunc) gimo_jsmodule_new, gjsctx);

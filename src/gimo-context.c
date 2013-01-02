@@ -48,6 +48,7 @@ G_DEFINE_TYPE (GimoContext, gimo_context, G_TYPE_OBJECT)
 enum {
     SIG_STATECHANGED,
     SIG_ASYNCRUN,
+    SIG_CALLGC,
     SIG_DESTROY,
     LAST_SIGNAL
 };
@@ -301,6 +302,7 @@ static void gimo_context_class_init (GimoContextClass *klass)
 
     klass->state_changed = NULL;
     klass->async_run = NULL;
+    klass->call_gc = NULL;
     klass->destroy = NULL;
 
     context_signals[SIG_STATECHANGED] =
@@ -322,8 +324,20 @@ static void gimo_context_class_init (GimoContextClass *klass)
                           G_STRUCT_OFFSET (GimoContextClass, async_run),
                           NULL, NULL,
                           g_cclosure_marshal_VOID__OBJECT,
-                          G_TYPE_NONE, 1,
+                          G_TYPE_NONE,
+                          1,
                           GIMO_TYPE_RUNNABLE);
+
+    context_signals[SIG_CALLGC] =
+            g_signal_new ("call-gc",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_FIRST,
+                          G_STRUCT_OFFSET (GimoContextClass, call_gc),
+                          NULL, NULL,
+                          g_cclosure_marshal_VOID__BOOLEAN,
+                          G_TYPE_NONE,
+                          1,
+                          G_TYPE_BOOLEAN);
 
     context_signals[SIG_DESTROY] =
             g_signal_new ("destroy",
@@ -869,6 +883,17 @@ void gimo_context_async_run (GimoContext *self,
                    context_signals[SIG_ASYNCRUN],
                    0,
                    run);
+}
+
+void gimo_context_call_gc (GimoContext *self,
+                           gboolean maybe_gc)
+{
+    g_return_if_fail (GIMO_IS_CONTEXT (self));
+
+    g_signal_emit (self,
+                   context_signals[SIG_CALLGC],
+                   0,
+                   maybe_gc);
 }
 
 void gimo_context_destroy (GimoContext *self)
