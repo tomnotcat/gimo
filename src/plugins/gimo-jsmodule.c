@@ -84,14 +84,16 @@ static void _gimo_jsmodule_context_unref (gpointer p)
 }
 
 static void _gimo_jsmodule_context_gc (GimoContext *x,
-                                       gboolean maybe_gc,
+                                       gboolean full_gc,
                                        GimoJsmoduleContext *c)
 {
-    if (maybe_gc) {
-        gjs_context_maybe_gc (c->gjsctx);
-    }
-    else {
-        gjs_context_gc (c->gjsctx);
+    if (c->gjsctx) {
+        if (full_gc) {
+            gjs_context_gc (c->gjsctx);
+        }
+        else {
+            gjs_context_maybe_gc (c->gjsctx);
+        }
     }
 }
 

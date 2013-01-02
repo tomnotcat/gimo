@@ -54,7 +54,7 @@ struct _GimoContextClass {
     void (*async_run) (GimoContext *self,
                        GimoRunnable *run);
     void (*call_gc) (GimoContext *self,
-                     gboolean maybe_gc);
+                     gboolean full_gc);
     void (*destroy) (GimoContext *self);
 };
 
@@ -97,7 +97,7 @@ void gimo_context_async_run (GimoContext *self,
                              GimoRunnable *run);
 
 void gimo_context_call_gc (GimoContext *self,
-                           gboolean maybe_gc);
+                           gboolean full_gc);
 
 void gimo_context_destroy (GimoContext *self);
 
