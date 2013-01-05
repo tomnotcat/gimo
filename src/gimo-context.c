@@ -98,7 +98,7 @@ static guint _gimo_context_load_plugin (GimoContext *self,
                                         GimoLoader *mloader,
                                         const gchar *cur_path,
                                         const gchar *file_name,
-                                        gboolean start)
+                                        GPtrArray **array)
 {
     GimoArchive *archive;
     GPtrArray *objects;
@@ -127,13 +127,14 @@ static guint _gimo_context_load_plugin (GimoContext *self,
                 continue;
             }
 
-            if (start) {
-                if (gimo_plugin_start (GIMO_PLUGIN (object), mloader))
-                    ++result;
+            if (array) {
+                if (NULL == *array)
+                    *array = g_ptr_array_new_with_free_func (g_object_unref);
+
+                g_ptr_array_add (*array, g_object_ref (object));
             }
-            else {
-                ++result;
-            }
+
+            ++result;
         }
 
         g_ptr_array_unref (objects);
@@ -448,21 +449,21 @@ void gimo_context_uninstall_plugin (GimoContext *self,
 void gimo_context_add_paths (GimoContext *self,
                              const gchar *paths)
 {
-	GimoContextPrivate *priv;
-	GimoLoader *aloader = NULL;
+    GimoContextPrivate *priv;
+    GimoLoader *aloader = NULL;
     GimoLoader *mloader = NULL;
-	gchar **dirs;
+    gchar **dirs;
     struct _PathInfo *info;
     guint i = 0;
 
-	g_return_if_fail (GIMO_IS_CONTEXT (self));
+    g_return_if_fail (GIMO_IS_CONTEXT (self));
 
     priv = self->priv;
 
-	if (NULL == paths)
-		goto done;
+    if (NULL == paths)
+        goto done;
 
-	aloader = gimo_safe_cast (
+    aloader = gimo_safe_cast (
         gimo_context_resolve_extpoint (
             self, "org.gimo.core.loader.archive"),
         GIMO_TYPE_LOADER);
@@ -503,10 +504,22 @@ done:
         g_object_unref (mloader);
 }
 
+/**
+ * gimo_context_load_plugin:
+ * @self: a #GimoContext
+ * @file_path: the plugin file path
+ * @cancellable: (allow-none): a #GCancellable
+ * @array: (out) (element-type Gimo.Plugin):
+ *         return the loaded plugins
+ *
+ * Load plugins from the specified path.
+ *
+ * Returns: the number of loaded plugins.
+ */
 guint gimo_context_load_plugin (GimoContext *self,
                                 const gchar *file_path,
                                 GCancellable *cancellable,
-                                gboolean start)
+                                GPtrArray **array)
 {
     GimoContextPrivate *priv;
     guint result = 0;
@@ -583,7 +596,7 @@ guint gimo_context_load_plugin (GimoContext *self,
                                              mloader,
                                              dirname,
                                              full_path,
-                                             start);
+                                             array);
         g_free (dirname);
 
         goto done;
@@ -624,7 +637,7 @@ guint gimo_context_load_plugin (GimoContext *self,
                                                              mloader,
                                                              full_path,
                                                              child_path,
-                                                             start);
+                                                             array);
                     }
 
                     g_free (child_path);

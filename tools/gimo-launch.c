@@ -28,13 +28,29 @@ static void _load_plugin (GimoContext *context,
                           const gchar *file_path,
                           gboolean start)
 {
-    if (!gimo_context_load_plugin (context, file_path, NULL, start)) {
+    GPtrArray *plugins = NULL;
+
+    if (!gimo_context_load_plugin (context, file_path, NULL, &plugins)) {
         gchar *err_str = gimo_dup_error_string ();
 
         g_warning ("Load plugin error: %s: %s",
                    file_path, err_str);
 
         g_free (err_str);
+    }
+
+    if (plugins) {
+        if (start) {
+            guint i;
+            GimoPlugin *plugin;
+
+            for (i = 0; i < plugins->len; ++i) {
+                plugin = g_ptr_array_index (plugins, i);
+                gimo_plugin_start (plugin, NULL);
+            }
+        }
+
+        g_ptr_array_unref (plugins);
     }
 }
 
@@ -80,9 +96,9 @@ int main (int argc, char *argv[])
     g_option_context_free (optctx);
 
     context = gimo_context_new ();
-	app_path = g_path_get_dirname (argv[0]);
-	gimo_context_add_paths (context, app_path);
-	g_free (app_path);
+    app_path = g_path_get_dirname (argv[0]);
+    gimo_context_add_paths (context, app_path);
+    g_free (app_path);
 
     if (files) {
         gchar **it = files;

@@ -121,6 +121,33 @@ static void _test_context_common (void)
     g_assert (3 == param.count);
 }
 
+static guint _test_context_load_plugin (GimoContext *context,
+                                        const gchar *path,
+                                        gboolean start)
+{
+    guint count;
+    GPtrArray *plugins = NULL;
+
+    count = gimo_context_load_plugin (context, path, NULL, &plugins);
+    if (plugins) {
+        if (start) {
+            GimoPlugin *plugin;
+            guint i;
+
+            count = 0;
+            for (i = 0; i < plugins->len; ++i) {
+                plugin = g_ptr_array_index (plugins, i);
+                if (gimo_plugin_start (plugin, NULL))
+                    ++count;
+            }
+        }
+
+        g_ptr_array_unref (plugins);
+    }
+
+    return count;
+}
+
 static void _test_context_dlplugin (void)
 {
     GimoContext *context;
@@ -129,10 +156,9 @@ static void _test_context_dlplugin (void)
     context = gimo_context_new ();
     gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
-    g_assert (gimo_context_load_plugin (context,
-                                        "demo-plugin.xml",
-                                        NULL,
-                                        FALSE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "demo-plugin.xml",
+                                         FALSE) == 1);
     g_object_unref (context);
 
     context = gimo_context_new ();
@@ -142,10 +168,9 @@ static void _test_context_dlplugin (void)
     g_assert (!gimo_lookup_object (G_OBJECT (context), "dl_object"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_bus"));
 
-    g_assert (gimo_context_load_plugin (context,
-                                        "demo-plugin.xml",
-                                        NULL,
-                                        TRUE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "demo-plugin.xml",
+                                         TRUE) == 1);
 
     exts = gimo_context_query_extensions (context,
                                           "org.oren.test.extension1");
@@ -168,10 +193,9 @@ static void _test_context_dlplugin (void)
     gimo_context_run_plugins (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "dl_run"));
 
-    g_assert (gimo_context_load_plugin (context,
-                                        "demo-plugin.xml",
-                                        NULL,
-                                        FALSE) == 0);
+    g_assert (_test_context_load_plugin (context,
+                                         "demo-plugin.xml",
+                                         FALSE) == 0);
     gimo_context_destroy (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "dl_stop"));
     g_object_unref (context);
@@ -183,27 +207,24 @@ static void _test_context_jsplugin (void)
 
     context = gimo_context_new ();
     gimo_context_add_paths (context, TEST_PLUGIN_PATH);
-    g_assert (gimo_context_load_plugin (context,
-                                        "plugins",
-                                        NULL,
-                                        FALSE) == 2);
+    g_assert (_test_context_load_plugin (context,
+                                         "plugins",
+                                         FALSE) == 2);
     g_object_unref (context);
 
     context = gimo_context_new ();
     gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
 #ifdef HAVE_INTROSPECTION
-    g_assert (gimo_context_load_plugin (context,
-                                        "jsmodule-1.0.xml",
-                                        NULL,
-                                        TRUE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "jsmodule-1.0.xml",
+                                         TRUE) == 1);
 
     g_assert (!gimo_lookup_string (G_OBJECT (context), "js_start"));
 
-    g_assert (gimo_context_load_plugin (context,
-                                        "plugins/plugin1.xml",
-                                        NULL,
-                                        TRUE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "plugins/plugin1.xml",
+                                         TRUE) == 1);
 
     g_assert (gimo_lookup_string (G_OBJECT (context), "js_start"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "js_run"));
@@ -213,10 +234,9 @@ static void _test_context_jsplugin (void)
     g_assert (gimo_lookup_string (G_OBJECT (context), "js_run"));
 
 #else  /* !HAVE_INTROSPECTION */
-    g_assert (gimo_context_load_plugin (context,
-                                        "plugins/plugin1.xml",
-                                        NULL,
-                                        FALSE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "plugins/plugin1.xml",
+                                         FALSE) == 1);
 #endif /* !HAVE_INTROSPECTION */
 
     gimo_context_destroy (context);
@@ -232,17 +252,15 @@ static void _test_context_pyplugin (void)
     context = gimo_context_new ();
     gimo_context_add_paths (context, TEST_PLUGIN_PATH);
 
-    g_assert (gimo_context_load_plugin (context,
-                                        "pymodule-1.0.xml",
-                                        NULL,
-                                        TRUE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "pymodule-1.0.xml",
+                                         TRUE) == 1);
 
     g_assert (!gimo_lookup_string (G_OBJECT (context), "py_start"));
 
-    g_assert (gimo_context_load_plugin (context,
-                                        "plugins/plugin2.xml",
-                                        NULL,
-                                        TRUE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "plugins/plugin2.xml",
+                                         TRUE) == 1);
 
     g_assert (gimo_lookup_string (G_OBJECT (context), "py_start"));
     g_assert (!gimo_lookup_string (G_OBJECT (context), "py_run"));
@@ -252,16 +270,14 @@ static void _test_context_pyplugin (void)
     g_assert (gimo_lookup_string (G_OBJECT (context), "py_run"));
 
 #else  /* !HAVE_INTROSPECTION */
-    g_assert (gimo_context_load_plugin (context,
-                                        "plugins/plugin2.xml",
-                                        NULL,
-                                        FALSE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "plugins/plugin2.xml",
+                                         FALSE) == 1);
 #endif /* !HAVE_INTROSPECTION */
 
-    g_assert (gimo_context_load_plugin (context,
-                                        "plugins",
-                                        NULL,
-                                        FALSE) == 1);
+    g_assert (_test_context_load_plugin (context,
+                                         "plugins",
+                                         FALSE) == 1);
     gimo_context_destroy (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "py_stop"));
     g_object_unref (context);

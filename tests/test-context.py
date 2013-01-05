@@ -71,3 +71,7 @@ assert (context.query_extpoint ("test.plugin2.extpt2") == None)
 assert (Gimo.PluginState.INSTALLED == g_old_state)
 assert (Gimo.PluginState.UNINSTALLED == g_new_state)
 assert (3 == g_state_count)
+
+result = context.load_plugin ("demo-plugin.xml", None)
+assert (result[0] == 1)
+assert (len (result[1]) == 1)
