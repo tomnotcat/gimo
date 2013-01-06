@@ -181,7 +181,7 @@ const GValue* gimo_data_store_get (GimoDataStore *self,
 }
 
 /**
- * gimo_data_store_foreach: (skip):
+ * gimo_data_store_foreach: (skip)
  * @self: a #GimoDataStore
  * @func: the function to call for each data visited. If this function
  *   returns %TRUE, the traversal is stopped.

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 from gi.repository import Gimo
 
 g_old_state = Gimo.PluginState.UNINSTALLED
@@ -72,6 +73,7 @@ assert (Gimo.PluginState.INSTALLED == g_old_state)
 assert (Gimo.PluginState.UNINSTALLED == g_new_state)
 assert (3 == g_state_count)
 
+context.add_paths (os.getenv ("TEST_PLUGIN_PATH"))
 result = context.load_plugin ("demo-plugin.xml", None)
 assert (result[0] == 1)
 assert (len (result[1]) == 1)
