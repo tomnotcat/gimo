@@ -242,10 +242,10 @@ const gchar* gimo_data_store_get_string (GimoDataStore *self,
 {
     const GValue *v = gimo_data_store_get (self, key);
 
-    if (NULL == v)
-        return NULL;
+    if (v && G_VALUE_HOLDS_STRING (v))
+        return g_value_get_string (v);
 
-    return g_value_get_string (v);
+    return NULL;
 }
 
 /**
@@ -288,10 +288,10 @@ GObject* gimo_data_store_get_object (GimoDataStore *self,
 {
     const GValue *v = gimo_data_store_get (self, key);
 
-    if (NULL == v)
-        return NULL;
+    if (v && G_VALUE_HOLDS_OBJECT (v))
+        return g_value_get_object (v);
 
-    return g_value_get_object (v);
+    return NULL;
 }
 
 /**
@@ -387,10 +387,10 @@ const gchar* gimo_lookup_string (GObject *object,
 {
     const GValue *v = gimo_lookup (object, key);
 
-    if (NULL == v)
-        return NULL;
+    if (v && G_VALUE_HOLDS_STRING (v))
+        return g_value_get_string (v);
 
-    return g_value_get_string (v);
+    return NULL;
 }
 
 /**
@@ -433,8 +433,8 @@ GObject* gimo_lookup_object (GObject *object,
 {
     const GValue *v = gimo_lookup (object, key);
 
-    if (NULL == v)
-        return NULL;
+    if (v && G_VALUE_HOLDS_OBJECT (v))
+        return g_value_get_object (v);
 
-    return g_value_get_object (v);
+    return NULL;
 }
