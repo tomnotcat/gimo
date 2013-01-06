@@ -10,7 +10,7 @@ for it in path.split (';'):
         scanner = it + os.path.sep + name
         break
 
-srcs = '''../../src/gimo-archive.h ../../src/gimo-archive.c ../../src/gimo-binding.h ../../src/gimo-binding.c \
+srcs = '''../../src/gimo-archive.h ../../src/gimo-archive.c ../../src/gimo-datastore.h ../../src/gimo-datastore.c \
  ../../src/gimo-context.h ../../src/gimo-context.c ../../src/gimo-dlmodule.h ../../src/gimo-dlmodule.c \
  ../../src/gimo-enums.h ../../src/gimo-enums.c ../../src/gimo-runnable.h ../../src/gimo-runnable.c \
  ../../src/gimo-error.h ../../src/gimo-error.c ../../src/gimo-extconfig.h ../../src/gimo-extconfig.c \

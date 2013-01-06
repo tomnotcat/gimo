@@ -148,3 +148,11 @@
      fun:g_type_set_qdata
      fun:gjs_gtype_create_gtype_wrapper
 }
+
+{
+     _test_context_pyplugin
+     Memcheck:Leak
+     ...
+     fun:gimo_context_save
+     fun:_test_context_pyplugin
+}

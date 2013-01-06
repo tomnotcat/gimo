@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -97,7 +97,7 @@ copy "..\src\gimo-xmlarchive.h"  "..\..\glib-win32\include\gimo-1.0\gimo-xmlarch
 copy "..\src\gimo-marshal.h"  "..\..\glib-win32\include\gimo-1.0\gimo-marshal.h"
 copy "..\src\gimo-utils.h"  "..\..\glib-win32\include\gimo-1.0\gimo-utils.h"
 copy "..\src\gimo-extconfig.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extconfig.h"
-copy "..\src\gimo-binding.h"  "..\..\glib-win32\include\gimo-1.0\gimo-binding.h"
+copy "..\src\gimo-datastore.h"  "..\..\glib-win32\include\gimo-1.0\gimo-datastore.h"
 copy "..\src\gimo-runnable.h"  "..\..\glib-win32\include\gimo-1.0\gimo-runnable.h"
 copy "..\src\gimo-signalbus.h"  "..\..\glib-win32\include\gimo-1.0\gimo-signalbus.h"
 copy "..\src\gimo.h"  "..\..\glib-win32\include\gimo-1.0\gimo.h"
@@ -157,7 +157,7 @@ copy "..\src\gimo-xmlarchive.h"  "..\..\glib-win32\include\gimo-1.0\gimo-xmlarch
 copy "..\src\gimo-marshal.h"  "..\..\glib-win32\include\gimo-1.0\gimo-marshal.h"
 copy "..\src\gimo-utils.h"  "..\..\glib-win32\include\gimo-1.0\gimo-utils.h"
 copy "..\src\gimo-extconfig.h"  "..\..\glib-win32\include\gimo-1.0\gimo-extconfig.h"
-copy "..\src\gimo-binding.h"  "..\..\glib-win32\include\gimo-1.0\gimo-binding.h"
+copy "..\src\gimo-datastore.h"  "..\..\glib-win32\include\gimo-1.0\gimo-datastore.h"
 copy "..\src\gimo-runnable.h"  "..\..\glib-win32\include\gimo-1.0\gimo-runnable.h"
 copy "..\src\gimo-signalbus.h"  "..\..\glib-win32\include\gimo-1.0\gimo-signalbus.h"
 copy "..\src\gimo.h"  "..\..\glib-win32\include\gimo-1.0\gimo.h"
@@ -167,7 +167,7 @@ copy "..\src\plugins\pymodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\p
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\gimo-archive.h" />
-    <ClInclude Include="..\src\gimo-binding.h" />
+    <ClInclude Include="..\src\gimo-datastore.h" />
     <ClInclude Include="..\src\gimo-context.h" />
     <ClInclude Include="..\src\gimo-dlmodule.h" />
     <ClInclude Include="..\src\gimo-enums.h" />
@@ -200,7 +200,7 @@ copy "..\src\plugins\pymodule-1.0.xml"  "..\..\glib-win32\lib\gimo-plugins-1.0\p
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\gimo-archive.c" />
-    <ClCompile Include="..\src\gimo-binding.c" />
+    <ClCompile Include="..\src\gimo-datastore.c" />
     <ClCompile Include="..\src\gimo-context.c" />
     <ClCompile Include="..\src\gimo-dlmodule.c" />
     <ClCompile Include="..\src\gimo-enums.c" />

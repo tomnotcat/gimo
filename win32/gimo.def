@@ -8,14 +8,21 @@ EXPORTS
 	gimo_archive_query_object
 	gimo_archive_query_objects
 
-	gimo_bind_object
-	gimo_bind_string
-	gimo_binding_lock
-	gimo_binding_unlock
-	gimo_lookup_object
-	gimo_lookup_string
-	gimo_query_object
-	gimo_query_string
+    gimo_data_store_get_type
+    gimo_data_store_new
+    gimo_data_store_set
+    gimo_data_store_get
+    gimo_data_store_foreach
+    gimo_data_store_set_string
+    gimo_data_store_get_string
+    gimo_data_store_set_object
+    gimo_data_store_get_object
+    gimo_bind
+    gimo_lookup
+    gimo_bind_string
+    gimo_lookup_string
+    gimo_bind_object
+    gimo_lookup_object
 
 	gimo_context_get_type
 	gimo_context_new
@@ -31,6 +38,8 @@ EXPORTS
     gimo_context_run_plugins
     gimo_context_async_run
     gimo_context_call_gc
+    gimo_context_save
+    gimo_context_restore
 	gimo_context_destroy
 
 	gimo_dlmodule_get_type
@@ -128,6 +137,8 @@ EXPORTS
 	gimo_plugin_resolve
 	gimo_plugin_start
 	gimo_plugin_stop
+    gimo_plugin_save
+    gimo_plugin_restore
 
 	gimo_require_get_type
 	gimo_require_new

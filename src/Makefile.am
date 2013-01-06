@@ -13,7 +13,7 @@ libgimo_1_0_la_SOURCES_COMMON = gimo-types.h gimo-types.c \
 	gimo-module.h gimo-module.c gimo-dlmodule.h gimo-dlmodule.c \
 	gimo-archive.h gimo-archive.c gimo-xmlarchive.h gimo-xmlarchive.c \
 	gimo-marshal.h gimo-marshal.c gimo-utils.h gimo-utils.c \
-	gimo-extconfig.h gimo-extconfig.c gimo-binding.h gimo-binding.c \
+	gimo-extconfig.h gimo-extconfig.c gimo-datastore.h gimo-datastore.c \
 	gimo-runnable.h gimo-runnable.c gimo-signalbus.h gimo-signalbus.c
 libgimo_1_0_la_SOURCES = ${libgimo_1_0_la_SOURCES_COMMON} \
 	gimo-intl.h
@@ -23,7 +23,7 @@ gimoinclude_HEADERS = gimo-types.h gimo-enums.h gimo-error.h \
 	gimo-context.h gimo-plugin.h gimo-require.h gimo-extpoint.h \
 	gimo-extension.h gimo-loader.h gimo-factory.h gimo-loadable.h \
 	gimo-module.h gimo-dlmodule.h gimo-archive.h gimo-xmlarchive.h \
-	gimo-marshal.h gimo-utils.h gimo-extconfig.h gimo-binding.h \
+	gimo-marshal.h gimo-utils.h gimo-extconfig.h gimo-datastore.h \
 	gimo-runnable.h gimo-signalbus.h gimo.h
 
 CLEANFILES =

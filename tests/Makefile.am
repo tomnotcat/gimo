@@ -26,6 +26,11 @@ check_PROGRAMS += test-module
 test_module_SOURCES = test-module.c
 check_SCRIPTS += test-module.py
 
+# Test datastore object.
+check_PROGRAMS += test-datastore
+test_datastore_SOURCES = test-datastore.c
+check_SCRIPTS += test-datastore.py
+
 # Test object archive.
 check_PROGRAMS += test-archive
 test_archive_SOURCES = test-archive.c

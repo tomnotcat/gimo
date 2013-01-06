@@ -17,9 +17,10 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include "gimo-binding.h"
+#include "gimo-datastore.h"
 #include "gimo-plugin.h"
 #include "gimo-signalbus.h"
+#include <string.h>
 
 #define TEST_TYPE_PLUGIN (test_plugin_get_type())
 #define TEST_PLUGIN(obj) \
@@ -148,6 +149,27 @@ static void _demo_plugin_stop (GimoPlugin *p)
     g_object_unref (c);
 }
 
+static void _demo_plugin_save (GimoPlugin *p,
+                               GimoDataStore *s)
+{
+    g_assert (!gimo_data_store_get_string (s, "demokey"));
+    gimo_data_store_set_string (s, "demokey", "demodata");
+}
+
+static void _demo_plugin_restore (GimoPlugin *p,
+                                  GimoDataStore *s)
+{
+    GimoContext *c = gimo_plugin_query_context (p);
+
+    if (strcmp (gimo_data_store_get_string (s, "demokey"),
+                "demodata") == 0)
+    {
+        gimo_bind_string (G_OBJECT (c), "dl_update", "dl_update");
+    }
+
+    g_object_unref (c);
+}
+
 GObject* demo_plugin (GimoPlugin *plugin)
 {
     g_signal_connect (plugin,
@@ -163,6 +185,16 @@ GObject* demo_plugin (GimoPlugin *plugin)
     g_signal_connect (plugin,
                       "stop",
                       G_CALLBACK (_demo_plugin_stop),
+                      NULL);
+
+    g_signal_connect (plugin,
+                      "save",
+                      G_CALLBACK (_demo_plugin_save),
+                      NULL);
+
+    g_signal_connect (plugin,
+                      "restore",
+                      G_CALLBACK (_demo_plugin_restore),
                       NULL);
 
     return g_object_ref (plugin);

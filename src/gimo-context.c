@@ -24,6 +24,7 @@
 
 #include "gimo-context.h"
 #include "gimo-archive.h"
+#include "gimo-datastore.h"
 #include "gimo-dlmodule.h"
 #include "gimo-error.h"
 #include "gimo-extconfig.h"
@@ -180,6 +181,23 @@ static gboolean _gimo_context_query_extensions (gpointer key,
     }
 
     g_ptr_array_unref (exts);
+    return FALSE;
+}
+
+static gboolean _gimo_context_restore_plugins (gpointer key,
+                                               gpointer value,
+                                               gpointer data)
+{
+    GObject *store = g_value_get_object (value);
+
+    if (GIMO_IS_DATASTORE (store)) {
+        GimoPlugin *p = gimo_context_query_plugin (data, key);
+        if (p) {
+            gimo_plugin_restore (p, GIMO_DATASTORE (store));
+            g_object_unref (p);
+        }
+    }
+
     return FALSE;
 }
 
@@ -907,6 +925,39 @@ void gimo_context_call_gc (GimoContext *self,
                    context_signals[SIG_CALLGC],
                    0,
                    maybe_gc);
+}
+
+void gimo_context_save (GimoContext *self,
+                        GimoDataStore *store)
+{
+    GPtrArray *plugins;
+
+    plugins = gimo_context_query_plugins (self);
+    if (plugins) {
+        GimoPlugin *p;
+        GimoDataStore *s;
+        guint i;
+
+        for (i = 0; i < plugins->len; ++i) {
+            p = g_ptr_array_index (plugins, i);
+            s = gimo_data_store_new ();
+            gimo_plugin_save (p, s);
+            gimo_data_store_set_object (store,
+                                        gimo_plugin_get_id (p),
+                                        G_OBJECT (s));
+            g_object_unref (s);
+        }
+
+        g_ptr_array_unref (plugins);
+    }
+}
+
+void gimo_context_restore (GimoContext *self,
+                           GimoDataStore *store)
+{
+    gimo_data_store_foreach (store,
+                             _gimo_context_restore_plugins,
+                             self);
 }
 
 void gimo_context_destroy (GimoContext *self)

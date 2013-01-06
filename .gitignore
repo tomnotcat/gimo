@@ -43,3 +43,4 @@ tests/test-module
 tests/test-archive
 tests/test-plugin
 tests/test-context
+tests/test-datastore

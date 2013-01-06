@@ -23,8 +23,8 @@
  */
 
 #include "gimo-plugin.h"
-#include "gimo-binding.h"
 #include "gimo-context.h"
+#include "gimo-datastore.h"
 #include "gimo-error.h"
 #include "gimo-extension.h"
 #include "gimo-extpoint.h"
@@ -61,6 +61,8 @@ G_DEFINE_TYPE (GimoPlugin, gimo_plugin, GIMO_TYPE_RUNNABLE)
 enum {
     SIG_START,
     SIG_STOP,
+    SIG_SAVE,
+    SIG_RESTORE,
     LAST_SIGNAL
 };
 
@@ -497,6 +499,8 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
 
     klass->start = NULL;
     klass->stop = NULL;
+    klass->save = NULL;
+    klass->restore = NULL;
 
     plugin_signals[SIG_START] =
             g_signal_new ("start",
@@ -515,6 +519,28 @@ static void gimo_plugin_class_init (GimoPluginClass *klass)
                           NULL, NULL,
                           g_cclosure_marshal_VOID__VOID,
                           G_TYPE_NONE, 0);
+
+    plugin_signals[SIG_SAVE] =
+            g_signal_new ("save",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_LAST,
+                          G_STRUCT_OFFSET (GimoPluginClass, save),
+                          NULL, NULL,
+                          g_cclosure_marshal_VOID__OBJECT,
+                          G_TYPE_NONE,
+                          1,
+                          GIMO_TYPE_DATASTORE);
+
+    plugin_signals[SIG_RESTORE] =
+            g_signal_new ("restore",
+                          G_OBJECT_CLASS_TYPE (gobject_class),
+                          G_SIGNAL_RUN_LAST,
+                          G_STRUCT_OFFSET (GimoPluginClass, restore),
+                          NULL, NULL,
+                          g_cclosure_marshal_VOID__OBJECT,
+                          G_TYPE_NONE,
+                          1,
+                          GIMO_TYPE_DATASTORE);
 
     g_object_class_install_property (
         gobject_class, PROP_ID,
@@ -944,12 +970,12 @@ void gimo_plugin_define_string (GimoPlugin *self,
  *
  * Get a previously defined object.
  *
- * Returns: (allow-none) (transfer full): a #GObject
+ * Returns: (allow-none) (transfer none): a #GObject
  */
 GObject* gimo_plugin_get_object (GimoPlugin *self,
                                  const gchar *symbol)
 {
-    return gimo_query_object (G_OBJECT (self), symbol);
+    return gimo_lookup_object (G_OBJECT (self), symbol);
 }
 
 const gchar* gimo_plugin_get_string (GimoPlugin *self,
@@ -972,24 +998,23 @@ GObject* gimo_plugin_resolve (GimoPlugin *self,
 {
     GimoModule *module;
     GObject *object = NULL;
-    gchar *string = NULL;
+    const gchar *string = NULL;
 
     g_return_val_if_fail (GIMO_IS_PLUGIN (self), NULL);
 
-    object = gimo_query_object (G_OBJECT (self), symbol);
+    object = gimo_lookup_object (G_OBJECT (self), symbol);
     if (object)
-        return object;
+        return g_object_ref (object);
 
     module = _gimo_plugin_query_module (self, NULL, TRUE);
     if (NULL == module)
         return NULL;
 
-    string = gimo_query_string (G_OBJECT (self), symbol);
+    string = gimo_lookup_string (G_OBJECT (self), symbol);
     if (string) {
         object = gimo_module_resolve (module,
                                       string,
                                       G_OBJECT (self));
-        g_free (string);
     }
     else {
         object = gimo_module_resolve (module,
@@ -1066,6 +1091,28 @@ void gimo_plugin_stop (GimoPlugin *self)
     g_object_unref (module);
 
     priv->state = GIMO_PLUGIN_RESOLVED;
+}
+
+void gimo_plugin_save (GimoPlugin *self,
+                       GimoDataStore *store)
+{
+    g_return_if_fail (GIMO_IS_PLUGIN (self));
+
+    g_signal_emit (self,
+                   plugin_signals[SIG_SAVE],
+                   0,
+                   store);
+}
+
+void gimo_plugin_restore (GimoPlugin *self,
+                          GimoDataStore *store)
+{
+    g_return_if_fail (GIMO_IS_PLUGIN (self));
+
+    g_signal_emit (self,
+                   plugin_signals[SIG_RESTORE],
+                   0,
+                   store);
 }
 
 void _gimo_plugin_install (GimoPlugin *self,

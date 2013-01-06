@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 #include "config.h"
-#include "gimo-binding.h"
 #include "gimo-context.h"
+#include "gimo-datastore.h"
 #include "gimo-error.h"
 #include "gimo-extpoint.h"
 #include "gimo-loader.h"
@@ -152,6 +152,7 @@ static void _test_context_dlplugin (void)
 {
     GimoContext *context;
     GPtrArray *exts;
+    GimoDataStore *store;
 
     context = gimo_context_new ();
     gimo_context_add_paths (context, TEST_PLUGIN_PATH);
@@ -196,6 +197,12 @@ static void _test_context_dlplugin (void)
     g_assert (_test_context_load_plugin (context,
                                          "demo-plugin.xml",
                                          FALSE) == 0);
+    store = gimo_data_store_new ();
+    gimo_context_save (context, store);
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "dl_update"));
+    gimo_context_restore (context, store);
+    g_object_unref (store);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "dl_update"));
     gimo_context_destroy (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "dl_stop"));
     g_object_unref (context);
@@ -204,6 +211,7 @@ static void _test_context_dlplugin (void)
 static void _test_context_jsplugin (void)
 {
     GimoContext *context;
+    GimoDataStore *store;
 
     context = gimo_context_new ();
     gimo_context_add_paths (context, TEST_PLUGIN_PATH);
@@ -233,6 +241,13 @@ static void _test_context_jsplugin (void)
     gimo_context_run_plugins (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "js_run"));
 
+    store = gimo_data_store_new ();
+    gimo_context_save (context, store);
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "js_update"));
+    gimo_context_restore (context, store);
+    g_object_unref (store);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "js_update"));
+
 #else  /* !HAVE_INTROSPECTION */
     g_assert (_test_context_load_plugin (context,
                                          "plugins/plugin1.xml",
@@ -248,6 +263,7 @@ static void _test_context_pyplugin (void)
 {
 #ifdef HAVE_INTROSPECTION
     GimoContext *context;
+    GimoDataStore *store;
 
     context = gimo_context_new ();
     gimo_context_add_paths (context, TEST_PLUGIN_PATH);
@@ -268,6 +284,13 @@ static void _test_context_pyplugin (void)
 
     gimo_context_run_plugins (context);
     g_assert (gimo_lookup_string (G_OBJECT (context), "py_run"));
+
+    store = gimo_data_store_new ();
+    gimo_context_save (context, store);
+    g_assert (!gimo_lookup_string (G_OBJECT (context), "py_update"));
+    gimo_context_restore (context, store);
+    g_object_unref (store);
+    g_assert (gimo_lookup_string (G_OBJECT (context), "py_update"));
 
 #else  /* !HAVE_INTROSPECTION */
     g_assert (_test_context_load_plugin (context,
