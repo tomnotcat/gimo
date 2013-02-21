@@ -3,7 +3,7 @@
 import os, platform
 from gi.repository import Gimo
 
-def dlmodule_new (user_data):
+def dlmodule_new (factory, user_data):
     assert (user_data == "hello")
     return Gimo.Dlmodule ()
 
@@ -21,7 +21,10 @@ if platform.system () == "Linux":
 
 # Dynamic library
 assert (loader.load ("demo-plugin.so") == None)
-factory = Gimo.Factory.new (dlmodule_new, "hello")
+#factory = Gimo.Factory.new (dlmodule_new, "hello")
+factory = Gimo.Factory ()
+factory.connect ("make", dlmodule_new, "hello")
+
 assert (loader.register (None, factory))
 module = loader.load ("demo-plugin.so")
 assert (module)
