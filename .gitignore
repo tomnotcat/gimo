@@ -16,6 +16,7 @@
 *.aps
 *.pc
 *.so
+*.spec
 win32/ipch/*
 win32/Debug/*
 win32/Release/*

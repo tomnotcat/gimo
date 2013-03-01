@@ -74,6 +74,8 @@ dnl Checks for GLib
 dnl ================================================================
 
 GLIB_REQUIRED_VERSION=2.32.0
+AC_SUBST(GLIB_REQUIRED_VERSION)
+
 GLIB_MODULES="glib-2.0 >= $GLIB_REQUIRED_VERSION gobject-2.0 gthread-2.0 gmodule-no-export-2.0 gio-2.0"
 
 PKG_CHECK_MODULES(GLIB, $GLIB_MODULES, :,
@@ -205,6 +207,7 @@ AC_SUBST([GIMO_LDFLAGS])
 
 AC_CONFIG_FILES([Makefile
         gimo-1.0.pc
+        gimo-1.0.spec
         src/Makefile
         src/plugins/Makefile
         tools/Makefile
