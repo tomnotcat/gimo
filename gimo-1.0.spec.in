@@ -64,7 +64,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*a
 %{_libdir}/pkgconfig/*.pc
 %{_includedir}/gimo-1.0
+%{_libdir}/gimo-plugins-1.0
+%{_bindir}/gimo-launch
+%{_libdir}/girepository-1.0/*.typelib
+%{_datadir}/gir-1.0/*.gir
 
 %changelog
-* Fri March 01 2013 Tom Wong <tomnotcat@163.com>
+* Fri Mar 01 2013 Tom Wong <tomnotcat@163.com>
 - created spec file
