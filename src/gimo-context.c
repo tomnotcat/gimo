@@ -146,6 +146,87 @@ static guint _gimo_context_load_plugin (GimoContext *self,
     return result;
 }
 
+static guint _gimo_context_load_plugins (GimoContext *self,
+                                         GimoLoader *aloader,
+                                         GimoLoader *mloader,
+                                         const gchar *path,
+                                         gboolean recursive,
+                                         GCancellable *cancellable,
+                                         GPtrArray **array)
+{
+    GFile *file;
+    GFileEnumerator *enumerator;
+    GError *error = NULL;
+    guint result = 0;
+
+    file = g_file_new_for_path (path);
+    enumerator = g_file_enumerate_children (file,
+                                            "standard::*",
+                                            G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
+                                            cancellable,
+                                            &error);
+    if (enumerator && !g_cancellable_is_cancelled (cancellable)) {
+        GFileInfo *child_info;
+        GFile *child;
+        gchar *child_path;
+
+        while (!g_cancellable_is_cancelled (cancellable)) {
+            child_info = g_file_enumerator_next_file (enumerator,
+                                                      cancellable,
+                                                      NULL);
+            if (NULL == child_info)
+                break;
+
+            if (!g_cancellable_is_cancelled (cancellable)) {
+                child = g_file_resolve_relative_path (
+                    file, g_file_info_get_name (child_info));
+
+                child_path = g_file_get_path (child);
+
+                if (g_file_test (child_path, G_FILE_TEST_IS_REGULAR)) {
+                    result += _gimo_context_load_plugin (self,
+                                                         aloader,
+                                                         mloader,
+                                                         path,
+                                                         child_path,
+                                                         array);
+                }
+                else if (recursive &&
+                         g_file_test (child_path, G_FILE_TEST_IS_DIR))
+                {
+                    result += _gimo_context_load_plugins (self,
+                                                          aloader,
+                                                          mloader,
+                                                          child_path,
+                                                          recursive,
+                                                          cancellable,
+                                                          array);
+                }
+
+                g_free (child_path);
+                g_object_unref (child);
+            }
+
+            g_object_unref (child_info);
+        }
+    }
+
+    if (enumerator)
+        g_object_unref (enumerator);
+
+    g_object_unref (file);
+
+    if (error) {
+        gimo_set_error_full (GIMO_ERROR_INVALID_FILE,
+                             "GimoContext enumerate dir error: %s: %s",
+                             path,
+                             error ? error->message : NULL);
+        g_clear_error (&error);
+    }
+
+    return result;
+}
+
 static gboolean _gimo_context_query_plugins (gpointer key,
                                              gpointer value,
                                              gpointer data)
@@ -526,6 +607,7 @@ done:
  * gimo_context_load_plugin:
  * @self: a #GimoContext
  * @file_path: the plugin file path
+ * @recursive: load sub directories recursively
  * @cancellable: (allow-none): a #GCancellable
  * @array: (out) (element-type Gimo.Plugin):
  *         return the loaded plugins
@@ -536,6 +618,7 @@ done:
  */
 guint gimo_context_load_plugin (GimoContext *self,
                                 const gchar *file_path,
+                                gboolean recursive,
                                 GCancellable *cancellable,
                                 GPtrArray **array)
 {
@@ -549,6 +632,7 @@ guint gimo_context_load_plugin (GimoContext *self,
 
     priv = self->priv;
 
+    /* Build full path for relative path. */
     if (!g_file_test (file_path, G_FILE_TEST_EXISTS)) {
         if (g_queue_get_length (priv->paths) > 0 &&
             !g_path_is_absolute (file_path))
@@ -621,63 +705,13 @@ guint gimo_context_load_plugin (GimoContext *self,
     }
 
     if (g_file_test (full_path, G_FILE_TEST_IS_DIR)) {
-        GFile *file;
-        GFileEnumerator *enumerator;
-        GError *error = NULL;
-
-        file = g_file_new_for_path (full_path);
-        enumerator = g_file_enumerate_children (file,
-                                                "standard::*",
-                                                G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
-                                                cancellable,
-                                                &error);
-        if (enumerator && !g_cancellable_is_cancelled (cancellable)) {
-            GFileInfo *child_info;
-            GFile *child;
-            gchar *child_path;
-
-            while (!g_cancellable_is_cancelled (cancellable)) {
-                child_info = g_file_enumerator_next_file (enumerator,
-                                                          cancellable,
-                                                          NULL);
-                if (NULL == child_info)
-                    break;
-
-                if (!g_cancellable_is_cancelled (cancellable)) {
-                    child = g_file_resolve_relative_path (
-                        file, g_file_info_get_name (child_info));
-
-                    child_path = g_file_get_path (child);
-
-                    if (g_file_test (child_path, G_FILE_TEST_IS_REGULAR)) {
-                        result += _gimo_context_load_plugin (self,
-                                                             aloader,
-                                                             mloader,
-                                                             full_path,
-                                                             child_path,
-                                                             array);
-                    }
-
-                    g_free (child_path);
-                    g_object_unref (child);
-                }
-
-                g_object_unref (child_info);
-            }
-        }
-
-        if (enumerator)
-            g_object_unref (enumerator);
-
-        g_object_unref (file);
-
-        if (error) {
-            gimo_set_error_full (GIMO_ERROR_INVALID_FILE,
-                                 "GimoContext enumerate dir error: %s: %s",
-                                 full_path,
-                                 error ? error->message : NULL);
-            g_clear_error (&error);
-        }
+        result += _gimo_context_load_plugins (self,
+                                              aloader,
+                                              mloader,
+                                              full_path,
+                                              recursive,
+                                              cancellable,
+                                              array);
     }
     else {
         gimo_set_error (GIMO_ERROR_INVALID_FILE);

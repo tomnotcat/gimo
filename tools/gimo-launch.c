@@ -30,7 +30,9 @@ static void _load_plugin (GimoContext *context,
 {
     GPtrArray *plugins = NULL;
 
-    if (!gimo_context_load_plugin (context, file_path, NULL, &plugins)) {
+    if (!gimo_context_load_plugin (context, file_path,
+                                   TRUE, NULL, &plugins))
+    {
         gchar *err_str = gimo_dup_error_string ();
 
         g_warning ("Load plugin error: %s: %s",

@@ -74,6 +74,6 @@ assert (Gimo.PluginState.UNINSTALLED == g_new_state)
 assert (3 == g_state_count)
 
 context.add_paths (os.getenv ("TEST_PLUGIN_PATH"))
-result = context.load_plugin ("demo-plugin.xml", None)
+result = context.load_plugin ("demo-plugin.xml", False, None)
 assert (result[0] == 1)
 assert (len (result[1]) == 1)

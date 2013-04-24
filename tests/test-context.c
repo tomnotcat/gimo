@@ -128,7 +128,7 @@ static guint _test_context_load_plugin (GimoContext *context,
     guint count;
     GPtrArray *plugins = NULL;
 
-    count = gimo_context_load_plugin (context, path, NULL, &plugins);
+    count = gimo_context_load_plugin (context, path, TRUE, NULL, &plugins);
     if (plugins) {
         if (start) {
             GimoPlugin *plugin;
